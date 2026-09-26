@@ -26,6 +26,19 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SampleClassSeeder::class,
             SampleTeachingAssignmentSeeder::class,
+            DepartmentDetailSeeder::class,
+            ProductCategorySeeder::class,
+            StudentProductSeeder::class,
+            ArticleCategorySeeder::class,
+            ArticleSeeder::class,
+            CareerCompanySeeder::class,
+            CareerServiceSeeder::class,
+            CareerOpportunitySeeder::class,
+            AlumniSeeder::class,
+            AdmissionSeeder::class,
+            AchievementCategorySeeder::class,
+            AchievementSeeder::class,
+            SiteStatisticSeeder::class,
         ]);
     }
 }

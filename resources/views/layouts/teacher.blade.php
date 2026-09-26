@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Portal Guru') — SMK Negeri 2 Karanganyar</title>
+    <title>@yield('title', 'Portal Guru') — {{ $schoolName ?? config('app.name') }}</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('assets/img/logo.svg') }}">
 
     <!-- Google Fonts -->
@@ -30,8 +30,8 @@
                 <img src="{{ asset('assets/img/logo.svg') }}" alt="Logo" class="w-full h-full object-contain">
             </div>
             <div class="leading-tight">
-                <div class="font-heading font-bold text-bluedark text-sm">SMK Negeri 2</div>
-                <div class="text-[11px] text-bluedark/60 font-medium">Karanganyar</div>
+                <div class="font-heading font-bold text-bluedark text-sm">{{ $schoolName ?? config('app.name') }}</div>
+                <div class="text-[11px] text-bluedark/60 font-medium">Sekolah Menengah Kejuruan</div>
             </div>
         </a>
 

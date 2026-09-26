@@ -40,10 +40,29 @@ class DepartmentSeeder extends Seeder
                 'career_prospects' => 'Graphic Designer, UI/UX Designer, Motion Graphic Designer, Content Creator.',
                 'is_active' => true,
             ],
+            [
+                'code' => 'TPM',
+                'name' => 'Teknik Pemesinan',
+                'short_name' => 'TPM',
+                'description' => 'Fokus pada mesin bubut, frais, CNC, pengelasan, dan manufaktur presisi.',
+                'vision' => 'Menjadi pusat pelatihan teknik mesin yang menghasilkan pekerja terampil.',
+                'mission' => 'Melatih keterampilan mesin bubut, frais, CNC, dan pengelasan.',
+                'career_prospects' => 'Operator CNC, Teknisi Presisi, Welder, QC Inspection.',
+                'is_active' => true,
+            ],
+            [
+                'code' => 'TPK',
+                'name' => 'Tekstil dan Percetakan',
+                'description' => 'Fokus pada tenun, rajut, warna, jahit, dan percetakan kain.',
+                'vision' => 'Menjadi contoh produksi kain yang berkelanjutan.',
+                'mission' => 'Melatih keterampilan tenun, pewarnaan, dan jahit mesin.',
+                'career_prospects' => 'Operator Tenun, Desainer Kain, Penjahit Produksi, QC Tekstil.',
+                'is_active' => true,
+            ],
         ];
 
         foreach ($depts as $dept) {
-            Department::firstOrCreate(['code' => $dept['code']], $dept);
+            Department::updateOrCreate(['code' => $dept['code']], $dept);
         }
     }
 }

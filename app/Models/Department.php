@@ -52,4 +52,18 @@ class Department extends Model
     {
         return $this->hasMany(StudentProduct::class);
     }
+
+    /**
+     * Cover image URL, resolved from the presentation fallback map in
+     * `config/public_site.php` because departments have no image column.
+     */
+    public function coverImageUrl(): string
+    {
+        $covers = config('public_site.department_covers');
+        $key = strtoupper((string) $this->short_name) ?: strtoupper((string) $this->code);
+
+        $path = $covers[$key] ?? $covers[$this->code] ?? $covers['default'];
+
+        return asset($path);
+    }
 }
