@@ -58,7 +58,8 @@
                     <img src="{{ $department->coverImageUrl() }}"
                         alt="Ilustrasi {{ $department->name }}"
                         class="relative w-full h-auto drop-shadow-2xl"
-                        loading="eager">
+                        width="310" height="270"
+                        loading="eager" decoding="async">
                 </div>
             </div>
 
@@ -78,7 +79,7 @@
 @endif
 
 {{-- ======================================================
-     KOMPETENSI (dari backend) / fallback static
+     KOMPETENSI (dari backend)
      ====================================================== --}}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20">
     <div class="reveal mb-8">
@@ -101,7 +102,7 @@
             @endforeach
         </div>
     @else
-        {{-- Fallback ketika belum ada data kompetensi --}}
+        {{-- Empty state ketika belum ada data kompetensi --}}
         <div class="bg-white border border-bluelight rounded-3xl p-6 sm:p-8 reveal">
             <x-public.empty-state
                 icon="folder"
@@ -112,7 +113,7 @@
 </section>
 
 {{-- ======================================================
-     MATA PELAJARAN + FASILITAS (2 kolom)
+     MATA PELAJARAN + FASILITAS (2 kolom, sesuai template)
      ====================================================== --}}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20 grid lg:grid-cols-2 gap-6 lg:gap-8">
 
@@ -127,7 +128,7 @@
                             stroke="#2196F3" stroke-width="2.4" aria-hidden="true">
                             <path d="M20 6L9 17l-5-5"/>
                         </svg>
-                        {{ $subject->name }}
+                        <span>{{ $subject->name }}</span>
                         @if (filled($subject->code))
                             <span class="text-[10px] font-heading font-semibold text-blueprim bg-bluelight px-2 py-0.5 rounded self-center ml-auto shrink-0">{{ $subject->code }}</span>
                         @endif
@@ -141,9 +142,9 @@
 
     {{-- Fasilitas + Visi/Misi --}}
     <div class="space-y-6">
-        @if ($department->facilities->isNotEmpty())
-            <div class="bg-white rounded-3xl border border-bluelight shadow-card p-6 sm:p-8 reveal">
-                <h3 class="font-heading font-semibold text-lg text-bluedark mb-5">Fasilitas &amp; Peralatan Praktik</h3>
+        <div class="bg-white rounded-3xl border border-bluelight shadow-card p-6 sm:p-8 reveal">
+            <h3 class="font-heading font-semibold text-lg text-bluedark mb-5">Fasilitas &amp; Peralatan Praktik</h3>
+            @if ($department->facilities->isNotEmpty())
                 <div class="flex flex-wrap gap-2">
                     @foreach ($department->facilities as $facility)
                         <span class="text-xs sm:text-sm bg-bluelight/70 text-bluedark/80 px-3 py-1.5 rounded-full font-medium">
@@ -151,8 +152,10 @@
                         </span>
                     @endforeach
                 </div>
-            </div>
-        @endif
+            @else
+                <p class="text-sm text-bluedark/50 italic">Fasilitas belum diisi.</p>
+            @endif
+        </div>
 
         @if (filled($department->vision) || filled($department->mission))
             <div class="bg-white rounded-3xl border border-bluelight shadow-card p-6 sm:p-8 reveal">
@@ -171,13 +174,74 @@
 
 {{-- ======================================================
      PROSPEK KARIER
+     `career_prospects` disimpan sebagai teks yang dipisah koma, jadi
+     dipecah menjadi chip mengikuti template.
      ====================================================== --}}
-@if (filled($department->career_prospects))
+@php
+    $careerChips = collect(preg_split('/\s*[,;\n]\s*/', (string) $department->career_prospects, -1, PREG_SPLIT_NO_EMPTY))
+        ->map(fn (string $career) => trim($career))
+        ->filter()
+        ->unique()
+        ->values();
+@endphp
+
+@if ($careerChips->isNotEmpty())
     <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20">
         <div class="rounded-3xl md:rounded-4xl bg-bluedark px-6 sm:px-10 md:px-14 py-10 md:py-14 reveal">
             <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-bluesoft font-semibold mb-2">Lulus Mau Kemana?</p>
             <h2 class="font-heading font-bold text-2xl sm:text-3xl text-white mb-2">Prospek Karier Lulusan</h2>
-            <p class="text-white/70 text-sm sm:text-base max-w-lg mb-6 leading-relaxed">{{ $department->career_prospects }}</p>
+            <p class="text-white/60 text-sm sm:text-base max-w-lg mb-6 leading-relaxed">
+                Lulusan dapat langsung bekerja, membuka usaha mandiri, atau melanjutkan kuliah dengan bekal kompetensi yang relevan.
+            </p>
+            <div class="flex flex-wrap gap-2.5">
+                @foreach ($careerChips as $career)
+                    <span class="text-xs sm:text-sm bg-white border border-bluelight text-bluedark px-3.5 py-2 rounded-full font-medium shadow-card">
+                        {{ $career }}
+                    </span>
+                @endforeach
+            </div>
+        </div>
+    </section>
+@endif
+
+{{-- ======================================================
+     MITRA INDUSTRI
+     ====================================================== --}}
+@if ($partners->isNotEmpty())
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20 reveal">
+        <h3 class="font-heading font-semibold text-lg sm:text-xl text-bluedark mb-4">Mitra Industri Program Keahlian Ini</h3>
+        <div class="flex flex-wrap gap-2.5">
+            @foreach ($partners as $partner)
+                <span class="text-xs sm:text-sm bg-bluelight/70 text-bluedark/80 px-3.5 py-1.5 rounded-full font-medium">
+                    {{ $partner->name }}
+                </span>
+            @endforeach
+        </div>
+    </section>
+@endif
+
+{{-- ======================================================
+     KARYA SISWA PROGRAM INI
+     ====================================================== --}}
+@if ($department->studentProducts->isNotEmpty())
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20">
+        <div class="reveal mb-8">
+            <h2 class="font-heading font-bold text-2xl sm:text-3xl text-bluedark">Karya Siswa {{ $department->short_name ?: $department->code }}</h2>
+            <p class="text-bluedark/60 mt-2 text-sm sm:text-base max-w-xl">Produk yang dikembangkan siswa program keahlian ini bersama mentor industri.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 stagger-group">
+            @foreach ($department->studentProducts as $product)
+                <x-public.product-card :product="$product" :show-department="false" />
+            @endforeach
+        </div>
+
+        <div class="mt-8 reveal">
+            <a href="{{ route('public.products.index') }}"
+                class="inline-flex items-center gap-2 bg-white border border-bluesoft/60 text-bluedark font-heading font-medium px-6 py-3 rounded-full hover:bg-bluelight transition-colors text-sm">
+                Lihat Semua Produk Unggulan
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
         </div>
     </section>
 @endif
@@ -185,23 +249,12 @@
 {{-- ======================================================
      CTA DAFTAR
      ====================================================== --}}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20 mb-4 reveal">
-    <div class="rounded-3xl bg-gradient-to-br from-blueprim to-bluedark p-8 sm:p-10 text-center relative overflow-hidden">
-        <div class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10 blur-3xl" aria-hidden="true"></div>
-        <p class="font-heading font-bold text-xl sm:text-2xl text-white relative">
-            Tertarik Bergabung di {{ $department->name }}?
-        </p>
-        <p class="text-white/70 text-sm mt-1.5 relative">
-            Kuota kelas terbatas setiap tahun ajaran — daftar dari sekarang.
-        </p>
-        <a href="{{ route('public.ppdb.index') }}"
-            class="inline-flex items-center gap-2 mt-5 bg-white text-bluedark font-heading font-semibold px-6 py-3 rounded-full hover:bg-bluelight transition-colors text-sm relative">
-            Daftar PPDB Sekarang
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                <path d="M5 12h14M13 6l6 6-6 6"/>
-            </svg>
-        </a>
-    </div>
-</section>
+<x-public.cta-band
+    title="Tertarik Bergabung di {{ $department->name }}?"
+    description="Kuota kelas terbatas setiap tahun ajaran — daftar dari sekarang."
+    action-label="Daftar PPDB Sekarang"
+    :action-url="route('public.ppdb.index')"
+    secondary-label="Lihat Jurusan Lain"
+    :secondary-url="route('public.departments.index')" />
 
 @endsection

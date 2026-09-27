@@ -10,7 +10,7 @@
         description="Informasi jadwal, jalur pendaftaran, persyaratan, dan biaya pendaftaran peserta didik baru."
         :breadcrumb="['Beranda' => route('public.home'), 'PPDB' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
             @if ($periods->isEmpty())
                 <div class="bg-white border border-bluelight rounded-3xl shadow-xs">
@@ -111,7 +111,7 @@
 
                                 <div class="grid lg:grid-cols-2 gap-8">
                                     @if ($period->requirements->isNotEmpty())
-                                        <div>
+                                        <div id="syarat">
                                             <h3 class="font-heading font-semibold text-base text-bluedark">Persyaratan</h3>
                                             <ul class="mt-4 space-y-2.5">
                                                 @foreach ($period->requirements as $requirement)
@@ -182,4 +182,12 @@
             @endif
         </div>
     </section>
+
+    <x-public.cta-band
+        title="Pendaftaran tahun pelajaran berikutnya segera dibuka"
+        description="Pantau jadwal, jalur pendaftaran, dan biaya terbaru langsung dari halaman PPDB sekolah."
+        action-label="Lihat Semua Jurusan"
+        :action-url="route('public.departments.index')"
+        secondary-label="Konsultasi ke BKK"
+        :secondary-url="route('public.career.index')" />
 @endsection

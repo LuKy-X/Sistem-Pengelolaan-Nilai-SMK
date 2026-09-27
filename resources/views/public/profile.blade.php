@@ -10,7 +10,7 @@
         :description="$schoolProfile?->description"
         :breadcrumb="['Beranda' => route('public.home'), 'Profil Sekolah' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
             @if ($schoolProfile === null)
@@ -173,4 +173,12 @@
             @endif
         </div>
     </section>
+
+    <x-public.cta-band
+        title="Tertarik melanjutkan pendidikan di sini?"
+        description="Pelajari program keahlian, jalur pendaftaran, dan seluruh informasinya sebelum kamu mendaftar."
+        action-label="Lihat Halaman PPDB"
+        :action-url="route('public.ppdb.index')"
+        secondary-label="Hubungi Sekolah"
+        :secondary-url="$schoolProfile?->phone ? 'tel:'.preg_replace('/[^0-9+]/', '', $schoolProfile->phone) : route('public.ppdb.index')" />
 @endsection

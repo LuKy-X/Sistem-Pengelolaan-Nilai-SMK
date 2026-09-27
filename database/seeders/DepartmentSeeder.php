@@ -9,7 +9,44 @@ class DepartmentSeeder extends Seeder
 {
     public function run(): void
     {
-        $depts = [
+        $departments = $this->departments();
+
+        foreach ($departments as $department) {
+            Department::updateOrCreate(['code' => $department['code']], $department);
+        }
+
+        $this->removePlaceholderDepartments(array_column($departments, 'code'));
+    }
+
+    /**
+     * Drop leftover scaffold rows that only repeat their own `code` and carry no
+     * content at all. Such a row shows up on the public "Kompetensi Keahlian"
+     * page as a card with empty competencies, facilities, and subjects.
+     *
+     * The guard is deliberately strict so a real department is never removed.
+     *
+     * @param  list<string>  $realCodes
+     */
+    private function removePlaceholderDepartments(array $realCodes): void
+    {
+        Department::query()
+            ->whereNotIn('code', $realCodes)
+            ->whereColumn('name', 'code')
+            ->doesntHave('subjects')
+            ->doesntHave('competencies')
+            ->doesntHave('facilities')
+            ->doesntHave('studentProducts')
+            ->doesntHave('classes')
+            ->get()
+            ->each(fn (Department $department) => $department->delete());
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function departments(): array
+    {
+        return [
             [
                 'code' => 'RPL',
                 'name' => 'Rekayasa Perangkat Lunak',
@@ -53,6 +90,7 @@ class DepartmentSeeder extends Seeder
             [
                 'code' => 'TPK',
                 'name' => 'Tekstil dan Percetakan',
+                'short_name' => 'TPK',
                 'description' => 'Fokus pada tenun, rajut, warna, jahit, dan percetakan kain.',
                 'vision' => 'Menjadi contoh produksi kain yang berkelanjutan.',
                 'mission' => 'Melatih keterampilan tenun, pewarnaan, dan jahit mesin.',
@@ -60,9 +98,5 @@ class DepartmentSeeder extends Seeder
                 'is_active' => true,
             ],
         ];
-
-        foreach ($depts as $dept) {
-            Department::updateOrCreate(['code' => $dept['code']], $dept);
-        }
     }
 }

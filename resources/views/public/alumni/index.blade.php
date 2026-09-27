@@ -10,7 +10,7 @@
         description="Kisah alumni yang melanjutkan pendidikan maupun berkarya di dunia kerja."
         :breadcrumb="['Beranda' => route('public.home'), 'Alumni' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
             @if ($alumni->isEmpty())
                 <div class="bg-white border border-bluelight rounded-3xl shadow-xs">
@@ -20,7 +20,7 @@
                         description="Cerita alumni akan tampil di sini setelah admin sekolah melengkapinya." />
                 </div>
             @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
                     @foreach ($alumni as $alumnus)
                         @php
                             $name = $alumnus->student?->full_name ?? 'Alumni';
@@ -31,7 +31,7 @@
                                 ->implode('');
                         @endphp
 
-                        <article class="flex flex-col bg-white rounded-3xl border border-bluelight shadow-card p-6 h-full card-hover">
+                        <article class="stagger-item flex flex-col bg-white rounded-3xl border border-bluelight shadow-card p-6 h-full card-hover">
                             <div class="flex items-center gap-4">
                                 <span class="w-14 h-14 rounded-2xl bg-bluelight grid place-items-center font-heading font-bold text-lg text-blueprim shrink-0">
                                     {{ $initials }}
@@ -80,4 +80,12 @@
             @endif
         </div>
     </section>
+
+    <x-public.cta-band
+        title="Jadilah bagian dari alumni berikutnya"
+        description="Pendaftaran masih dibuka. Kenali program keahlian yang paling sesuai dengan minat dan bakatmu."
+        action-label="Daftar PPDB"
+        :action-url="route('public.ppdb.index')"
+        secondary-label="Tanyakan ke BKK"
+        :secondary-url="route('public.career.index')" />
 @endsection

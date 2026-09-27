@@ -7,7 +7,7 @@
 <section class="relative overflow-hidden border-b border-bluelight bg-gradient-to-b from-bluelight/70 to-[#F7FBFF]">
     <div class="absolute -top-24 -right-20 w-80 h-80 rounded-full bg-bluesoft/25 blur-3xl"></div>
 
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-8 pb-7 sm:pt-10 sm:pb-8 md:pt-12 md:pb-10">
         @if (filled($eyebrow))
             <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-blueprim font-semibold reveal">
                 {{ $eyebrow }}

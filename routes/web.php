@@ -46,6 +46,7 @@ Route::name('public.')->group(function () {
     Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
     Route::get('/produk-siswa', [StudentProductController::class, 'index'])->name('products.index');
+    Route::get('/produk-siswa/{studentProduct:slug}', [StudentProductController::class, 'show'])->name('products.show');
 
     // The original public URL was misspelled `/karir`; keep it working.
     Route::redirect('/karir', '/karier')->name('career.legacy');

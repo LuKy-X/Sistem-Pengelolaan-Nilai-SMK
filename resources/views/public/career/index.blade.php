@@ -10,7 +10,7 @@
         description="Layanan pendampingan karier dan lowongan magang dari mitra industri."
         :breadcrumb="['Beranda' => route('public.home'), 'BKK &amp; Karier' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
             <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
 
@@ -176,4 +176,18 @@
             </div>
         </div>
     </section>
+
+    @php
+        $partnerEmail = filled($schoolProfile?->email) ? $schoolProfile->email : null;
+    @endphp
+
+    <x-public.cta-band
+        title="Perusahaan ingin bermitra dengan BKK kami?"
+        description="BKK kami membuka kanal lowongan magang maupun karier untuk siswa dengan proses yang terstruktur dan aman."
+        :action-label="$partnerEmail ? 'Kirim Lowongan' : 'Lihat Kontak Sekolah'"
+        :action-url="$partnerEmail
+            ? 'mailto:'.$partnerEmail.'?subject=Lowongan%20Kerja%20untuk%20Siswa'
+            : route('public.profile')"
+        secondary-label="Lihat produk siswa"
+        :secondary-url="route('public.products.index')" />
 @endsection

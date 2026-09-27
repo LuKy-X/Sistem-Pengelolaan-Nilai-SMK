@@ -10,7 +10,7 @@
         description="Capaian siswa di berbagai kompetisi tingkat sekolah, kabupaten, hingga nasional."
         :breadcrumb="['Beranda' => route('public.home'), 'Prestasi' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
             @if ($categories->isNotEmpty())
@@ -47,9 +47,9 @@
                             : 'Data prestasi siswa belum dipublikasikan.'" />
                 </div>
             @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
                     @foreach ($achievements as $achievement)
-                        <article class="link-card relative flex flex-col bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden h-full card-hover">
+                        <article class="stagger-item link-card relative flex flex-col bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden h-full card-hover">
                             <div class="h-40 shrink-0">
                                 <x-public.media :model="$achievement" :alt="$achievement->title" icon="award" />
                             </div>
@@ -96,4 +96,12 @@
             @endif
         </div>
     </section>
+
+    <x-public.cta-band
+        title="Ingin ikut berprestasi seperti mereka?"
+        description="Program pendampingan tiap bidang membantu siswa menemukan potensi dan prepping kompetisi."
+        action-label="Lihat Program Jurusan"
+        :action-url="route('public.departments.index')"
+        secondary-label="Pelajari soal PPDB"
+        :secondary-url="route('public.ppdb.index')" />
 @endsection

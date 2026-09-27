@@ -580,41 +580,41 @@ body {
     /* 2-column layout: gambar cukup besar */
     .jurusan-item {
         max-width: none;
-        padding-top: 200px;
+        padding-top: 127px;
     }
 
     .jurusan-card {
-        padding: 90px 22px 24px;
+        padding: 66px 22px 24px;
     }
 
     .jurusan-card__link {
-        top: -200px;
+        top: -127px;
     }
 
     .jurusan-card__art-wrap {
-        width: 260px;
-        height: 220px;
+        width: 200px;
+        height: 175px;
     }
 }
 
 @media (min-width: 1024px) {
     /* 4-column layout: ukuran identik template JHIC */
     .jurusan-item {
-        padding-top: 230px;
+        padding-top: 191px;
     }
 
     .jurusan-card {
-        padding: 105px 24px 26px;
+        padding: 97px 24px 26px;
     }
 
     .jurusan-card__link {
-        top: -230px;
+        top: -191px;
     }
 
     .jurusan-card__art-wrap {
         width: 310px;
         height: 270px;
-        top: 16px;
+        top: 20px;
     }
 }
 

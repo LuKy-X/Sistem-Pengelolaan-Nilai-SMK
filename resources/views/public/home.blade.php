@@ -45,22 +45,6 @@
                         </a>
                         <span class="font-heading text-sm text-bluedark/70">Lihat Jurusan</span>
                     </div>
-
-                    {{-- Stats from backend --}}
-                    @if ($statistics->isNotEmpty())
-                        <dl class="grid grid-cols-2 gap-4 sm:gap-6 mt-10 pt-8 border-t border-bluesoft/50">
-                            @foreach ($statistics->take(4) as $stat)
-                                <div>
-                                    <dt class="font-heading font-extrabold text-2xl sm:text-3xl text-blueprim leading-none counter"
-                                        data-target="{{ preg_replace('/[^0-9.]/', '', $stat->value) }}"
-                                        data-suffix="{{ preg_replace('/[0-9.]/', '', $stat->value) }}">
-                                        {{ $stat->value }}
-                                    </dt>
-                                    <dd class="text-xs text-bluedark/55 mt-1.5">{{ $stat->label }}</dd>
-                                </div>
-                            @endforeach
-                        </dl>
-                    @endif
                 </div>
 
                 {{-- Right: hero art + floating chips --}}
@@ -102,6 +86,26 @@
         </div>
     </div>
 </section>
+
+{{-- ======================================================
+     RINGKASAN ANGKA (dari CMS: site_statistics, section = HERO)
+     ====================================================== --}}
+@if ($statistics->isNotEmpty())
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-12">
+        <dl class="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-6 reveal">
+            @foreach ($statistics->take(4) as $stat)
+                <div class="border-l-2 border-bluelight pl-4">
+                    <dt class="font-heading font-bold text-xl sm:text-2xl text-bluedark leading-none counter"
+                        data-target="{{ preg_replace('/[^0-9.]/', '', $stat->value) }}"
+                        data-suffix="{{ preg_replace('/[0-9.]/', '', $stat->value) }}">
+                        {{ $stat->value }}
+                    </dt>
+                    <dd class="text-[11px] sm:text-xs text-bluedark/50 mt-1.5">{{ $stat->label }}</dd>
+                </div>
+            @endforeach
+        </dl>
+    </section>
+@endif
 
 
 {{-- ======================================================
@@ -465,7 +469,7 @@
         <div class="mt-8 sm:mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-group">
             @foreach ($products as $product)
                 <article class="link-card group relative bg-white rounded-3xl overflow-hidden border border-bluelight stagger-item">
-                    <a href="{{ route('public.products.index') }}"
+                    <a href="{{ route('public.products.show', $product) }}"
                         class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
                         aria-label="Detail Produk {{ $product->name }}"></a>
                     <div class="h-40 overflow-hidden">
@@ -701,15 +705,29 @@
             <div class="bg-white rounded-3xl border border-bluelight shadow-card p-6 sm:p-8 reveal">
                 <h3 class="font-heading font-semibold text-lg text-bluedark mb-5">Syarat Pendaftaran</h3>
 
-                @if ($admissionPeriod && $admissionPeriod->requirements->isNotEmpty())
+                @php
+                    $requirements = $admissionPeriod?->requirements ?? collect();
+                @endphp
+
+                @if ($requirements->isNotEmpty())
                     <ul class="space-y-3.5 text-sm text-bluedark/70">
-                        @foreach ($admissionPeriod->requirements->take(5) as $req)
+                        @foreach ($requirements as $requirement)
                             <li class="flex gap-3">
                                 <svg class="shrink-0 mt-0.5" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2196F3" stroke-width="2.4" aria-hidden="true"><path d="M20 6L9 17l-5-5"/></svg>
-                                {{ $req->description }}
+                                <span>
+                                    {{ $requirement->title }}
+                                    @if (filled($requirement->description))
+                                        <span class="block text-xs text-bluedark/50 mt-0.5">{{ $requirement->description }}</span>
+                                    @endif
+                                </span>
                             </li>
                         @endforeach
                     </ul>
+                    <a href="{{ route('public.ppdb.index') }}#syarat"
+                        class="mt-6 inline-flex items-center gap-1.5 text-sm font-heading font-medium text-blueprim hover:text-bluedark transition-colors">
+                        Lihat detail pendaftaran
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
                 @else
                     <ul class="space-y-3.5 text-sm text-bluedark/70">
                         @foreach ([

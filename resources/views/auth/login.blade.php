@@ -16,7 +16,7 @@
                 class="absolute rounded-full bg-white/[0.08] blur-sm w-[180px] h-[180px] -bottom-[60px] -left-[60px] lg:w-[280px] lg:h-[280px] lg:-bottom-24 lg:-left-24 pointer-events-none"></span>
 
             <a href="{{ route('public.home') }}" class="relative z-10 flex items-center gap-2.5 group">
-                <img src="{{ asset('assets/img/logo.svg') }}" alt="Logo {{ $schoolName }}"
+                <img src="{{ asset('assets/img/logo.png') }}" alt="Logo {{ $schoolName }}"
                     class="w-[34px] h-[34px] lg:w-10 lg:h-10 object-contain shrink-0">
                 <span class="font-heading text-[0.92rem] lg:text-base font-bold text-white leading-tight">
                     {{ $schoolName }}
@@ -177,28 +177,6 @@
                         <span>Masuk</span>
                     </button>
                 </form>
-
-                @if (app()->environment('local'))
-                    <div class="mt-8 pt-6 border-t border-slate-100" data-demo-credentials>
-                        <p class="text-xs font-semibold text-slate-500 mb-2.5 flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blueprim" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Akun pengujian demo (klik untuk isi otomatis):
-                        </p>
-                        <div class="grid grid-cols-2 gap-2">
-                            @foreach (['Guru' => 'guru.agus', 'Admin' => 'admin'] as $role => $username)
-                                <button type="button" data-demo-login="{{ $username }}" data-demo-password="password123"
-                                    class="text-left p-2.5 rounded-xl border border-bluelight bg-bluelight/30 hover:bg-bluelight transition-colors">
-                                    <span class="block text-xs font-bold text-bluedark">{{ $role }}</span>
-                                    <span class="block text-[11px] text-slate-500 font-mono">{{ $username }}</span>
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
 
                 <p class="text-center mt-6 text-[0.83rem] text-[#5C7899]">
                     Kembali ke <a href="{{ route('public.home') }}"

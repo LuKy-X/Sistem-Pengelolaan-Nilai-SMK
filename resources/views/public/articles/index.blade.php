@@ -10,7 +10,7 @@
         description="Kabar kegiatan sekolah, prestasi siswa, dan pengumuman resmi dari {{ $schoolName }}."
         :breadcrumb="['Beranda' => route('public.home'), 'Berita' => null]" />
 
-    <section class="py-14 sm:py-16 md:py-20">
+    <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
 
             @if ($categories->isNotEmpty())
@@ -47,9 +47,9 @@
                             : 'Belum ada berita yang dipublikasikan. Silakan kembali lagi nanti.'" />
                 </div>
             @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
                     @foreach ($articles as $article)
-                        <x-public.article-card :article="$article" />
+                        <x-public.article-card :article="$article" class="stagger-item" />
                     @endforeach
                 </div>
 
@@ -59,4 +59,12 @@
             @endif
         </div>
     </section>
+
+    <x-public.cta-band
+        title="Ingin tahu lebih lanjut tentang sekolah kami?"
+        description="Ikuti kabar terbaru, jadwal PPDB, dan kegiatan siswa langsung dari sekolah."
+        action-label="Lihat Program PPDB"
+        :action-url="route('public.ppdb.index')"
+        secondary-label="Kunjungi halaman profil"
+        :secondary-url="route('public.profile')" />
 @endsection

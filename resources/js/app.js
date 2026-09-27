@@ -341,8 +341,15 @@ function initAnimations() {
         document.documentElement.classList.add('gsap-ready');
         gsap.registerPlugin(ScrollTrigger);
 
+        // `.gsap-ready .reveal, .gsap-ready .stagger-item` starts at opacity 0 in CSS,
+        // so every one of those elements must be handed to a tween or it stays hidden.
+        // Track what GSAP covers so orphans (e.g. a `.stagger-item` outside any
+        // `.stagger-group`) can still be faded in below.
+        var animated = [];
+
         // Reveal elements
         gsap.utils.toArray('.reveal').forEach(function (el) {
+            animated.push(el);
             gsap.fromTo(el,
                 { opacity: 0, y: 36 },
                 {
@@ -361,6 +368,7 @@ function initAnimations() {
         // Stagger groups
         document.querySelectorAll('.stagger-group').forEach(function (group) {
             var items = group.querySelectorAll(':scope > .stagger-item, :scope > *');
+            animated = animated.concat(Array.prototype.slice.call(items));
             gsap.fromTo(items,
                 { opacity: 0, y: 40 },
                 {
@@ -371,6 +379,28 @@ function initAnimations() {
                     scrollTrigger: {
                         trigger: group,
                         start: 'top 85%',
+                        toggleActions: 'play none none reverse',
+                    },
+                }
+            );
+        });
+
+        // Safety net: reveal items no group picked up, so they can never stay invisible.
+        var orphans = [];
+        document.querySelectorAll('.reveal, .stagger-item').forEach(function (el) {
+            if (animated.indexOf(el) === -1) orphans.push(el);
+        });
+
+        orphans.forEach(function (el) {
+            gsap.fromTo(el,
+                { opacity: 0, y: 28 },
+                {
+                    opacity: 1, y: 0,
+                    duration: 0.9,
+                    ease: 'expo.out',
+                    scrollTrigger: {
+                        trigger: el,
+                        start: 'top 92%',
                         toggleActions: 'play none none reverse',
                     },
                 }
