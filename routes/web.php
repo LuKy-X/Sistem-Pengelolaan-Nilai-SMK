@@ -14,6 +14,7 @@ use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
 use App\Http\Controllers\Teacher\GradeNoteController;
+use App\Http\Controllers\Teacher\GradingController;
 use App\Http\Controllers\Teacher\JournalController;
 use App\Http\Controllers\Teacher\ProfileController;
 use App\Http\Controllers\Teacher\RubricController;
@@ -160,8 +161,14 @@ Route::middleware('auth')->group(function () {
         // Buku Nilai Digital
         Route::prefix('gradebooks')->name('gradebooks.')->group(function () {
             Route::get('/', [GradebookController::class, 'index'])->name('index');
+            Route::get('/create', [GradebookController::class, 'create'])->name('create');
+            Route::post('/', [GradebookController::class, 'store'])->name('store');
             Route::get('/{gradebook}', [GradebookController::class, 'show'])->name('show');
+            Route::get('/{gradebook}/edit', [GradebookController::class, 'edit'])->name('edit');
+            Route::put('/{gradebook}', [GradebookController::class, 'update'])->name('update');
+            Route::delete('/{gradebook}', [GradebookController::class, 'destroy'])->name('destroy');
             Route::post('/{gradebook}/columns', [GradebookController::class, 'storeColumn'])->name('columns.store');
+            Route::delete('/{gradebook}/columns/{column}', [GradebookController::class, 'destroyColumn'])->name('columns.destroy');
             Route::post('/{gradebook}/scores', [GradebookController::class, 'updateScores'])->name('scores.store');
             Route::get('/{gradebook}/export', [GradebookController::class, 'export'])->name('export');
         });
@@ -173,6 +180,12 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [AssessmentController::class, 'store'])->name('store');
             Route::get('/{assessment}', [AssessmentController::class, 'show'])->name('show');
             Route::post('/{assessment}/submissions/{submission}/grade', [AssessmentController::class, 'gradeSubmission'])->name('submissions.grade');
+        });
+
+        // Penilaian Siswa (Input Nilai Tugas/Ulangan/Remidi)
+        Route::prefix('penilaian')->name('grading.')->group(function () {
+            Route::get('/', [GradingController::class, 'index'])->name('index');
+            Route::post('/', [GradingController::class, 'store'])->name('store');
         });
 
         // Catatan Nilai Siswa

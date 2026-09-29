@@ -45,6 +45,11 @@ class SampleTeachingAssignmentSeeder extends Seeder
             return;
         }
 
+        // Pastikan guru hanya mengajar 1 mata pelajaran (Matematika)
+        TeachingAssignment::where('teacher_id', $teacherAgus->id)
+            ->where('subject_id', '!=', $mapelMtk->id)
+            ->delete();
+
         // 1. Assignment Guru Agus: Matematika XII RPL 1
         $assign1 = TeachingAssignment::firstOrCreate(
             [
@@ -67,22 +72,11 @@ class SampleTeachingAssignmentSeeder extends Seeder
             ['weekly_hours' => 4, 'is_active' => true]
         );
 
-        // 3. Assignment Guru Agus: Pemrograman Web XII RPL 1
+        // 3. Assignment Guru Agus: Matematika XI RPL 1
         $assign3 = TeachingAssignment::firstOrCreate(
             [
                 'teacher_id' => $teacherAgus->id,
-                'subject_id' => $mapelPwpb->id,
-                'class_id' => $classXiiRpl1->id,
-                'semester_id' => $semesterGanjil->id,
-            ],
-            ['weekly_hours' => 6, 'is_active' => true]
-        );
-
-        // 4. Assignment Guru Agus: Basis Data XI RPL 1
-        $assign4 = TeachingAssignment::firstOrCreate(
-            [
-                'teacher_id' => $teacherAgus->id,
-                'subject_id' => $mapelBd->id,
+                'subject_id' => $mapelMtk->id,
                 'class_id' => $classXiRpl1->id,
                 'semester_id' => $semesterGanjil->id,
             ],
@@ -255,5 +249,78 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 ]
             );
         }
+
+        // BUILD A REAL GRADEBOOK FOR GURU AGUS (Matematika XII RPL 2)
+        $gradebook2 = Gradebook::firstOrCreate(
+            ['teaching_assignment_id' => $assign2->id, 'name' => 'Buku Nilai Matematika XII RPL 2'],
+            ['description' => 'Buku nilai utama semester ganjil tahun ajaran 2026/2027', 'is_active' => true]
+        );
+        $enrollments2 = ClassEnrollment::where('class_id', $classXiiRpl2->id)->get();
+        foreach ($enrollments2 as $enrollment) {
+            GradebookStudent::firstOrCreate(
+                ['gradebook_id' => $gradebook2->id, 'student_id' => $enrollment->student_id],
+                ['class_enrollment_id' => $enrollment->id, 'status' => 'ACTIVE', 'joined_at' => now()]
+            );
+        }
+        $catUH2 = GradebookCategory::firstOrCreate(
+            ['gradebook_id' => $gradebook2->id, 'code' => 'UH'],
+            ['name' => 'Ulangan Harian', 'weight' => 50.00, 'sort_order' => 1, 'is_included_in_average' => true]
+        );
+        GradebookColumn::firstOrCreate(
+            ['gradebook_id' => $gradebook2->id, 'code' => 'UH1'],
+            [
+                'category_id' => $catUH2->id,
+                'name' => 'Ulangan Harian 1',
+                'column_type' => GradebookColumnType::Score,
+                'max_score' => 100.00,
+                'weight' => 25.00,
+                'sort_order' => 1,
+                'is_visible' => true,
+                'is_included_in_average' => true,
+            ]
+        );
+        GradebookColumn::firstOrCreate(
+            ['gradebook_id' => $gradebook2->id, 'code' => 'UH2'],
+            [
+                'category_id' => $catUH2->id,
+                'name' => 'Ulangan Harian 2',
+                'column_type' => GradebookColumnType::Score,
+                'max_score' => 100.00,
+                'weight' => 25.00,
+                'sort_order' => 2,
+                'is_visible' => true,
+                'is_included_in_average' => true,
+            ]
+        );
+
+        // BUILD A REAL GRADEBOOK FOR GURU AGUS (Matematika XI RPL 1)
+        $gradebook3 = Gradebook::firstOrCreate(
+            ['teaching_assignment_id' => $assign3->id, 'name' => 'Buku Nilai Matematika XI RPL 1'],
+            ['description' => 'Buku nilai utama semester ganjil tahun ajaran 2026/2027', 'is_active' => true]
+        );
+        $enrollments3 = ClassEnrollment::where('class_id', $classXiRpl1->id)->get();
+        foreach ($enrollments3 as $enrollment) {
+            GradebookStudent::firstOrCreate(
+                ['gradebook_id' => $gradebook3->id, 'student_id' => $enrollment->student_id],
+                ['class_enrollment_id' => $enrollment->id, 'status' => 'ACTIVE', 'joined_at' => now()]
+            );
+        }
+        $catUH3 = GradebookCategory::firstOrCreate(
+            ['gradebook_id' => $gradebook3->id, 'code' => 'UH'],
+            ['name' => 'Ulangan Harian', 'weight' => 50.00, 'sort_order' => 1, 'is_included_in_average' => true]
+        );
+        GradebookColumn::firstOrCreate(
+            ['gradebook_id' => $gradebook3->id, 'code' => 'UH1'],
+            [
+                'category_id' => $catUH3->id,
+                'name' => 'Ulangan Harian 1',
+                'column_type' => GradebookColumnType::Score,
+                'max_score' => 100.00,
+                'weight' => 25.00,
+                'sort_order' => 1,
+                'is_visible' => true,
+                'is_included_in_average' => true,
+            ]
+        );
     }
 }

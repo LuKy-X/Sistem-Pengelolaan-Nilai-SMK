@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('assessments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('gradebook_column_id')->constrained('gradebook_columns')->restrictOnDelete();
+            $table->foreignId('gradebook_column_id')->nullable()->constrained('gradebook_columns')->nullOnDelete();
             $table->foreignId('teaching_assignment_id')->constrained('teaching_assignments')->restrictOnDelete();
             $table->enum('type', ['TASK', 'QUIZ', 'PROJECT', 'EXAM', 'OTHER'])->default('TASK');
             $table->string('title', 200);
