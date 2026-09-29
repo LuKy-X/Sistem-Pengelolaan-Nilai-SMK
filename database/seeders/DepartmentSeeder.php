@@ -68,16 +68,6 @@ class DepartmentSeeder extends Seeder
                 'is_active' => true,
             ],
             [
-                'code' => 'DKV',
-                'name' => 'Desain Komunikasi Visual',
-                'short_name' => 'DKV',
-                'description' => 'Fokus pada desain grafis, animasi, UI/UX, fotografi, dan videografi digital.',
-                'vision' => 'Menghasilkan talenta industri kreatif visual yang inovatif.',
-                'mission' => 'Mengasah kepekaan estetika, ilustrasi digital, dan komunikasi brand.',
-                'career_prospects' => 'Graphic Designer, UI/UX Designer, Motion Graphic Designer, Content Creator.',
-                'is_active' => true,
-            ],
-            [
                 'code' => 'TPM',
                 'name' => 'Teknik Pemesinan',
                 'short_name' => 'TPM',
