@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{-- <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -169,4 +169,4 @@
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 @stack('scripts')
 </body>
-</html>
+</html> --}}
