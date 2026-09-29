@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Teacher;
 use App\Enums\GradebookCalculationType;
 use App\Enums\GradebookColumnType;
 use App\Http\Controllers\Controller;
+use App\Models\Assessment;
+use App\Models\ClassEnrollment;
 use App\Models\Gradebook;
 use App\Models\GradebookColumn;
 use App\Models\GradebookScore;
+use App\Models\GradebookStudent;
 use App\Models\TeachingAssignment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,15 +28,209 @@ class GradebookController extends Controller
 
         $assignments = TeachingAssignment::with([
             'schoolClass.gradeLevel',
+            'schoolClass.department',
             'subject',
             'semester.academicYear',
             'gradebooks.columns',
+            'gradebooks.students',
         ])
             ->where('teacher_id', $teacher->id)
             ->where('is_active', true)
             ->get();
 
-        return view('teacher.gradebooks.index', compact('assignments'));
+        $selectedAssignmentId = $request->query('assignment_id');
+
+        $gradebooksQuery = Gradebook::with([
+            'teachingAssignment.schoolClass.department',
+            'teachingAssignment.subject',
+            'teachingAssignment.semester.academicYear',
+            'columns' => fn ($q) => $q->orderBy('sort_order'),
+            'students',
+        ])
+            ->whereIn('teaching_assignment_id', $assignments->pluck('id'));
+
+        if ($selectedAssignmentId) {
+            $gradebooksQuery->where('teaching_assignment_id', $selectedAssignmentId);
+        }
+
+        $gradebooks = $gradebooksQuery->latest()->get();
+
+        return view('teacher.gradebooks.index', compact('assignments', 'gradebooks', 'selectedAssignmentId'));
+    }
+
+    public function create(Request $request): View
+    {
+        Gate::authorize('create', Gradebook::class);
+
+        $teacher = Auth::user()->teacherProfile;
+
+        $assignments = TeachingAssignment::with([
+            'schoolClass.department',
+            'subject',
+            'semester.academicYear',
+            'schoolClass.enrollments.student',
+        ])
+            ->where('teacher_id', $teacher->id)
+            ->where('is_active', true)
+            ->get();
+
+        $selectedAssignmentId = $request->query('assignment_id', $assignments->first()?->id);
+
+        return view('teacher.gradebooks.create', compact('assignments', 'selectedAssignmentId'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        Gate::authorize('create', Gradebook::class);
+
+        $teacher = Auth::user()->teacherProfile;
+
+        $validated = $request->validate([
+            'teaching_assignment_id' => ['required', 'exists:teaching_assignments,id'],
+            'name' => ['required', 'string', 'max:150'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'is_active' => ['nullable', 'boolean'],
+            'columns' => ['nullable', 'array'],
+            'columns.*.name' => ['required_with:columns', 'string', 'max:100'],
+            'columns.*.code' => ['required_with:columns', 'string', 'max:50'],
+            'columns.*.column_type' => ['required_with:columns', 'string', 'in:SCORE,SUMMARY'],
+            'columns.*.calculation_type' => ['nullable', 'string', 'in:AVERAGE,SUM,WEIGHTED_AVERAGE'],
+            'columns.*.max_score' => ['nullable', 'numeric', 'min:1', 'max:100'],
+            'columns.*.weight' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $assignment = TeachingAssignment::findOrFail($validated['teaching_assignment_id']);
+        if ($assignment->teacher_id !== $teacher->id && ! Auth::user()->isAdmin()) {
+            abort(403, 'Anda tidak berhak membuat buku nilai untuk kelas ini.');
+        }
+
+        $gradebook = DB::transaction(function () use ($validated, $assignment, $request) {
+            $gradebook = Gradebook::create([
+                'teaching_assignment_id' => $assignment->id,
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'is_active' => $request->boolean('is_active', true),
+            ]);
+
+            // Auto enroll active students in the class
+            $enrollments = ClassEnrollment::where('class_id', $assignment->class_id)
+                ->where('status', 'ACTIVE')
+                ->get();
+
+            foreach ($enrollments as $enrollment) {
+                GradebookStudent::firstOrCreate(
+                    [
+                        'gradebook_id' => $gradebook->id,
+                        'student_id' => $enrollment->student_id,
+                    ],
+                    [
+                        'class_enrollment_id' => $enrollment->id,
+                        'status' => 'ACTIVE',
+                        'joined_at' => now(),
+                    ]
+                );
+            }
+
+            // Save configured columns
+            if (! empty($validated['columns'])) {
+                foreach ($validated['columns'] as $index => $col) {
+                    $isSummary = ($col['column_type'] ?? 'SCORE') === 'SUMMARY';
+                    $colType = $isSummary ? GradebookColumnType::Summary : GradebookColumnType::Score;
+                    $calcType = null;
+                    if ($isSummary && ! empty($col['calculation_type'])) {
+                        $calcType = match (strtoupper($col['calculation_type'])) {
+                            'SUM' => GradebookCalculationType::Sum,
+                            'WEIGHTED_AVERAGE' => GradebookCalculationType::WeightedAverage,
+                            default => GradebookCalculationType::Average,
+                        };
+                    }
+
+                    GradebookColumn::create([
+                        'gradebook_id' => $gradebook->id,
+                        'name' => $col['name'],
+                        'code' => strtoupper($col['code']),
+                        'column_type' => $colType,
+                        'calculation_type' => $calcType,
+                        'max_score' => $col['max_score'] ?? 100.00,
+                        'weight' => $col['weight'] ?? 10.00,
+                        'sort_order' => $index + 1,
+                        'is_visible' => true,
+                        'is_included_in_average' => true,
+                    ]);
+                }
+            }
+
+            return $gradebook;
+        });
+
+        return redirect()->route('teacher.gradebooks.show', $gradebook)->with('success', 'Buku nilai berhasil dibuat dan siap digunakan.');
+    }
+
+    public function edit(Gradebook $gradebook): View
+    {
+        Gate::authorize('update', $gradebook);
+
+        $gradebook->load([
+            'teachingAssignment.schoolClass',
+            'teachingAssignment.subject',
+            'teachingAssignment.semester.academicYear',
+            'columns' => fn ($q) => $q->orderBy('sort_order'),
+        ]);
+
+        return view('teacher.gradebooks.edit', compact('gradebook'));
+    }
+
+    public function update(Request $request, Gradebook $gradebook): RedirectResponse
+    {
+        Gate::authorize('update', $gradebook);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:150'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $gradebook->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return redirect()->route('teacher.gradebooks.index')->with('success', 'Buku nilai berhasil diperbarui.');
+    }
+
+    public function destroy(Gradebook $gradebook): RedirectResponse
+    {
+        Gate::authorize('delete', $gradebook);
+
+        DB::transaction(function () use ($gradebook) {
+            $columnIds = $gradebook->columns()->pluck('id');
+            Assessment::whereIn('gradebook_column_id', $columnIds)->update(['gradebook_column_id' => null]);
+            GradebookScore::whereIn('gradebook_column_id', $columnIds)->delete();
+            $gradebook->columns()->delete();
+            $gradebook->students()->delete();
+            $gradebook->categories()->delete();
+            $gradebook->delete();
+        });
+
+        return redirect()->route('teacher.gradebooks.index')->with('success', 'Buku nilai berhasil dihapus.');
+    }
+
+    public function destroyColumn(Gradebook $gradebook, GradebookColumn $column): RedirectResponse
+    {
+        Gate::authorize('update', $gradebook);
+
+        if ($column->gradebook_id !== $gradebook->id) {
+            abort(403, 'Kolom bukan milik buku nilai ini.');
+        }
+
+        DB::transaction(function () use ($column) {
+            Assessment::where('gradebook_column_id', $column->id)->update(['gradebook_column_id' => null]);
+            GradebookScore::where('gradebook_column_id', $column->id)->delete();
+            $column->delete();
+        });
+
+        return redirect()->back()->with('success', 'Kolom nilai berhasil dihapus.');
     }
 
     public function show(Gradebook $gradebook): View
