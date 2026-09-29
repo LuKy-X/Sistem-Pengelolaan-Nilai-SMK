@@ -1,6 +1,15 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Public\AchievementController;
+use App\Http\Controllers\Public\AdmissionController;
+use App\Http\Controllers\Public\AlumniController;
+use App\Http\Controllers\Public\ArticleController;
+use App\Http\Controllers\Public\CareerController;
+use App\Http\Controllers\Public\DepartmentController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\SchoolProfileController;
+use App\Http\Controllers\Public\StudentProductController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -21,49 +30,29 @@ use Illuminate\Support\Facades\Route;
 // 1. PUBLIC & SCHOOL CMS ROUTES
 // ==========================================
 Route::name('public.')->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    })->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/profil', function () {
-        return 'Profil Sekolah';
-    })->name('profile');
+    Route::get('/profil', [SchoolProfileController::class, 'show'])->name('profile');
 
-    Route::get('/jurusan', function () {
-        return 'Kompetensi Keahlian';
-    })->name('departments.index');
+    Route::get('/jurusan', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/jurusan/{department:code}', [DepartmentController::class, 'show'])->name('departments.show');
 
-    Route::get('/jurusan/{department:code}', function () {
-        return 'Detail Jurusan';
-    })->name('departments.show');
+    Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/berita/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 
-    Route::get('/berita', function () {
-        return 'Berita & Artikel Sekolah';
-    })->name('articles.index');
+    Route::get('/prestasi', [AchievementController::class, 'index'])->name('achievements.index');
 
-    Route::get('/berita/{article:slug}', function () {
-        return 'Detail Artikel';
-    })->name('articles.show');
+    Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
 
-    Route::get('/prestasi', function () {
-        return 'Prestasi Sekolah & Siswa';
-    })->name('achievements.index');
+    Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
-    Route::get('/alumni', function () {
-        return 'Kisah Alumni & Lulusan';
-    })->name('alumni.index');
+    Route::get('/produk-siswa', [StudentProductController::class, 'index'])->name('products.index');
+    Route::get('/produk-siswa/{studentProduct:slug}', [StudentProductController::class, 'show'])->name('products.show');
 
-    Route::get('/ppdb', function () {
-        return 'Informasi PPDB';
-    })->name('ppdb.index');
+    // The original public URL was misspelled `/karir`; keep it working.
+    Route::redirect('/karir', '/karier')->name('career.legacy');
 
-    Route::get('/produk-siswa', function () {
-        return 'Katalog Produk Siswa';
-    })->name('products.index');
-
-    Route::get('/karir', function () {
-        return 'BKK & Lowongan PKL / Kerja';
-    })->name('career.index');
+    Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
 });
 
 // ==========================================

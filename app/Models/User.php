@@ -103,4 +103,18 @@ class User extends Authenticatable
     {
         return $this->hasRole('COUNSELOR');
     }
+
+    /**
+     * Named route the user should land on after signing in.
+     */
+    public function dashboardRouteName(): string
+    {
+        return match (true) {
+            $this->isAdmin() => 'admin.dashboard',
+            $this->isTeacher() => 'teacher.dashboard',
+            $this->isCounselor() => 'counselor.dashboard',
+            $this->isStudent() => 'student.dashboard',
+            default => 'public.home',
+        };
+    }
 }
