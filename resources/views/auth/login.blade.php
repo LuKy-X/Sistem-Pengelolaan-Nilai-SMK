@@ -26,11 +26,18 @@
 </head>
 <body class="font-body text-ink antialiased">
 
-<div class="page-transition-overlay" id="pageTransitionOverlay" aria-hidden="true">
+<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
   <div class="page-transition-diagonal">
     <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
   </div>
 </div>
+<script>
+  try {
+    if (sessionStorage.getItem('playPageTransition') === '1') {
+      document.getElementById('pageTransitionOverlay')?.classList.remove('is-hidden');
+    }
+  } catch (e) {}
+</script>
 
 <div class="min-h-screen flex flex-col lg:flex-row">
 
