@@ -60,6 +60,91 @@ class TeacherPortalTest extends TestCase
         $response->assertSee($this->assignment->schoolClass->name);
     }
 
+    public function test_teacher_can_view_gradebooks_create_page(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.gradebooks.create'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Buat Buku Nilai Baru');
+        $response->assertSee('Struktur Kolom Penilaian');
+    }
+
+    public function test_teacher_can_create_gradebook_with_dynamic_columns(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.gradebooks.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'name' => 'Buku Nilai Pemrograman Web Gasal',
+            'description' => 'Lembar nilai praktik dan teori',
+            'is_active' => 1,
+            'columns' => [
+                [
+                    'name' => 'Ulangan Harian 1',
+                    'code' => 'UH1',
+                    'column_type' => 'SCORE',
+                    'max_score' => 100,
+                    'weight' => 20,
+                ],
+                [
+                    'name' => 'Tugas 1',
+                    'code' => 'T1',
+                    'column_type' => 'SCORE',
+                    'max_score' => 100,
+                    'weight' => 15,
+                ],
+                [
+                    'name' => 'Rata-rata Nilai',
+                    'code' => 'RATA',
+                    'column_type' => 'SUMMARY',
+                    'calculation_type' => 'AVERAGE',
+                    'max_score' => 100,
+                    'weight' => 0,
+                ],
+            ],
+        ]);
+
+        $newGradebook = Gradebook::where('name', 'Buku Nilai Pemrograman Web Gasal')->firstOrFail();
+        $response->assertRedirect(route('teacher.gradebooks.show', $newGradebook));
+        $this->assertDatabaseHas('gradebooks', [
+            'id' => $newGradebook->id,
+            'teaching_assignment_id' => $this->assignment->id,
+        ]);
+        $this->assertDatabaseHas('gradebook_columns', [
+            'gradebook_id' => $newGradebook->id,
+            'code' => 'UH1',
+        ]);
+        $this->assertDatabaseHas('gradebook_columns', [
+            'gradebook_id' => $newGradebook->id,
+            'code' => 'RATA',
+            'column_type' => 'SUMMARY',
+        ]);
+    }
+
+    public function test_teacher_can_update_and_delete_gradebook(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->put(route('teacher.gradebooks.update', $this->gradebook), [
+            'name' => 'Buku Nilai Revisi Gasal',
+            'description' => 'Deskripsi diperbarui',
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect(route('teacher.gradebooks.index'));
+        $this->assertDatabaseHas('gradebooks', [
+            'id' => $this->gradebook->id,
+            'name' => 'Buku Nilai Revisi Gasal',
+        ]);
+
+        // Delete column test
+        $column = $this->gradebook->columns()->firstOrFail();
+        $colDelRes = $this->actingAs($this->teacherUser)->delete(route('teacher.gradebooks.columns.destroy', [$this->gradebook, $column]));
+        $colDelRes->assertRedirect();
+        $this->assertDatabaseMissing('gradebook_columns', ['id' => $column->id]);
+
+        // Delete gradebook test
+        $delResponse = $this->actingAs($this->teacherUser)->delete(route('teacher.gradebooks.destroy', $this->gradebook));
+        $delResponse->assertRedirect(route('teacher.gradebooks.index'));
+        $this->assertDatabaseMissing('gradebooks', ['id' => $this->gradebook->id]);
+    }
+
     public function test_teacher_can_view_gradebook_spreadsheet(): void
     {
         $response = $this->actingAs($this->teacherUser)->get(route('teacher.gradebooks.show', $this->gradebook));

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
@@ -63,6 +64,16 @@ class GradebookColumn extends Model
     public function summarySources(): HasMany
     {
         return $this->hasMany(GradebookColumnSource::class, 'summary_column_id');
+    }
+
+    public function sourceColumns(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            GradebookColumn::class,
+            'gradebook_column_sources',
+            'summary_column_id',
+            'source_column_id'
+        )->withPivot('weight')->withTimestamps();
     }
 
     public function usedInSummaries(): HasMany

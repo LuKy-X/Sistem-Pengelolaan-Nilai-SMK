@@ -25,7 +25,15 @@ class AssessmentController extends Controller
     {
         $teacher = Auth::user()->teacherProfile;
 
-        $assignments = TeachingAssignment::with(['schoolClass', 'subject'])
+        $assignments = TeachingAssignment::with([
+            'schoolClass.department',
+            'schoolClass.enrollments.student.user',
+            'subject',
+            'semester.academicYear',
+            'schedules',
+            'gradebooks.columns' => fn ($q) => $q->orderBy('sort_order'),
+            'gradebooks.students.student.user',
+        ])
             ->where('teacher_id', $teacher->id)
             ->where('is_active', true)
             ->get();
@@ -45,11 +53,13 @@ class AssessmentController extends Controller
         }
 
         $assessments = $assessmentsQuery->latest()->get();
+        $rubrics = Rubric::where('created_by', $teacher->id)->latest()->get();
 
         return view('teacher.assessments.index', compact(
             'assignments',
             'assessments',
-            'selectedAssignmentId'
+            'selectedAssignmentId',
+            'rubrics'
         ));
     }
 

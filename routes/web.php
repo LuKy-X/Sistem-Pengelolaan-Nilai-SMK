@@ -16,10 +16,20 @@ use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\TeachingAssignmentController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Public\AchievementController;
+use App\Http\Controllers\Public\AdmissionController;
+use App\Http\Controllers\Public\AlumniController;
+use App\Http\Controllers\Public\ArticleController;
+use App\Http\Controllers\Public\CareerController;
+use App\Http\Controllers\Public\DepartmentController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\SchoolProfileController;
+use App\Http\Controllers\Public\StudentProductController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
 use App\Http\Controllers\Teacher\GradeNoteController;
+use App\Http\Controllers\Teacher\GradingController;
 use App\Http\Controllers\Teacher\JournalController;
 use App\Http\Controllers\Teacher\ProfileController;
 use App\Http\Controllers\Teacher\RubricController;
@@ -35,49 +45,29 @@ use Illuminate\Support\Facades\Route;
 // 1. PUBLIC & SCHOOL CMS ROUTES
 // ==========================================
 Route::name('public.')->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    })->name('home');
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/profil', function () {
-        return 'Profil Sekolah';
-    })->name('profile');
+    Route::get('/profil', [SchoolProfileController::class, 'show'])->name('profile');
 
-    Route::get('/jurusan', function () {
-        return 'Kompetensi Keahlian';
-    })->name('departments.index');
+    Route::get('/jurusan', [DepartmentController::class, 'index'])->name('departments.index');
+    Route::get('/jurusan/{department:code}', [DepartmentController::class, 'show'])->name('departments.show');
 
-    Route::get('/jurusan/{department:code}', function () {
-        return 'Detail Jurusan';
-    })->name('departments.show');
+    Route::get('/berita', [ArticleController::class, 'index'])->name('articles.index');
+    Route::get('/berita/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 
-    Route::get('/berita', function () {
-        return 'Berita & Artikel Sekolah';
-    })->name('articles.index');
+    Route::get('/prestasi', [AchievementController::class, 'index'])->name('achievements.index');
 
-    Route::get('/berita/{article:slug}', function () {
-        return 'Detail Artikel';
-    })->name('articles.show');
+    Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
 
-    Route::get('/prestasi', function () {
-        return 'Prestasi Sekolah & Siswa';
-    })->name('achievements.index');
+    Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
-    Route::get('/alumni', function () {
-        return 'Kisah Alumni & Lulusan';
-    })->name('alumni.index');
+    Route::get('/produk-siswa', [StudentProductController::class, 'index'])->name('products.index');
+    Route::get('/produk-siswa/{studentProduct:slug}', [StudentProductController::class, 'show'])->name('products.show');
 
-    Route::get('/ppdb', function () {
-        return 'Informasi PPDB';
-    })->name('ppdb.index');
+    // The original public URL was misspelled `/karir`; keep it working.
+    Route::redirect('/karir', '/karier')->name('career.legacy');
 
-    Route::get('/produk-siswa', function () {
-        return 'Katalog Produk Siswa';
-    })->name('products.index');
-
-    Route::get('/karir', function () {
-        return 'BKK & Lowongan PKL / Kerja';
-    })->name('career.index');
+    Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
 });
 
 // ==========================================
@@ -208,8 +198,14 @@ Route::middleware('auth')->group(function () {
         // Buku Nilai Digital
         Route::prefix('gradebooks')->name('gradebooks.')->group(function () {
             Route::get('/', [GradebookController::class, 'index'])->name('index');
+            Route::get('/create', [GradebookController::class, 'create'])->name('create');
+            Route::post('/', [GradebookController::class, 'store'])->name('store');
             Route::get('/{gradebook}', [GradebookController::class, 'show'])->name('show');
+            Route::get('/{gradebook}/edit', [GradebookController::class, 'edit'])->name('edit');
+            Route::put('/{gradebook}', [GradebookController::class, 'update'])->name('update');
+            Route::delete('/{gradebook}', [GradebookController::class, 'destroy'])->name('destroy');
             Route::post('/{gradebook}/columns', [GradebookController::class, 'storeColumn'])->name('columns.store');
+            Route::delete('/{gradebook}/columns/{column}', [GradebookController::class, 'destroyColumn'])->name('columns.destroy');
             Route::post('/{gradebook}/scores', [GradebookController::class, 'updateScores'])->name('scores.store');
             Route::get('/{gradebook}/export', [GradebookController::class, 'export'])->name('export');
         });
@@ -221,6 +217,12 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [AssessmentController::class, 'store'])->name('store');
             Route::get('/{assessment}', [AssessmentController::class, 'show'])->name('show');
             Route::post('/{assessment}/submissions/{submission}/grade', [AssessmentController::class, 'gradeSubmission'])->name('submissions.grade');
+        });
+
+        // Penilaian Siswa (Input Nilai Tugas/Ulangan/Remidi)
+        Route::prefix('penilaian')->name('grading.')->group(function () {
+            Route::get('/', [GradingController::class, 'index'])->name('index');
+            Route::post('/', [GradingController::class, 'store'])->name('store');
         });
 
         // Catatan Nilai Siswa
