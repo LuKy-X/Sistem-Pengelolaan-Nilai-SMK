@@ -39,12 +39,10 @@
   } catch (e) {}
 </script>
 
-        {{-- Left brand panel --}}
-        <div
-            class="relative isolate overflow-hidden flex flex-col p-7 pb-12 lg:w-1/2 lg:min-h-screen lg:p-12 bg-gradient-to-br from-bluedark to-blueprim text-white">
-            <div class="login-dot-grid"></div>
+<div class="min-h-screen flex flex-col lg:flex-row bg-[#FAFDFF]">
 
-  <div class="relative isolate overflow-hidden flex flex-col p-7 pb-12 lg:w-1/2 lg:min-h-screen lg:p-12 bg-gradient-to-br from-bluedark to-blueprim">
+  {{-- Left brand panel --}}
+  <div class="relative isolate overflow-hidden flex flex-col p-7 pb-12 lg:w-1/2 lg:min-h-screen lg:p-12 bg-gradient-to-br from-bluedark to-blueprim text-white">
     <div class="login-dot-grid"></div>
     <span class="absolute rounded-full bg-white/10 blur-[2px] w-[280px] h-[280px] -top-[120px] -right-[90px] lg:w-[420px] lg:h-[420px] lg:-top-40 lg:-right-[140px]"></span>
     <span class="absolute rounded-full bg-white/[0.08] blur-[2px] w-[180px] h-[180px] -bottom-[60px] -left-[60px] lg:w-[280px] lg:h-[280px] lg:-bottom-24 lg:-left-24"></span>
