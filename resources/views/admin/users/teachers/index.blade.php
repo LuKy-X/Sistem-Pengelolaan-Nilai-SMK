@@ -57,7 +57,9 @@
                                     <div class="w-7 h-7 rounded-full bg-blueprim/10 text-blueprim font-bold text-xs flex items-center justify-center shrink-0">
                                         {{ strtoupper(substr($t->full_name, 0, 1)) }}
                                     </div>
-                                    <span>{{ $t->full_name }}</span>
+                                    <a href="{{ route('admin.users.teachers.show', $t) }}" class="hover:underline hover:text-blueprim">
+                                        {{ $t->full_name }}
+                                    </a>
                                 </div>
                             </td>
                             <td class="text-xs text-bluedark/70">{{ $t->user?->email ?? '-' }}</td>
@@ -78,6 +80,9 @@
                             </td>
                             <td>
                                 <div class="flex items-center justify-center gap-1.5">
+                                    <a href="{{ route('admin.users.teachers.show', $t) }}" class="btn btn-outline btn-sm text-xs py-1 px-2.5">
+                                        Detail
+                                    </a>
                                     <button type="button" onclick="editTeacher({{ json_encode($t) }})" class="btn btn-outline btn-sm text-xs py-1 px-2.5">
                                         Edit
                                     </button>

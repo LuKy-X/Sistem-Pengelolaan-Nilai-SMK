@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\ClassController;
 use App\Http\Controllers\Admin\CmsController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
 use App\Http\Controllers\Admin\GradesController;
 use App\Http\Controllers\Admin\GuidanceController;
 use App\Http\Controllers\Admin\ScheduleController;
@@ -103,13 +103,13 @@ Route::middleware('auth')->group(function () {
             Route::post('/semesters/{semester}/toggle-active', [SemesterController::class, 'toggleActive'])->name('semesters.toggle-active');
 
             // Jurusan & Kompetensi
-            Route::get('/departments', [DepartmentController::class, 'index'])->name('departments.index');
-            Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
-            Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
-            Route::put('/departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
-            Route::delete('/departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
-            Route::post('/departments/{department}/competencies', [DepartmentController::class, 'storeCompetency'])->name('departments.competencies.store');
-            Route::delete('/departments/competencies/{competency}', [DepartmentController::class, 'destroyCompetency'])->name('departments.competencies.destroy');
+            Route::get('/departments', [AdminDepartmentController::class, 'index'])->name('departments.index');
+            Route::post('/departments', [AdminDepartmentController::class, 'store'])->name('departments.store');
+            Route::get('/departments/{department}', [AdminDepartmentController::class, 'show'])->name('departments.show');
+            Route::put('/departments/{department}', [AdminDepartmentController::class, 'update'])->name('departments.update');
+            Route::delete('/departments/{department}', [AdminDepartmentController::class, 'destroy'])->name('departments.destroy');
+            Route::post('/departments/{department}/competencies', [AdminDepartmentController::class, 'storeCompetency'])->name('departments.competencies.store');
+            Route::delete('/departments/competencies/{competency}', [AdminDepartmentController::class, 'destroyCompetency'])->name('departments.competencies.destroy');
 
             // Kelas / Rombel
             Route::get('/classes', [ClassController::class, 'index'])->name('classes.index');
@@ -160,6 +160,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/teachers/{teacher}', [TeachersController::class, 'show'])->name('teachers.show');
             Route::put('/teachers/{teacher}', [TeachersController::class, 'update'])->name('teachers.update');
             Route::delete('/teachers/{teacher}', [TeachersController::class, 'destroy'])->name('teachers.destroy');
+
+            // Siswa & Staff (Rute kompatibilitas skeleton)
+            Route::get('/students', fn () => redirect()->route('admin.academic.students.index'))->name('students.index');
+            Route::get('/staff', [UsersController::class, 'index'])->name('staff.index');
         });
 
         // Absensi Siswa
@@ -175,16 +179,36 @@ Route::middleware('auth')->group(function () {
 
         // CMS Management
         Route::prefix('cms')->name('cms.')->group(function () {
+            // Profil Sekolah
             Route::get('/profile', [CmsController::class, 'profile'])->name('profile');
+            Route::get('/school-profile', [CmsController::class, 'profile'])->name('school-profile.edit');
             Route::post('/profile', [CmsController::class, 'updateProfile'])->name('profile.update');
+
+            // Berita & Artikel
             Route::get('/articles', [CmsController::class, 'articles'])->name('articles');
+            Route::get('/articles/index', [CmsController::class, 'articles'])->name('articles.index');
+
+            // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
+            Route::get('/ppdb/index', [CmsController::class, 'ppdb'])->name('ppdb.index');
             Route::post('/ppdb/periods', [CmsController::class, 'storeAdmissionPeriod'])->name('ppdb.periods.store');
+
+            // Prestasi
             Route::get('/achievements', [CmsController::class, 'achievements'])->name('achievements');
+            Route::get('/achievements/index', [CmsController::class, 'achievements'])->name('achievements.index');
             Route::post('/achievements', [CmsController::class, 'storeAchievement'])->name('achievements.store');
+
+            // Alumni
+            Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
+
+            // Produk Siswa
             Route::get('/products', [CmsController::class, 'products'])->name('products');
+            Route::get('/products/index', [CmsController::class, 'products'])->name('products.index');
             Route::post('/products', [CmsController::class, 'storeProduct'])->name('products.store');
+
+            // BKK & Mitra Perusahaan / Karir
             Route::get('/career', [CmsController::class, 'career'])->name('career');
+            Route::get('/career/index', [CmsController::class, 'career'])->name('career.index');
             Route::post('/career', [CmsController::class, 'storeCareer'])->name('career.store');
         });
     });

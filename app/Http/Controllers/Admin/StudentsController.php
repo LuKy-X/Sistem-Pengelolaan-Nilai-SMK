@@ -65,7 +65,7 @@ class StudentsController extends Controller
                     'is_active' => true,
                 ]);
 
-                $studentRole = Role::where('code', 'student')->first();
+                $studentRole = Role::whereIn('code', ['STUDENT', 'student'])->first();
                 if ($studentRole) {
                     $user->roles()->attach($studentRole->id);
                 }

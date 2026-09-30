@@ -36,7 +36,7 @@
         <div class="panel p-5 lg:col-span-2 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h2 class="font-heading font-semibold text-bluedark text-[15px]">Daftar Siswa Terdaftar ({{ $class->classEnrollments->count() }})</h2>
+                    <h2 class="font-heading font-semibold text-bluedark text-[15px]">Daftar Siswa Terdaftar ({{ $class->enrollments->count() }})</h2>
                     <p class="text-xs text-bluedark/50">Anggota rombongan belajar resmi pada tahun ajaran aktif</p>
                 </div>
                 <a href="{{ route('admin.academic.students.index', ['class_id' => $class->id]) }}" class="text-xs text-blueprim hover:underline">
@@ -56,7 +56,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($class->classEnrollments as $idx => $enrollment)
+                        @forelse($class->enrollments as $idx => $enrollment)
                             <tr>
                                 <td>{{ $idx + 1 }}</td>
                                 <td class="font-mono text-xs">{{ $enrollment->student?->nis }} / {{ $enrollment->student?->nisn }}</td>

@@ -46,7 +46,7 @@ class TeachersController extends Controller
                 'is_active' => true,
             ]);
 
-            $teacherRole = Role::where('code', 'teacher')->first();
+            $teacherRole = Role::whereIn('code', ['TEACHER', 'teacher'])->first();
             if ($teacherRole) {
                 $user->roles()->attach($teacherRole->id);
             }

@@ -6,6 +6,7 @@ use App\Enums\AttendanceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AcademicYear;
 use App\Models\Article;
+use App\Models\ClassEnrollment;
 use App\Models\Department;
 use App\Models\JournalAttendance;
 use App\Models\SchoolClass;
@@ -47,6 +48,17 @@ class DashboardController extends Controller
         // Berita sekolah terbaru
         $recentArticles = Article::latest()->take(3)->get();
 
+        // Statistik per jurusan untuk chart
+        $departments = Department::where('is_active', true)->get();
+        $chartLabels = [];
+        $chartData = [];
+        foreach ($departments as $dept) {
+            $chartLabels[] = $dept->short_name ?: $dept->code;
+            $chartData[] = ClassEnrollment::where('status', 'ACTIVE')
+                ->whereHas('schoolClass', fn ($q) => $q->where('department_id', $dept->id))
+                ->count();
+        }
+
         return view('admin.dashboard', compact(
             'activeYear',
             'activeSemester',
@@ -56,7 +68,9 @@ class DashboardController extends Controller
             'totalDepartments',
             'attendanceStats',
             'recentClasses',
-            'recentArticles'
+            'recentArticles',
+            'chartLabels',
+            'chartData'
         ));
     }
 }

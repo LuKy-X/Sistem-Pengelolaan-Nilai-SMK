@@ -59,19 +59,20 @@
                     <tbody>
                         @forelse($disciplinaryLetters as $sp)
                             <tr>
-                                <td>{{ \Carbon\Carbon::parse($sp->issued_date)->translatedFormat('d M Y') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($sp->issued_at)->translatedFormat('d M Y') }}</td>
                                 <td class="font-semibold text-bluedark">{{ $sp->student?->full_name }}</td>
                                 <td>
                                     @php
-                                        $spColor = match($sp->letter_type) {
+                                        $typeVal = $sp->type instanceof \BackedEnum ? $sp->type->value : (string) $sp->type;
+                                        $spColor = match($typeVal) {
                                             'SP3' => 'badge-red',
                                             'SP2' => 'badge-yellow',
                                             default => 'badge-blue',
                                         };
                                     @endphp
-                                    <span class="badge {{ $spColor }}">{{ $sp->letter_type }}</span>
+                                    <span class="badge {{ $spColor }}">{{ $typeVal }}</span>
                                 </td>
-                                <td class="font-mono text-xs">{{ $sp->letter_number }}</td>
+                                <td class="font-mono text-xs">SP-{{ str_pad($sp->id, 4, '0', STR_PAD_LEFT) }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -141,7 +142,7 @@
                     @forelse($recentDisciplineRecords as $idx => $rec)
                         <tr>
                             <td>{{ $idx + 1 }}</td>
-                            <td>{{ \Carbon\Carbon::parse($rec->incident_date)->translatedFormat('d M Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($rec->occurred_at)->translatedFormat('d M Y') }}</td>
                             <td class="font-semibold text-bluedark">{{ $rec->student?->full_name }}</td>
                             <td>{{ $rec->category?->name ?? 'Umum' }}</td>
                             <td class="text-xs text-bluedark/70">{{ $rec->description }}</td>

@@ -23,7 +23,7 @@ class ClassController extends Controller
             'gradeLevel',
             'homeroomTeacher',
         ])
-            ->withCount(['classEnrollments', 'teachingAssignments'])
+            ->withCount(['enrollments', 'teachingAssignments'])
             ->latest()
             ->get();
 
@@ -59,7 +59,7 @@ class ClassController extends Controller
             'department',
             'gradeLevel',
             'homeroomTeacher',
-            'classEnrollments.student',
+            'enrollments.student',
             'teachingAssignments.subject',
             'teachingAssignments.teacher',
         ]);
@@ -80,7 +80,7 @@ class ClassController extends Controller
 
     public function destroy(SchoolClass $class): RedirectResponse
     {
-        if ($class->classEnrollments()->exists() || $class->teachingAssignments()->exists()) {
+        if ($class->enrollments()->exists() || $class->teachingAssignments()->exists()) {
             return redirect()->route('admin.academic.classes.index')
                 ->with('error', 'Tidak dapat menghapus kelas yang sudah memiliki siswa terdaftar atau jadwal mengajar.');
         }

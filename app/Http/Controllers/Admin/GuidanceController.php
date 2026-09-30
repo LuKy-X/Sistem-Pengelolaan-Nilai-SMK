@@ -33,12 +33,12 @@ class GuidanceController extends Controller
         ];
 
         $recentDisciplineRecords = DisciplineRecord::with(['student', 'category'])
-            ->latest('incident_date')
+            ->latest('occurred_at')
             ->take(10)
             ->get();
 
         $disciplinaryLetters = DisciplinaryLetter::with(['student', 'academicYear'])
-            ->latest('issued_date')
+            ->latest('issued_at')
             ->take(10)
             ->get();
 

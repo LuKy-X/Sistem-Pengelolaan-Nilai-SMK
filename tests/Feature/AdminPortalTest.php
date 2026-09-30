@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AcademicYear;
 use App\Models\Department;
 use App\Models\GradeLevel;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -159,5 +160,36 @@ class AdminPortalTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Manajemen Pengguna');
+    }
+
+    public function test_admin_can_view_classes_index(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.academic.classes.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Manajemen Rombel / Kelas');
+    }
+
+    public function test_admin_can_view_guidance_index(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.guidance.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Layanan BK & Kedisiplinan Siswa');
+    }
+
+    public function test_admin_can_view_teacher_show(): void
+    {
+        $admin = $this->getAdminUser();
+        $teacher = TeacherProfile::first();
+
+        $response = $this->actingAs($admin)->get(route('admin.users.teachers.show', $teacher));
+
+        $response->assertStatus(200);
+        $response->assertSee('Profil Data Tenaga Pendidik');
     }
 }
