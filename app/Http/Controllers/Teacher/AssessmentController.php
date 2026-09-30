@@ -238,7 +238,7 @@ class AssessmentController extends Controller
             'teachingAssignment.schoolClass',
             'teachingAssignment.subject',
             'gradebookColumn',
-            'rubric.criteria.levels',
+            'rubric.criteria',
             'latePolicy',
             'submissions.student.user',
         ]);
