@@ -1818,3 +1818,46 @@ body.teacher-portal {
   border-radius: 1rem !important;
   max-width: 28rem !important;
 }
+
+/* Teacher Gradebook Column Selection & Highlights */
+.active-col-header {
+  background-color: #0D47A1 !important;
+  color: #ffffff !important;
+  border-color: #0D47A1 !important;
+  box-shadow: inset 0 0 0 2px #2196F3, 0 3px 10px rgba(13, 71, 161, 0.25) !important;
+}
+.active-col-header * {
+  color: #ffffff !important;
+}
+.active-col-cell {
+  background-color: #EFF6FF !important;
+  border-left: 2px solid #2196F3 !important;
+  border-right: 2px solid #2196F3 !important;
+}
+.quick-col-btn {
+  font-family: inherit;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.quick-col-btn.active-quick-btn {
+  background-color: #0D47A1 !important;
+  color: #ffffff !important;
+  border-color: #0D47A1 !important;
+  box-shadow: 0 2px 8px rgba(13, 71, 161, 0.28) !important;
+}
+.quick-col-btn.active-quick-btn .quick-col-name {
+  color: #ffffff !important;
+}
+.quick-col-btn .quick-task-badge {
+  background-color: #d1fae5;
+  color: #065f46 !important;
+  font-weight: 600;
+}
+.quick-col-btn.active-quick-btn .quick-task-badge {
+  background-color: #ffffff !important;
+  color: #065f46 !important;
+  font-weight: 700 !important;
+}
+.quick-col-btn.active-quick-btn .quick-new-badge {
+  color: #BFDBFE !important;
+}
+

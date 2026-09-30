@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\AssessmentLatePolicy;
 use App\Models\AssessmentSubmission;
+use App\Models\GradebookColumn;
 use App\Models\GradebookScore;
 use App\Models\Rubric;
 use App\Models\TeachingAssignment;
@@ -31,7 +32,7 @@ class AssessmentController extends Controller
             'subject',
             'semester.academicYear',
             'schedules',
-            'gradebooks.columns' => fn ($q) => $q->orderBy('sort_order'),
+            'gradebooks.columns' => fn ($q) => $q->orderBy('sort_order')->with('category', 'assessments.latePolicy', 'assessments.rubric.criteria'),
             'gradebooks.students.student.user',
         ])
             ->where('teacher_id', $teacher->id)
@@ -45,6 +46,8 @@ class AssessmentController extends Controller
             'teachingAssignment.subject',
             'gradebookColumn',
             'submissions',
+            'latePolicy',
+            'rubric.criteria',
         ])
             ->whereIn('teaching_assignment_id', $assignments->pluck('id'));
 
@@ -53,7 +56,10 @@ class AssessmentController extends Controller
         }
 
         $assessments = $assessmentsQuery->latest()->get();
-        $rubrics = Rubric::where('created_by', $teacher->id)->latest()->get();
+        $rubrics = Rubric::with(['criteria' => fn ($q) => $q->orderBy('sort_order')])
+            ->where('created_by', $teacher->id)
+            ->latest()
+            ->get();
 
         return view('teacher.assessments.index', compact(
             'assignments',
@@ -121,6 +127,7 @@ class AssessmentController extends Controller
         $teacher = Auth::user()->teacherProfile;
 
         $validated = $request->validate([
+            'assessment_id' => ['nullable', 'exists:assessments,id'],
             'teaching_assignment_id' => ['required', 'exists:teaching_assignments,id'],
             'gradebook_column_id' => ['nullable', 'exists:gradebook_columns,id'],
             'type' => ['required', 'string'],
@@ -150,7 +157,7 @@ class AssessmentController extends Controller
                 default => AssessmentType::Task,
             };
 
-            $assessment = Assessment::create([
+            $assessmentData = [
                 'teaching_assignment_id' => $assignment->id,
                 'gradebook_column_id' => $validated['gradebook_column_id'] ?? null,
                 'type' => $typeEnum,
@@ -162,26 +169,65 @@ class AssessmentController extends Controller
                 'created_by' => $teacher->id,
                 'published_at' => now(),
                 'status' => AssessmentStatus::Published,
-            ]);
+            ];
+
+            if (! empty($validated['assessment_id'])) {
+                $assessment = Assessment::where('id', $validated['assessment_id'])
+                    ->where('teaching_assignment_id', $assignment->id)
+                    ->firstOrFail();
+                $assessment->update($assessmentData);
+            } else {
+                $assessment = Assessment::create($assessmentData);
+            }
+
+            if (! empty($validated['gradebook_column_id']) && isset($validated['max_score'])) {
+                $column = GradebookColumn::find($validated['gradebook_column_id']);
+                if ($column) {
+                    $column->update(['max_score' => $validated['max_score']]);
+                }
+            }
 
             // Late penalty policy
-            $hasLatePolicy = $request->boolean('enable_late_policy');
+            $hasLatePolicy = $request->boolean('enable_late_policy', true);
             if ($hasLatePolicy) {
-                AssessmentLatePolicy::create([
-                    'assessment_id' => $assessment->id,
+                $isDefault = $request->boolean('use_default_policy');
+                $reductionValue = $isDefault ? 5.00 : (float) ($validated['reduction_value'] ?? 5.00);
+                $interval = $isDefault ? 7 : (strtoupper($request->input('interval') ?? 'MINGGU') === 'HARI' ? 1 : 7);
+
+                $policyData = [
                     'enabled' => true,
                     'reduction_type' => LateReductionType::FixedPoints,
-                    'reduction_value' => $validated['reduction_value'] ?? 5.00,
-                    'interval' => $validated['interval'] === 'MINGGU' ? 7 : 1,
+                    'reduction_value' => $reductionValue,
+                    'interval' => $interval,
                     'grace_period_minutes' => 0,
                     'minimum_max_score' => 50.00,
-                ]);
+                ];
+
+                if ($assessment->latePolicy) {
+                    $assessment->latePolicy->update($policyData);
+                } else {
+                    AssessmentLatePolicy::create(array_merge(['assessment_id' => $assessment->id], $policyData));
+                }
+            } else {
+                if ($assessment->latePolicy) {
+                    $assessment->latePolicy->delete();
+                }
             }
         });
 
+        $targetColumnId = $validated['gradebook_column_id'] ?? null;
+        $targetGradebookId = null;
+        if ($targetColumnId) {
+            $column = GradebookColumn::find($targetColumnId);
+            $targetGradebookId = $column?->gradebook_id;
+        }
+
         return redirect()->route('teacher.assessments.index', [
             'assignment_id' => $validated['teaching_assignment_id'],
-        ])->with('success', 'Tugas / asesmen berhasil dibuat dan dipublikasikan ke siswa.');
+        ])
+            ->with('success', 'Tugas / asesmen berhasil disimpan.')
+            ->with('selected_gradebook_id', $targetGradebookId)
+            ->with('selected_column_id', $targetColumnId);
     }
 
     public function show(Assessment $assessment): View
@@ -192,7 +238,7 @@ class AssessmentController extends Controller
             'teachingAssignment.schoolClass',
             'teachingAssignment.subject',
             'gradebookColumn',
-            'rubric.criteria.levels',
+            'rubric.criteria',
             'latePolicy',
             'submissions.student.user',
         ]);
