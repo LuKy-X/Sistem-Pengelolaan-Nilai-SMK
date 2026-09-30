@@ -52,24 +52,7 @@ class LoginController extends Controller
         $user->update(['last_login_at' => now()]);
         $request->session()->regenerate();
 
-        // Redirect based on user role
-        if ($user->isAdmin()) {
-            return redirect()->intended(route('admin.dashboard'));
-        }
-
-        if ($user->isTeacher()) {
-            return redirect()->intended(route('teacher.dashboard'));
-        }
-
-        if ($user->isCounselor()) {
-            return redirect()->intended(route('counselor.dashboard'));
-        }
-
-        if ($user->isStudent()) {
-            return redirect()->intended(route('student.dashboard'));
-        }
-
-        return redirect()->intended('/');
+        return redirect()->intended(route($user->dashboardRoute()));
     }
 
     public function logout(Request $request): RedirectResponse

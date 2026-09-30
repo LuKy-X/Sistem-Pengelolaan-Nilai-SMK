@@ -1,6 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BK\AppealController;
+use App\Http\Controllers\BK\CounselingController;
+use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
+use App\Http\Controllers\BK\DisciplinaryLetterController;
+use App\Http\Controllers\BK\DisciplineController;
+use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -9,6 +16,7 @@ use App\Http\Controllers\Teacher\GradingController;
 use App\Http\Controllers\Teacher\JournalController;
 use App\Http\Controllers\Teacher\ProfileController;
 use App\Http\Controllers\Teacher\RubricController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,12 +26,26 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ==========================================
+// 0. ROOT DISPATCHER
+// ==========================================
+// The root path is never a page of its own: it sends guests to the login form
+// and authenticated users to the dashboard that matches their role. Keeping the
+// dispatcher at "/" is also what the "guest" middleware redirects to, so an
+// authenticated user who opens /login is forwarded here instead of being shown
+// the welcome page.
+Route::get('/', function (Request $request) {
+    if (! $request->user()) {
+        return redirect()->route('login');
+    }
+
+    return redirect()->route($request->user()->dashboardRoute());
+})->name('home');
+
+// ==========================================
 // 1. PUBLIC & SCHOOL CMS ROUTES
 // ==========================================
 Route::name('public.')->group(function () {
-    Route::get('/', function () {
-        return view('welcome');
-    })->name('home');
+    Route::view('/beranda', 'welcome')->name('home');
 
     Route::get('/profil', function () {
         return 'Profil Sekolah';
@@ -290,58 +312,49 @@ Route::middleware('auth')->group(function () {
     // 6. COUNSELOR / BK ROUTES (role:counselor)
     // ==========================================
     Route::middleware('role:counselor')->prefix('bk')->name('counselor.')->group(function () {
-        Route::get('/dashboard', function () {
-            return 'Counselor BK Dashboard';
-        })->name('dashboard');
+        Route::get('/dashboard', [CounselorDashboardController::class, 'index'])->name('dashboard');
 
         // Manajemen Izin Keluar & Timer
         Route::prefix('exit-permits')->name('exit-permits.')->group(function () {
-            Route::get('/', function () {
-                return 'Monitoring Izin Keluar & Siswa di Luar';
-            })->name('index');
+            Route::get('/', [ExitPermitController::class, 'index'])->name('index');
+            Route::get('/{permit}', [ExitPermitController::class, 'show'])->name('show');
+            Route::post('/{permit}/approve', [ExitPermitController::class, 'approve'])->name('approve');
+            Route::post('/{permit}/reject', [ExitPermitController::class, 'reject'])->name('reject');
+            Route::post('/{permit}/complete', [ExitPermitController::class, 'complete'])->name('complete');
+        });
 
-            Route::get('/{permit}', function () {
-                return 'Detail Izin Keluar Siswa';
-            })->name('show');
-
-            Route::post('/{permit}/approve', function () {
-                return 'Setujui Izin Keluar';
-            })->name('approve');
-
-            Route::post('/{permit}/reject', function () {
-                return 'Tolak Izin Keluar';
-            })->name('reject');
-
-            Route::post('/{permit}/complete', function () {
-                return 'Siswa Kembali ke Sekolah';
-            })->name('complete');
-
-            Route::post('/appeals/{appeal}/decide', function () {
-                return 'Proses Keputusan Banding';
-            })->name('appeals.decide');
+        // Banding Keterlambatan
+        Route::prefix('appeals')->name('appeals.')->group(function () {
+            Route::get('/', [AppealController::class, 'index'])->name('index');
+            Route::post('/{appeal}/decide', [AppealController::class, 'decide'])->name('decide');
         });
 
         // Kedisiplinan & Poin Siswa
         Route::prefix('discipline')->name('discipline.')->group(function () {
-            Route::get('/', function () {
-                return 'Rekap Poin & Pelanggaran Siswa';
-            })->name('index');
+            Route::get('/', [DisciplineController::class, 'index'])->name('index');
+            Route::get('/create', [DisciplineController::class, 'create'])->name('create');
+            Route::post('/', [DisciplineController::class, 'store'])->name('store');
+            Route::delete('/{record}', [DisciplineController::class, 'destroy'])->name('destroy');
+        });
 
-            Route::get('/records/create', function () {
-                return 'Catat Pelanggaran / Prestasi Perilaku';
-            })->name('records.create');
+        // Surat Peringatan (SP)
+        Route::prefix('disciplinary-letters')->name('disciplinary-letters.')->group(function () {
+            Route::get('/', [DisciplinaryLetterController::class, 'index'])->name('index');
+            Route::post('/', [DisciplinaryLetterController::class, 'store'])->name('store');
+            Route::get('/{letter}', [DisciplinaryLetterController::class, 'show'])->name('show');
+            Route::delete('/{letter}', [DisciplinaryLetterController::class, 'destroy'])->name('destroy');
+        });
 
-            Route::post('/records', function () {
-                return 'Simpan Catatan Disiplin';
-            })->name('records.store');
+        // Rekam Konseling
+        Route::prefix('counseling')->name('counseling.')->group(function () {
+            Route::get('/', [CounselingController::class, 'index'])->name('index');
+            Route::post('/', [CounselingController::class, 'store'])->name('store');
+        });
 
-            Route::get('/letters', function () {
-                return 'Daftar Surat Peringatan (SP)';
-            })->name('letters.index');
-
-            Route::post('/letters', function () {
-                return 'Terbitkan Surat Peringatan (SP)';
-            })->name('letters.store');
+        // Rekap Siswa
+        Route::prefix('students')->name('students.')->group(function () {
+            Route::get('/', [CounselorStudentController::class, 'index'])->name('index');
+            Route::get('/{student}', [CounselorStudentController::class, 'show'])->name('show');
         });
     });
 });

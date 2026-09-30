@@ -3,9 +3,9 @@
   var maps = {};
 
   var markerIcon = (typeof L !== "undefined") ? L.icon({
-    iconUrl: "../assets/css/vendor/images/marker-icon.png",
-    iconRetinaUrl: "../assets/css/vendor/images/marker-icon-2x.png",
-    shadowUrl: "../assets/css/vendor/images/marker-shadow.png",
+    iconUrl: "../assets/vendor/leaflet/images/marker-icon.png",
+    iconRetinaUrl: "../assets/vendor/leaflet/images/marker-icon-2x.png",
+    shadowUrl: "../assets/vendor/leaflet/images/marker-shadow.png",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],

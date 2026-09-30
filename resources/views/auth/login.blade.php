@@ -7,9 +7,8 @@
 <meta name="description" content="Masuk ke Portal Sistem Pengelolaan Nilai SMK Negeri 2 Karanganyar.">
 <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('assets/css/fonts.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -22,7 +21,6 @@
     }
   }
 </script>
-<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 </head>
 <body class="font-body text-ink antialiased">
 
@@ -138,6 +136,17 @@
         </div>
 
         <p class="text-center mt-6 text-[0.83rem] text-[#5C7899]">Kembali ke <a href="{{ route('public.home') }}" class="text-bluedark font-bold hover:underline">Beranda</a></p>
+
+        <!-- sponsor-bar -->
+        <div class="sponsor-bar sponsor-bar--compact sponsor-bar--login">
+          <div class="sponsor-bar__logos">
+            <img src="{{ asset('assets/images/logo/jhic-2026.webp') }}" alt="Logo Jagoan Hosting Innovation Competition 2026" width="900" height="479" class="sb-jhic" loading="lazy" decoding="async">
+            <img src="{{ asset('assets/images/logo/jagoan-hosting.webp') }}" alt="Logo Jagoan Hosting" width="700" height="206" class="sb-jagoan" loading="lazy" decoding="async">
+            <img src="{{ asset('assets/images/logo/komdigi.webp') }}" alt="Logo Komdigi" width="500" height="351" class="sb-komdigi" loading="lazy" decoding="async">
+            <img src="{{ asset('assets/images/logo/garuda-spark.webp') }}" alt="Logo Garuda Spark Innovation Hub by Komdigi" width="700" height="367" class="sb-garuda" loading="lazy" decoding="async">
+            <img src="{{ asset('assets/images/logo/ngalup.webp') }}" alt="Logo Ngalup.co" width="700" height="111" class="sb-ngalup" loading="lazy" decoding="async">
+          </div>
+        </div>
       </div>
     </div>
   </div>

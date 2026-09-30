@@ -103,4 +103,21 @@ class User extends Authenticatable
     {
         return $this->hasRole('COUNSELOR');
     }
+
+    /**
+     * Named route of the dashboard that matches the user's primary role.
+     *
+     * Used by the root dispatcher in routes/web.php and by the login flow so
+     * the role-to-dashboard mapping lives in exactly one place.
+     */
+    public function dashboardRoute(): string
+    {
+        return match (true) {
+            $this->isAdmin() => 'admin.dashboard',
+            $this->isTeacher() => 'teacher.dashboard',
+            $this->isCounselor() => 'counselor.dashboard',
+            $this->isStudent() => 'student.dashboard',
+            default => 'login',
+        };
+    }
 }
