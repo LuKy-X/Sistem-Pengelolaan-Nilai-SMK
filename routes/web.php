@@ -201,6 +201,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/create', [RubricController::class, 'create'])->name('create');
             Route::post('/', [RubricController::class, 'store'])->name('store');
             Route::get('/{rubric}', [RubricController::class, 'show'])->name('show');
+            Route::get('/{rubric}/edit', [RubricController::class, 'edit'])->name('edit');
+            Route::put('/{rubric}', [RubricController::class, 'update'])->name('update');
+            Route::delete('/{rubric}', [RubricController::class, 'destroy'])->name('destroy');
         });
 
         // Jurnal Kelas & Presensi Mengajar
