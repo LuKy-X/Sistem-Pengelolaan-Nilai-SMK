@@ -1,29 +1,15 @@
-{{-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Dashboard Guru') — SMK Negeri 2 Karanganyar</title>
-<link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { bluelight: '#E3F2FD', bluesoft: '#90CAF9', blueprim: '#2196F3', bluedark: '#0D47A1', ink: '#0D2A4A' },
-        fontFamily: { heading: ['Poppins', 'sans-serif'], body: ['Inter', 'sans-serif'] },
-        borderRadius: { '4xl': '2rem', '5xl': '2.5rem' },
-      }
-    }
-  }
-</script>
-<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+{{-- Single stylesheet: Tailwind v4 build + the JHIC template custom layer,
+     including the local Poppins/Inter @font-face. No Google Fonts, no CDN. --}}
+@vite(['resources/css/app.css'])
 <script src="{{ asset('assets/js/vendor/chart.umd.min.js') }}"></script>
 @stack('styles')
 </head>
@@ -41,7 +27,7 @@
 
   <aside class="db-sidebar w-64 flex-shrink-0 flex flex-col p-5" id="dbSidebar">
     <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-3 px-1 mb-8">
-      <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
+      <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
       <div class="leading-tight">
         <div class="font-heading font-bold text-bluedark text-sm">SMK Negeri 2</div>
         <div class="text-[11px] text-bluedark/60 font-medium">Karanganyar</div>
@@ -162,6 +148,8 @@
       @yield('content')
 
     </main>
+
+    <x-public.sponsor-bar variant="app" />
   </div>
 </div>
 
@@ -169,4 +157,4 @@
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 @stack('scripts')
 </body>
-</html> --}}
+</html>

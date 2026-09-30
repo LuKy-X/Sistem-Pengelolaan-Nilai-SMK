@@ -52,6 +52,68 @@ class PublicSitePagesTest extends TestCase
         }
     }
 
+    public function test_public_pages_render_without_cdn_assets_and_with_balanced_markup(): void
+    {
+        $urls = ['/', '/profil', '/jurusan', '/berita', '/prestasi', '/alumni', '/ppdb', '/produk-siswa', '/karier'];
+
+        foreach ($urls as $url) {
+            $html = $this->get($url)->assertOk()->getContent();
+
+            $this->assertDoesNotMatchRegularExpression(
+                '#(cdn\.tailwindcss|fonts\.googleapis|fonts\.gstatic|cdnjs\.cloudflare|unpkg\.com|jsdelivr|images\.unsplash)#i',
+                $html,
+                "[{$url}] must not reference a CDN; all assets are served locally.",
+            );
+
+            $this->assertSame(
+                preg_match_all('#</div>#i', $html),
+                preg_match_all('/<div\b/i', $html),
+                "[{$url}] has unbalanced div tags.",
+            );
+        }
+    }
+
+    public function test_every_configured_fallback_image_exists_on_disk(): void
+    {
+        $config = config('public_site');
+
+        $paths = array_merge(
+            array_values($config['department_covers']),
+            array_values($config['department_art']),
+            [$config['hero_fallback']],
+            [$config['logo_fallback']],
+        );
+
+        foreach (array_unique($paths) as $path) {
+            $this->assertFileExists(
+                public_path($path),
+                "Fallback image [{$path}] is configured in config/public_site.php but missing from public/.",
+            );
+        }
+    }
+
+    public function test_public_pages_never_reference_a_missing_local_asset(): void
+    {
+        $urls = ['/', '/profil', '/jurusan', '/berita', '/prestasi', '/alumni', '/ppdb', '/produk-siswa', '/karier'];
+
+        foreach ($urls as $url) {
+            $html = $this->get($url)->assertOk()->getContent();
+
+            preg_match_all('~(?:src|href)="(/[^"?\#]+)~i', $html, $matches);
+
+            foreach (array_unique($matches[1]) as $reference) {
+                if (str_contains($reference, '/build/') || str_contains($reference, '/storage/')) {
+                    continue;
+                }
+
+                $this->assertFileExists(
+                    public_path(ltrim($reference, '/')),
+                    "[{$url}] references missing local asset [{$reference}].",
+                );
+            }
+        }
+    }
+
     public function test_landing_page_renders_school_profile_from_database(): void
     {
         $profile = SchoolProfile::firstOrFail();
