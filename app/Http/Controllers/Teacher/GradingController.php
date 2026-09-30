@@ -34,7 +34,7 @@ class GradingController extends Controller
 
         $assessments = Assessment::with([
             'gradebookColumn',
-            'rubric.criteria.levels',
+            'rubric.criteria',
             'teachingAssignment.schoolClass',
             'teachingAssignment.subject',
         ])

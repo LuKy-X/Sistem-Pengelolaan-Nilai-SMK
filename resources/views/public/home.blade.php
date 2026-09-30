@@ -51,7 +51,7 @@
                 <div class="lg:col-span-6 relative reveal">
                     <div class="relative max-w-md mx-auto">
                         <div class="absolute inset-0 bg-blueprim/10 rounded-full blur-3xl scale-90" aria-hidden="true"></div>
-                        <img src="{{ asset('assets/img/hero-jurusan.png') }}"
+                        <img src="{{ asset('assets/images/hero/hero-jurusan.png') }}"
                             alt="Ilustrasi empat program keahlian {{ $schoolName }}"
                             class="relative w-full h-auto drop-shadow-2xl hero-art-parallax"
                             loading="eager">
@@ -106,6 +106,49 @@
         </dl>
     </section>
 @endif
+
+
+{{-- ======================================================
+     JHIC 2026 & DIDUKUNG OLEH
+     Logo JHIC 2026 + mitra pendukung
+     ====================================================== --}}
+<section id="jhic-2026" class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-12 sm:mt-16 md:mt-20" aria-labelledby="jhicTitle">
+    <div class="reveal rounded-3xl md:rounded-4xl bg-white border border-bluelight shadow-card px-5 sm:px-8 md:px-12 py-8 sm:py-10 md:py-12">
+        <div class="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+            <div class="lg:col-span-5 text-center">
+                <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-blueprim font-semibold mb-3">Kompetisi Inovasi</p>
+                <h2 id="jhicTitle" class="sr-only">Jagoan Hosting Innovation Competition 2026</h2>
+                <img src="{{ asset('assets/images/logo/jhic-2026.webp') }}" width="900" height="479" loading="lazy" decoding="async"
+                    alt="Logo Jagoan Hosting Innovation Competition 2026"
+                    class="mx-auto w-full max-w-[280px] sm:max-w-[340px] lg:max-w-[380px] h-auto">
+            </div>
+
+            <div class="lg:col-span-7">
+                <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-bluedark/60 font-semibold text-center lg:text-left mb-4">Didukung oleh</p>
+                <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div class="h-24 sm:h-32 rounded-2xl bg-bluelight/30 border border-bluelight flex items-center justify-center px-3 sm:px-5">
+                        <img src="{{ asset('assets/images/logo/jagoan-hosting.webp') }}" width="700" height="206" loading="lazy" decoding="async"
+                            alt="Logo Jagoan Hosting" class="max-w-[88%] max-h-[62%] w-auto h-auto object-contain">
+                    </div>
+                    <div class="h-24 sm:h-32 rounded-2xl bg-bluelight/30 border border-bluelight flex items-center justify-center px-3 sm:px-5">
+                        <img src="{{ asset('assets/images/logo/komdigi.webp') }}" width="500" height="351" loading="lazy" decoding="async"
+                            alt="Logo Komdigi" class="max-w-[88%] max-h-[72%] w-auto h-auto object-contain">
+                    </div>
+                    <div class="h-24 sm:h-32 rounded-2xl bg-bluelight/30 border border-bluelight flex items-center justify-center px-3 sm:px-5">
+                        <img src="{{ asset('assets/images/logo/garuda-spark.webp') }}" width="700" height="367" loading="lazy" decoding="async"
+                            alt="Logo Garuda Spark Innovation Hub by Komdigi" class="max-w-[88%] max-h-[72%] w-auto h-auto object-contain">
+                    </div>
+                    <div class="h-24 sm:h-32 rounded-2xl bg-bluelight/30 border border-bluelight flex items-center justify-center px-3 sm:px-5">
+                        <img src="{{ asset('assets/images/logo/ngalup.webp') }}" width="700" height="111" loading="lazy" decoding="async"
+                            alt="Logo Ngalup.co" class="max-w-[88%] max-h-[40%] w-auto h-auto object-contain">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
 
 
 {{-- ======================================================
@@ -195,7 +238,7 @@
 
         <div class="lg:col-span-5 relative reveal">
             <div class="rounded-3xl md:rounded-4xl overflow-hidden shadow-soft aspect-[4/5] max-w-sm mx-auto lg:mx-0 bg-bluelight">
-                <img src="https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80"
+                <img src="{{ asset('assets/images/landing/lulusan-terbaik-w800.jpg') }}"
                     alt="Lulusan terbaik {{ $schoolName }}"
                     class="w-full h-full object-cover lulusan-photo-parallax"
                     loading="lazy">

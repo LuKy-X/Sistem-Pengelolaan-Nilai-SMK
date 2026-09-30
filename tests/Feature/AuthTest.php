@@ -24,6 +24,25 @@ class AuthTest extends TestCase
         $response->assertSee('Masuk ke Akun');
     }
 
+    public function test_login_screen_renders_offline_and_shows_the_sponsor_bar(): void
+    {
+        $html = $this->get('/login')->assertOk()->getContent();
+
+        $this->assertDoesNotMatchRegularExpression(
+            '#(cdn\.tailwindcss|fonts\.googleapis|fonts\.gstatic|cdnjs\.cloudflare|unpkg\.com|jsdelivr|images\.unsplash)#i',
+            $html,
+            'The login screen must not reference a CDN; all assets are served locally.',
+        );
+
+        $this->assertSame(
+            preg_match_all('#</div>#i', $html),
+            preg_match_all('/<div\b/i', $html),
+            'The login screen has unbalanced div tags.',
+        );
+
+        $this->assertStringContainsString('jhic-2026.webp', $html);
+    }
+
     public function test_teacher_can_authenticate_using_username(): void
     {
         $response = $this->post('/login', [

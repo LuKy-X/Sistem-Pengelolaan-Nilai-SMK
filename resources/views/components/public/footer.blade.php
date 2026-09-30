@@ -13,7 +13,7 @@
             {{-- Identity, contact & social --}}
             <div class="flex flex-col">
                 <div class="footer-brand-logo w-fit mb-6">
-                    <img src="{{ asset('assets/img/logo-smk-bisa-hebat.png') }}"
+                    <img src="{{ asset('assets/images/logo/logo-smk-bisa-hebat.png') }}"
                         alt="Logo {{ $schoolName }}"
                         class="h-16 sm:h-20 md:h-24 w-auto object-contain"
                         loading="lazy">
@@ -64,6 +64,11 @@
                             </a>
                         </div>
                     @endif
+                </div>
+
+                {{-- Sponsor/event card: white mini card, sits under the contact block --}}
+                <div class="mb-7">
+                    <x-public.sponsor-bar variant="mini" />
                 </div>
 
                 {{-- Social media icons --}}

@@ -13,17 +13,11 @@
         <meta name="description" content="@yield('meta_description', $schoolProfile?->description ?? 'Website resmi sekolah menengah kejuruan.')">
     @endif
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-
-    {{-- GSAP for scroll animations and parallax --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    {{-- GSAP for scroll animations and parallax (local, from the JHIC template) --}}
+    <script src="{{ asset('assets/vendor/gsap/gsap.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/gsap/ScrollTrigger.min.js') }}"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')

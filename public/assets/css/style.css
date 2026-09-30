@@ -8,6 +8,10 @@ html {
   scroll-behavior: smooth;
 }
 
+button, input, select, textarea {
+  font-family: inherit;
+}
+
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: 'Poppins', sans-serif;
 }
@@ -1281,3 +1285,331 @@ body {
 .tab-pill-group button svg { width: 15px; height: 15px; }
 .tab-pill-group button.active.tab-blue { background: #2196F3; color: #fff; box-shadow: 0 4px 12px -4px rgba(33,150,243,.4); }
 .tab-pill-group button.active.tab-amber { background: #F59E0B; color: #fff; box-shadow: 0 4px 12px -4px rgba(245,158,11,.4); }
+
+/* =========================================================
+   Teacher Portal Compact & Fluid Responsive Scaling System
+   Optimized for standard 100% browser zoom
+   ========================================================= */
+
+/* Fluid base scale across viewports: rem units scale down proportionally */
+html.teacher-portal-html {
+  font-size: clamp(12px, 0.18vw + 11.2px, 13.25px);
+}
+
+@media (max-width: 640px) {
+  html.teacher-portal-html {
+    font-size: 13px;
+  }
+}
+
+/* Base typography & colors for teacher portal */
+body.teacher-portal {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  background-color: #F8FAFD;
+  color: #0D2A4A;
+}
+
+/* Headings in teacher portal */
+.teacher-portal h1,
+.teacher-portal h1.font-heading,
+.teacher-portal .text-2xl {
+  font-size: clamp(1.05rem, 1.15vw, 1.25rem) !important;
+  line-height: 1.25 !important;
+}
+
+.teacher-portal h2,
+.teacher-portal h2.font-heading,
+.teacher-portal .text-xl {
+  font-size: clamp(0.9rem, 0.95vw, 1rem) !important;
+  line-height: 1.25 !important;
+}
+
+.teacher-portal h3,
+.teacher-portal h3.font-heading,
+.teacher-portal .text-lg {
+  font-size: 0.85rem !important;
+  line-height: 1.25 !important;
+}
+
+.teacher-portal p.text-sm {
+  font-size: 0.76rem !important;
+}
+
+/* Sidebar navigation */
+.teacher-portal .db-sidebar {
+  padding: 0.75rem 0.65rem !important;
+}
+.teacher-portal .db-sidebar nav {
+  gap: 0.2rem !important;
+}
+.teacher-portal .db-nav-item {
+  gap: 0.55rem;
+  padding: 0.38rem 0.7rem;
+  min-height: 34px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.teacher-portal .db-nav-item svg {
+  width: 15px;
+  height: 15px;
+}
+.teacher-portal .db-nav-item.active {
+  box-shadow: 0 2px 8px rgba(24, 144, 246, 0.28);
+  font-weight: 600;
+}
+
+/* Topbar */
+.teacher-portal .db-topbar {
+  height: 2.85rem !important;
+  min-height: 44px !important;
+}
+.teacher-portal .avatar-circle {
+  width: 28px;
+  height: 28px;
+  font-size: 0.7rem;
+}
+.teacher-portal .avatar-circle--lg {
+  width: 34px;
+  height: 34px;
+  font-size: 0.78rem;
+}
+
+/* Vertical spacing rhythm */
+.teacher-portal .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.85rem !important;
+}
+.teacher-portal .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.75rem !important;
+}
+.teacher-portal .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.65rem !important;
+}
+
+/* Panels, Cards & KPI */
+.teacher-portal .panel {
+  border-radius: 0.75rem !important;
+  padding: 0.85rem 1rem !important;
+  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+}
+.teacher-portal .kpi-card {
+  border-radius: 0.75rem !important;
+  padding: 0.6rem 0.8rem !important;
+  gap: 0.6rem !important;
+  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+}
+.teacher-portal .kpi-icon {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 0.5rem !important;
+}
+.teacher-portal .kpi-icon svg {
+  width: 15px !important;
+  height: 15px !important;
+}
+.teacher-portal .kpi-card .font-heading.text-xl,
+.teacher-portal .kpi-card .font-heading.text-2xl,
+.teacher-portal .kpi-card .text-xl,
+.teacher-portal .kpi-card .text-2xl {
+  font-size: 1.05rem !important;
+}
+
+/* Form blocks */
+.teacher-portal .form-block {
+  border-radius: 0.75rem !important;
+  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+}
+.teacher-portal .form-block__header {
+  padding: 0.55rem 0.95rem !important;
+}
+.teacher-portal .form-block__header h3 {
+  font-size: 0.82rem !important;
+}
+.teacher-portal .form-block__header p {
+  font-size: 0.68rem !important;
+  margin-top: 0.1rem !important;
+}
+.teacher-portal .form-block__body {
+  padding: 0.85rem 0.95rem !important;
+}
+
+/* Tables */
+.teacher-portal .tbl,
+.teacher-portal table {
+  font-size: 0.73rem !important;
+}
+.teacher-portal .tbl thead th,
+.teacher-portal table thead th {
+  font-size: 0.65rem !important;
+  padding: 0.38rem 0.55rem !important;
+  letter-spacing: 0.025em !important;
+}
+.teacher-portal .tbl tbody td,
+.teacher-portal table tbody td {
+  padding: 0.4rem 0.55rem !important;
+  font-size: 0.73rem !important;
+}
+
+/* Form Controls & Labels */
+.teacher-portal .f-label,
+.teacher-portal label {
+  font-size: 0.7rem;
+  margin-bottom: 0.18rem;
+}
+.teacher-portal .f-input,
+.teacher-portal .f-select,
+.teacher-portal .f-textarea,
+.teacher-portal input[type="text"],
+.teacher-portal input[type="search"],
+.teacher-portal input[type="number"],
+.teacher-portal input[type="date"],
+.teacher-portal select,
+.teacher-portal textarea {
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+  border-radius: 0.45rem;
+}
+
+/* Buttons & Badges */
+.teacher-portal .btn {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  border-radius: 0.45rem;
+  gap: 0.3rem;
+  min-height: 28px;
+}
+.teacher-portal .btn-sm {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.66rem;
+  border-radius: 0.38rem;
+  min-height: 24px;
+}
+.teacher-portal .badge {
+  padding: 0.14rem 0.4rem;
+  font-size: 0.64rem;
+  gap: 0.22rem;
+}
+
+/* Tabs & Step navigation */
+.teacher-portal .arrow-tabs {
+  border-radius: 0.55rem;
+}
+.teacher-portal .arrow-tabs a,
+.teacher-portal .arrow-tabs button {
+  padding: 0.42rem 0.7rem 0.42rem 1.1rem;
+  font-size: 0.72rem;
+}
+.teacher-portal .arrow-tabs a span.step-num,
+.teacher-portal .arrow-tabs button span.step-num {
+  width: 15px;
+  height: 15px;
+  font-size: 0.6rem;
+}
+.teacher-portal .tab-pill-group button {
+  padding: 0.38rem 0.7rem;
+  font-size: 0.74rem;
+}
+
+/* Crud cards & Kelas cards */
+.teacher-portal .crud-card {
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  gap: 0.4rem;
+}
+.teacher-portal .crud-card__icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 0.45rem;
+}
+.teacher-portal .crud-card__icon svg {
+  width: 13px;
+  height: 13px;
+}
+.teacher-portal .crud-card__title {
+  font-size: 0.78rem;
+}
+.teacher-portal .crud-card__sub {
+  font-size: 0.65rem;
+}
+.teacher-portal .crud-card__meta {
+  font-size: 0.68rem;
+  gap: 0.6rem;
+}
+
+.teacher-portal .kelas-card {
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+  background-color: #FFFFFF !important;
+  border: 1.5px solid #E3F2FD !important;
+  border-radius: 0.8rem !important;
+  padding: 0.75rem 0.9rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  font-family: inherit !important;
+}
+.teacher-portal .kelas-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: #90CAF9 !important;
+  box-shadow: 0 8px 20px -8px rgba(13, 71, 161, 0.16) !important;
+}
+.teacher-portal .kelas-card.active {
+  border-color: #2196F3 !important;
+  background-color: #FAFDFF !important;
+  box-shadow: 0 5px 16px -4px rgba(33, 150, 243, 0.22) !important;
+}
+.teacher-portal .kelas-card .font-heading {
+  text-align: left !important;
+  font-size: 0.82rem !important;
+}
+.teacher-portal .kelas-card div {
+  text-align: left !important;
+}
+.teacher-portal .kelas-card__meta {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 0.65rem !important;
+  margin: 0.35rem 0 0.45rem !important;
+  font-size: 0.7rem !important;
+  color: #5C7C9E !important;
+  text-align: left !important;
+}
+.teacher-portal .kelas-card__meta span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.3rem !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+.teacher-portal .kelas-card__meta svg {
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+  color: #90CAF9 !important;
+  stroke: #2196F3 !important;
+}
+
+/* Highlight rows & chart box */
+.teacher-portal .hl-row {
+  padding: 0.38rem 0.6rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+}
+.teacher-portal .hl-row .hl-sub {
+  font-size: 0.65rem;
+}
+.teacher-portal .chart-box {
+  height: 11rem;
+}
+
+/* Modals */
+.teacher-portal .modal-box {
+  padding: 1.15rem 1.25rem !important;
+  border-radius: 1rem !important;
+  max-width: 28rem !important;
+}

@@ -75,4 +75,9 @@ class Assessment extends Model
     {
         return $this->morphMany(Media::class, 'mediable');
     }
+
+    public function getMaxScoreAttribute(): float
+    {
+        return (float) ($this->gradebookColumn?->max_score ?? 100.00);
+    }
 }
