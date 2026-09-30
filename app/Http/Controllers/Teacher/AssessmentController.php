@@ -109,6 +109,8 @@ class AssessmentController extends Controller
             }
         }
 
+        $gradebookColumns = $previewColumns;
+
         return view('teacher.assessments.create', compact(
             'assignments',
             'selectedAssignment',
@@ -116,7 +118,8 @@ class AssessmentController extends Controller
             'previewGradebook',
             'previewStudents',
             'previewColumns',
-            'previewScoresMatrix'
+            'previewScoresMatrix',
+            'gradebookColumns'
         ));
     }
 
@@ -133,8 +136,11 @@ class AssessmentController extends Controller
             'type' => ['required', 'string'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'instructions' => ['nullable', 'string'],
             'due_at' => ['nullable', 'date'],
             'max_score' => ['required', 'numeric', 'min:1', 'max:100'],
+            'status' => ['nullable', 'string', 'in:PUBLISHED,DRAFT,ARCHIVED'],
+            'submission_required' => ['nullable', 'boolean'],
             'enable_late_policy' => ['nullable', 'boolean'],
             'reduction_value' => ['nullable', 'numeric', 'min:0'],
             'interval' => ['nullable', 'string'],
@@ -151,11 +157,23 @@ class AssessmentController extends Controller
         DB::transaction(function () use ($validated, $assignment, $teacher, $request) {
             // Map or convert type to AssessmentType enum
             $typeEnum = match (strtoupper($validated['type'])) {
-                'UH', 'ULANGAN_HARIAN', 'MID', 'UTS', 'SEM', 'UAS' => AssessmentType::Exam,
                 'QUIZ', 'KUIS' => AssessmentType::Quiz,
-                'PROJEK', 'PROJECT', 'PRAKTIK' => AssessmentType::Project,
+                'PROJECT', 'PROJEK', 'PRAKTIK' => AssessmentType::Project,
+                'EXAM', 'ULANGAN', 'UH', 'MID', 'SEM', 'UAS', 'UTS', 'ULANGAN_HARIAN' => AssessmentType::Exam,
+                'REMEDIAL', 'REMIDI' => AssessmentType::Remedial,
+                'OTHER', 'LAINNYA' => AssessmentType::Other,
                 default => AssessmentType::Task,
             };
+
+            $statusStr = strtoupper($request->input('status', 'DRAFT'));
+            $statusEnum = match ($statusStr) {
+                'PUBLISHED' => AssessmentStatus::Published,
+                'ARCHIVED' => AssessmentStatus::Archived,
+                default => AssessmentStatus::Draft,
+            };
+
+            $isPublished = ($statusEnum === AssessmentStatus::Published);
+            $submissionRequired = $request->boolean('submission_required', false);
 
             $assessmentData = [
                 'teaching_assignment_id' => $assignment->id,
@@ -163,20 +181,30 @@ class AssessmentController extends Controller
                 'type' => $typeEnum,
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
+                'instructions' => $submissionRequired ? ($validated['instructions'] ?? null) : null,
                 'due_at' => $validated['due_at'] ?? null,
-                'submission_required' => true,
+                'submission_required' => $submissionRequired,
                 'rubric_id' => $request->boolean('use_rubric') ? ($validated['rubric_id'] ?? null) : null,
                 'created_by' => $teacher->id,
-                'published_at' => now(),
-                'status' => AssessmentStatus::Published,
+                'status' => $statusEnum,
             ];
 
             if (! empty($validated['assessment_id'])) {
                 $assessment = Assessment::where('id', $validated['assessment_id'])
                     ->where('teaching_assignment_id', $assignment->id)
                     ->firstOrFail();
+
+                if ($isPublished && ! $assessment->published_at) {
+                    $assessmentData['published_at'] = now();
+                } elseif (! $isPublished) {
+                    $assessmentData['published_at'] = null;
+                } else {
+                    $assessmentData['published_at'] = $assessment->published_at;
+                }
+
                 $assessment->update($assessmentData);
             } else {
+                $assessmentData['published_at'] = $isPublished ? now() : null;
                 $assessment = Assessment::create($assessmentData);
             }
 
@@ -187,8 +215,9 @@ class AssessmentController extends Controller
                 }
             }
 
-            // Late penalty policy
-            $hasLatePolicy = $request->boolean('enable_late_policy', true);
+            // Late penalty policy (Default nonaktif)
+            $hasLatePolicy = $request->boolean('enable_late_policy', false);
+
             if ($hasLatePolicy) {
                 $isDefault = $request->boolean('use_default_policy');
                 $reductionValue = $isDefault ? 5.00 : (float) ($validated['reduction_value'] ?? 5.00);
@@ -210,7 +239,17 @@ class AssessmentController extends Controller
                 }
             } else {
                 if ($assessment->latePolicy) {
-                    $assessment->latePolicy->delete();
+                    $assessment->latePolicy->update(['enabled' => false]);
+                } else {
+                    AssessmentLatePolicy::create([
+                        'assessment_id' => $assessment->id,
+                        'enabled' => false,
+                        'reduction_type' => LateReductionType::FixedPoints,
+                        'reduction_value' => 5.00,
+                        'interval' => 7,
+                        'grace_period_minutes' => 0,
+                        'minimum_max_score' => 50.00,
+                    ]);
                 }
             }
         });
