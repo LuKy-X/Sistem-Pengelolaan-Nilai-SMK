@@ -107,35 +107,24 @@
         <div>
           <label class="f-label">Tipe Asesmen <span class="text-red-500">*</span></label>
           <select name="type" class="f-select" required>
-            <option value="TUGAS">Tugas Mandiri</option>
-            <option value="ULANGAN_HARIAN">Ulangan Harian</option>
-            <option value="REMEDIAL">Remedial</option>
-            <option value="PROJECT">Project / Portofolio</option>
-            <option value="PRAKTIK">Uji Praktik Kejuruan</option>
+            <option value="TASK" {{ old('type') === 'TASK' ? 'selected' : '' }}>Tugas (Task)</option>
+            <option value="QUIZ" {{ old('type') === 'QUIZ' ? 'selected' : '' }}>Kuis (Quiz)</option>
+            <option value="PROJECT" {{ old('type') === 'PROJECT' ? 'selected' : '' }}>Projek / Praktik (Project)</option>
+            <option value="EXAM" {{ old('type') === 'EXAM' ? 'selected' : '' }}>Ulangan / Ujian (Exam)</option>
+            <option value="REMEDIAL" {{ old('type') === 'REMEDIAL' ? 'selected' : '' }}>Remidi (Remedial)</option>
+            <option value="OTHER" {{ old('type') === 'OTHER' ? 'selected' : '' }}>Lainnya (Other)</option>
           </select>
         </div>
       </div>
 
-      <div class="form-row cols-2">
-        <div>
-          <label class="f-label">Kolom pada Buku Nilai</label>
-          <select name="gradebook_column_id" class="f-select">
-            <option value="">-- Tanpa Tautan Kolom Langsung --</option>
-            @foreach($gradebookColumns as $col)
-              <option value="{{ $col->id }}">{{ $col->code }} - {{ $col->name }}</option>
-            @endforeach
-          </select>
-        </div>
-
-        <div>
-          <label class="f-label">Rubrik Penilaian (Opsional)</label>
-          <select name="rubric_id" class="f-select">
-            <option value="">-- Tanpa Rubrik Penilaian --</option>
-            @foreach($rubrics as $rubric)
-              <option value="{{ $rubric->id }}">{{ $rubric->name }} ({{ $rubric->criteria->count() }} Kriteria)</option>
-            @endforeach
-          </select>
-        </div>
+      <div class="mb-4">
+        <label class="f-label">Kolom pada Buku Nilai</label>
+        <select name="gradebook_column_id" class="f-select">
+          <option value="">-- Tanpa Tautan Kolom Langsung --</option>
+          @foreach($gradebookColumns as $col)
+            <option value="{{ $col->id }}" {{ old('gradebook_column_id') == $col->id ? 'selected' : '' }}>{{ $col->code }} - {{ $col->name }}</option>
+          @endforeach
+        </select>
       </div>
 
       <div class="mb-4">
@@ -145,7 +134,7 @@
 
       <div class="mb-4">
         <label class="f-label">Deskripsi Tugas &amp; Instruksi Pengerjaan</label>
-        <textarea name="description" rows="3" placeholder="Tuliskan instruksi atau petunjuk pengumpulan tugas bagi siswa..." class="f-textarea">{{ old('description') }}</textarea>
+        <textarea name="description" rows="3" placeholder="Tuliskan instruksi atau petunjuk umum pengerjaan tugas..." class="f-textarea">{{ old('description') }}</textarea>
       </div>
 
       <div class="form-row cols-2">
@@ -159,25 +148,102 @@
         </div>
       </div>
 
-      <div class="form-row cols-2">
+      <!-- Pengaturan Rubrik Penilaian (Di bawah Info Tugas) -->
+      <div class="panel p-3.5 rounded-xl border border-bluelight bg-white mb-4 space-y-3">
+        <div class="field-toggle">
+          <div>
+            <span class="font-heading font-semibold text-xs text-bluedark block">Gunakan Rubrik Penilaian</span>
+            <p class="text-[11px] text-bluedark/50 font-normal">Rubrik membantu menstandarisasi kriteria penilaian tugas siswa</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" name="use_rubric" value="1" id="createRubricToggle" {{ old('rubric_id') ? 'checked' : '' }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div id="createRubricWrap" class="{{ old('rubric_id') ? '' : 'hidden' }} space-y-2 pt-2 border-t border-bluelight/60">
+          <label class="f-label">Pilih Rubrik Penilaian</label>
+          <select name="rubric_id" id="createRubricSelect" class="f-select">
+            <option value="">-- Tanpa Rubrik Penilaian --</option>
+            @foreach($rubrics as $rubric)
+              <option value="{{ $rubric->id }}" {{ old('rubric_id') == $rubric->id ? 'selected' : '' }}>
+                {{ $rubric->name }} ({{ $rubric->criteria->count() }} Kriteria)
+              </option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+
+      <!-- Pengaturan Status Publikasi Tugas (Default DRAFT) -->
+      <div class="panel p-3.5 rounded-xl border border-bluelight bg-white mb-4 space-y-2.5">
         <div>
-          <label class="f-label">Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat</label>
-          <div class="grid grid-cols-[1fr_auto_1.4fr] gap-2 items-center">
-            <input type="number" name="reduction_value" value="{{ old('reduction_value', 5) }}" min="0" class="f-input">
-            <span class="text-bluedark/50 text-sm">/</span>
-            <select name="interval" class="f-select">
-              <option value="MINGGU">Minggu</option>
-              <option value="HARI">Hari</option>
-            </select>
+          <span class="font-heading font-semibold text-xs text-bluedark block">Status Publikasi</span>
+          <p class="text-[11px] text-bluedark/60 mt-0.5">Tentukan apakah tugas langsung aktif untuk siswa atau disimpan sebagai draf sementara.</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <label class="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
+            <input type="radio" name="status" value="DRAFT" {{ old('status', 'DRAFT') === 'DRAFT' ? 'checked' : '' }}>
+            <span class="text-amber-800">Simpan Sebagai Draf</span>
+          </label>
+          <label class="inline-flex items-center gap-2 text-xs font-semibold cursor-pointer">
+            <input type="radio" name="status" value="PUBLISHED" {{ old('status') === 'PUBLISHED' ? 'checked' : '' }}>
+            <span class="text-emerald-700">Publikasikan Sekarang</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Pengaturan Pengiriman Berkas & Bukti Siswa (Submission - Default Disabled) -->
+      <div class="panel p-3.5 rounded-xl border border-bluelight bg-white mb-4 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="font-heading font-semibold text-xs text-bluedark block">Wajibkan Pengiriman / Bukti Tugas Siswa (Online Submission)</span>
+            <p class="text-[11px] text-bluedark/60">Aktifkan jika siswa harus mengunggah file bukti pengerjaan melalui sistem.</p>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" name="submission_required" id="createSubmissionToggle" value="1" {{ old('submission_required') ? 'checked' : '' }}>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div id="createInstructionsWrap" class="{{ old('submission_required') ? '' : 'hidden' }} pt-2 border-t border-bluelight/60">
+          <label class="f-label text-xs">Petunjuk Format &amp; Pengiriman Bukti Siswa</label>
+          <textarea name="instructions" rows="2" placeholder="cth. Unggah laporan dalam format PDF atau foto dokumentasi..." class="f-textarea">{{ old('instructions') }}</textarea>
+        </div>
+      </div>
+
+      <!-- Pengaturan Pengurangan Nilai Keterlambatan (Dipindah Paling Bawah - Default Nonaktif) -->
+      <div class="panel p-3.5 rounded-xl border border-bluelight bg-white mb-4 space-y-2.5">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <span class="font-heading font-semibold text-xs text-bluedark block">Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat</span>
+            <p class="text-[11px] text-bluedark/60 mt-0.5">
+              Aktifkan jika batas maksimal nilai tugas otomatis berkurang ketika siswa terlambat mengumpulkan.
+            </p>
+          </div>
+          <div class="field-toggle shrink-0">
+            <span class="text-xs font-semibold text-bluedark" id="createLateToggleLabel">{{ old('enable_late_policy', '0') == '1' ? 'Aktif' : 'Nonaktif' }}</span>
+            <label class="toggle-switch">
+              <input type="hidden" name="enable_late_policy" value="0">
+              <input type="checkbox" name="enable_late_policy" id="createLateToggle" value="1" {{ old('enable_late_policy', '0') == '1' ? 'checked' : '' }}>
+              <span class="slider"></span>
+            </label>
           </div>
         </div>
 
-        <div class="field-toggle self-end">
-          <span>Gunakan Kebijakan Keterlambatan</span>
-          <label class="toggle-switch">
-            <input type="checkbox" name="enable_late_policy" value="1" checked>
-            <span class="slider"></span>
-          </label>
+        <div id="createLateWrap" class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-bluelight/60 {{ old('enable_late_policy', '0') == '1' ? '' : 'hidden' }}">
+          <div>
+            <label class="f-label text-xs">Nilai Pengurangan Poin</label>
+            <div class="relative">
+              <input type="number" name="reduction_value" value="{{ old('reduction_value', 5) }}" min="0" max="100" class="f-input">
+              <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-bluedark/50 font-medium pointer-events-none">Poin</span>
+            </div>
+          </div>
+          <div>
+            <label class="f-label text-xs">Interval Keterlambatan</label>
+            <select name="interval" class="f-select">
+              <option value="MINGGU" {{ old('interval', 'MINGGU') === 'MINGGU' ? 'selected' : '' }}>Per Minggu (7 Hari)</option>
+              <option value="HARI" {{ old('interval') === 'HARI' ? 'selected' : '' }}>Per Hari (1 Hari)</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -192,4 +258,49 @@
   </div>
 
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const lateToggle = document.getElementById('createLateToggle');
+    const lateWrap = document.getElementById('createLateWrap');
+    const lateLabel = document.getElementById('createLateToggleLabel');
+    if (lateToggle && lateWrap && lateLabel) {
+      lateToggle.addEventListener('change', function () {
+        if (this.checked) {
+          lateWrap.classList.remove('hidden');
+          lateLabel.textContent = 'Aktif';
+        } else {
+          lateWrap.classList.add('hidden');
+          lateLabel.textContent = 'Nonaktif';
+        }
+      });
+    }
+
+    const rubricToggle = document.getElementById('createRubricToggle');
+    const rubricWrap = document.getElementById('createRubricWrap');
+    const rubricSelect = document.getElementById('createRubricSelect');
+    if (rubricToggle && rubricWrap && rubricSelect) {
+      rubricToggle.addEventListener('change', function () {
+        if (this.checked) {
+          rubricWrap.classList.remove('hidden');
+        } else {
+          rubricWrap.classList.add('hidden');
+          rubricSelect.value = '';
+        }
+      });
+    }
+
+    const subToggle = document.getElementById('createSubmissionToggle');
+    const subWrap = document.getElementById('createInstructionsWrap');
+    if (subToggle && subWrap) {
+      subToggle.addEventListener('change', function () {
+        if (this.checked) {
+          subWrap.classList.remove('hidden');
+        } else {
+          subWrap.classList.add('hidden');
+        }
+      });
+    }
+  });
+</script>
 @endsection

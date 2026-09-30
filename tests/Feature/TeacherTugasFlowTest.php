@@ -204,4 +204,197 @@ class TeacherTugasFlowTest extends TestCase
         $this->assertEquals('Tugas Diperbarui', $existing->title);
         $this->assertEquals(100, (float) $existing->max_score);
     }
+
+    public function test_teacher_can_create_remedial_as_draft_without_online_submission(): void
+    {
+        $column = $this->gradebook->columns()->firstOrFail();
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.assessments.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => 'REMEDIAL',
+            'title' => 'Remidi Ulangan Harian 1',
+            'description' => 'Tes remidi lisan / tertulis di kelas.',
+            'max_score' => 75,
+            'status' => 'DRAFT',
+            'submission_required' => 0,
+            'use_default_policy' => 1,
+        ]);
+
+        $response->assertRedirect(route('teacher.assessments.index', ['assignment_id' => $this->assignment->id]));
+
+        $assessment = Assessment::where('title', 'Remidi Ulangan Harian 1')->firstOrFail();
+        $this->assertEquals(AssessmentType::Remedial, $assessment->type);
+        $this->assertEquals(AssessmentStatus::Draft, $assessment->status);
+        $this->assertNull($assessment->published_at);
+        $this->assertFalse($assessment->submission_required);
+        $this->assertNull($assessment->instructions);
+    }
+
+    public function test_teacher_can_create_quiz_published_with_submission_and_instructions(): void
+    {
+        $column = $this->gradebook->columns()->firstOrFail();
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.assessments.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => 'QUIZ',
+            'title' => 'Kuis Pemahaman Logika Algoritma',
+            'description' => 'Kerjakan kuis logika 10 soal.',
+            'max_score' => 100,
+            'status' => 'PUBLISHED',
+            'submission_required' => 1,
+            'instructions' => 'Unggah dokumen jawaban dalam format PDF dengan ukuran maksimal 5MB.',
+            'use_default_policy' => 1,
+        ]);
+
+        $response->assertRedirect(route('teacher.assessments.index', ['assignment_id' => $this->assignment->id]));
+
+        $assessment = Assessment::where('title', 'Kuis Pemahaman Logika Algoritma')->firstOrFail();
+        $this->assertEquals(AssessmentType::Quiz, $assessment->type);
+        $this->assertEquals(AssessmentStatus::Published, $assessment->status);
+        $this->assertNotNull($assessment->published_at);
+        $this->assertTrue($assessment->submission_required);
+        $this->assertEquals('Unggah dokumen jawaban dalam format PDF dengan ukuran maksimal 5MB.', $assessment->instructions);
+    }
+
+    public function test_teacher_can_publish_previously_draft_assessment(): void
+    {
+        $column = $this->gradebook->columns()->firstOrFail();
+
+        $draft = Assessment::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => AssessmentType::Project,
+            'title' => 'Projek Portofolio Web Awal',
+            'max_score' => 100,
+            'submission_required' => true,
+            'instructions' => 'Sertakan link repositori GitHub.',
+            'created_by' => $this->teacherUser->teacherProfile->id,
+            'published_at' => null,
+            'status' => AssessmentStatus::Draft,
+        ]);
+
+        $this->assertNull($draft->published_at);
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.assessments.store'), [
+            'assessment_id' => $draft->id,
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => 'PROJECT',
+            'title' => 'Projek Portofolio Web Final',
+            'max_score' => 100,
+            'status' => 'PUBLISHED',
+            'submission_required' => 1,
+            'instructions' => 'Sertakan link repositori GitHub dan file PDF laporan.',
+            'use_default_policy' => 1,
+        ]);
+
+        $response->assertRedirect(route('teacher.assessments.index', ['assignment_id' => $this->assignment->id]));
+
+        $draft->refresh();
+        $this->assertEquals('Projek Portofolio Web Final', $draft->title);
+        $this->assertEquals(AssessmentType::Project, $draft->type);
+        $this->assertEquals(AssessmentStatus::Published, $draft->status);
+        $this->assertNotNull($draft->published_at);
+        $this->assertTrue($draft->submission_required);
+    }
+
+    public function test_teacher_can_disable_late_penalty_policy(): void
+    {
+        $column = $this->gradebook->columns()->firstOrFail();
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.assessments.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => 'TUGAS',
+            'title' => 'Tugas Tanpa Pengurangan Nilai Keterlambatan',
+            'max_score' => 100,
+            'enable_late_policy' => 0,
+        ]);
+
+        $response->assertRedirect(route('teacher.assessments.index', ['assignment_id' => $this->assignment->id]));
+
+        $assessment = Assessment::where('title', 'Tugas Tanpa Pengurangan Nilai Keterlambatan')->firstOrFail();
+        $this->assertNotNull($assessment->latePolicy);
+        $this->assertFalse((bool) $assessment->latePolicy->enabled);
+    }
+
+    public function test_new_task_defaults_to_draft_and_no_submission_required(): void
+    {
+        $column = $this->gradebook->columns()->firstOrFail();
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.assessments.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'type' => 'TUGAS',
+            'title' => 'Tugas Baru Default Draf',
+            'max_score' => 100,
+        ]);
+
+        $response->assertRedirect(route('teacher.assessments.index', ['assignment_id' => $this->assignment->id]));
+
+        $assessment = Assessment::where('title', 'Tugas Baru Default Draf')->firstOrFail();
+        $this->assertEquals(AssessmentStatus::Draft, $assessment->status);
+        $this->assertNull($assessment->published_at);
+        $this->assertFalse($assessment->submission_required);
+        $this->assertNotNull($assessment->latePolicy);
+        $this->assertFalse((bool) $assessment->latePolicy->enabled);
+    }
+
+    public function test_ui_has_rubric_below_info_and_late_policy_at_bottom(): void
+    {
+        // 1. Index Page
+        $resIndex = $this->actingAs($this->teacherUser)->get(route('teacher.assessments.index'));
+        $resIndex->assertStatus(200);
+
+        $contentIndex = $resIndex->getContent();
+        $infoPosIndex = strpos($contentIndex, 'Batas Pengumpulan (Deadline)');
+        $rubricPosIndex = strpos($contentIndex, 'Gunakan Rubrik Penilaian');
+        $pubPosIndex = strpos($contentIndex, 'Status Publikasi');
+        $subPosIndex = strpos($contentIndex, 'Wajibkan Pengiriman');
+        $latePosIndex = strpos($contentIndex, 'Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat');
+
+        $this->assertNotFalse($infoPosIndex, 'Info tugas should be present on index page');
+        $this->assertNotFalse($rubricPosIndex, 'Rubrik form should be present on index page');
+        $this->assertNotFalse($pubPosIndex, 'Status publikasi should be present on index page');
+        $this->assertNotFalse($subPosIndex, 'Submission should be present on index page');
+        $this->assertNotFalse($latePosIndex, 'Late policy should be present on index page');
+
+        // Verify order: Info -> Rubrik -> Status Publikasi -> Submission -> Late Policy (at the bottom)
+        $this->assertTrue($infoPosIndex < $rubricPosIndex, 'Rubrik must be below info tugas on index page');
+        $this->assertTrue($rubricPosIndex < $pubPosIndex, 'Rubrik must be above Status Publikasi on index page');
+        $this->assertTrue($pubPosIndex < $subPosIndex, 'Status Publikasi must be above Submission on index page');
+        $this->assertTrue($subPosIndex < $latePosIndex, 'Late policy must be positioned at the very bottom on index page');
+
+        $resIndex->assertSee('name="enable_late_policy"', false);
+        $resIndex->assertSee('id="radioStatusDraft"', false);
+        $resIndex->assertSee('checked', false);
+
+        // 2. Create Page
+        $resCreate = $this->actingAs($this->teacherUser)->get(route('teacher.assessments.create'));
+        $resCreate->assertStatus(200);
+
+        $contentCreate = $resCreate->getContent();
+        $infoPosCreate = strpos($contentCreate, 'Batas Pengumpulan (Deadline)');
+        $rubricPosCreate = strpos($contentCreate, 'Gunakan Rubrik Penilaian');
+        $pubPosCreate = strpos($contentCreate, 'Status Publikasi');
+        $subPosCreate = strpos($contentCreate, 'Wajibkan Pengiriman');
+        $latePosCreate = strpos($contentCreate, 'Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat');
+
+        $this->assertNotFalse($infoPosCreate, 'Info tugas should be present on create page');
+        $this->assertNotFalse($rubricPosCreate, 'Rubrik form should be present on create page');
+        $this->assertNotFalse($pubPosCreate, 'Status publikasi should be present on create page');
+        $this->assertNotFalse($subPosCreate, 'Submission should be present on create page');
+        $this->assertNotFalse($latePosCreate, 'Late policy should be present on create page');
+
+        // Verify order: Info -> Rubrik -> Status Publikasi -> Submission -> Late Policy (at the bottom)
+        $this->assertTrue($infoPosCreate < $rubricPosCreate, 'Rubrik must be below info tugas on create page');
+        $this->assertTrue($rubricPosCreate < $pubPosCreate, 'Rubrik must be above Status Publikasi on create page');
+        $this->assertTrue($pubPosCreate < $subPosCreate, 'Status Publikasi must be above Submission on create page');
+        $this->assertTrue($subPosCreate < $latePosCreate, 'Late policy must be positioned at the very bottom on create page');
+
+        $resCreate->assertSee('name="enable_late_policy"', false);
+        $resCreate->assertSee('value="DRAFT" checked', false);
+    }
 }
