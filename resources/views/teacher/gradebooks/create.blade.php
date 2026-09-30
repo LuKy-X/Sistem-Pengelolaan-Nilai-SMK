@@ -142,17 +142,34 @@
 
       <!-- Panel Form Tambahan: Mengedit Kolom yang Sedang Dipilih -->
       <div class="panel p-5 bg-slate-50 border-2 border-blueprim/40 rounded-xl" id="columnEditorCard">
-        <div class="flex items-center justify-between mb-4 pb-2 border-b border-bluelight">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-2 border-b border-bluelight">
           <div class="flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-blueprim animate-pulse"></span>
             <h3 class="font-heading font-bold text-bluedark text-sm">
               Pengaturan Kolom: <span id="editorColNameTitle" class="text-blueprim">Ulangan Harian 1</span>
             </h3>
           </div>
-          <button type="button" id="btnDeleteCurrentCol" class="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 cursor-pointer">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Hapus Kolom Ini
-          </button>
+
+          <div class="flex items-center gap-2">
+            <!-- Geser Posisi Kolom -->
+            <div class="flex items-center bg-white border border-bluelight rounded-lg p-0.5 shadow-2xs">
+              <button type="button" id="btnMoveColLeft" class="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-blueprim hover:bg-slate-100 rounded disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 cursor-pointer transition-colors" title="Geser kolom terpilih satu posisi ke kiri">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                <span>Geser Kiri</span>
+              </button>
+              <div class="w-px h-4 bg-slate-200"></div>
+              <button type="button" id="btnMoveColRight" class="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-blueprim hover:bg-slate-100 rounded disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 cursor-pointer transition-colors" title="Geser kolom terpilih satu posisi ke kanan">
+                <span>Geser Kanan</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+
+            <!-- Hapus Kolom -->
+            <button type="button" id="btnDeleteCurrentCol" class="text-xs text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 hover:bg-red-100/80 cursor-pointer transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Hapus Kolom</span>
+            </button>
+          </div>
         </div>
 
         <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-3 mb-3">
@@ -196,6 +213,34 @@
             </p>
           </div>
         </div>
+
+        <!-- Section Pilihan Sumber Kolom (Hanya Aktif untuk Kolom Tipe SUMMARY) -->
+        <div id="editorSourcesContainer" class="mt-4 pt-3 border-t border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div>
+              <label class="f-label text-xs font-bold text-bluedark mb-0.5 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-blueprim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Pilih Kolom Sumber Perhitungan Nilai</span>
+              </label>
+              <p class="text-[11px] text-bluedark/60">
+                Centang kolom mana saja yang nilainya akan dikalkulasikan ke dalam kolom <span id="editorSourcesColCode" class="font-bold text-blueprim">RUH</span> ini.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnSelectAllSources" class="text-[11px] text-blueprim hover:underline font-semibold cursor-pointer">
+                Pilih Semua
+              </button>
+              <span class="text-slate-300 text-xs">|</span>
+              <button type="button" id="btnResetSources" class="text-[11px] text-slate-500 hover:underline cursor-pointer">
+                Kosongkan
+              </button>
+            </div>
+          </div>
+
+          <div id="sourcesCheckboxesList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 bg-white p-3 rounded-lg border border-slate-200 max-h-48 overflow-y-auto">
+            <!-- Dynamic checkboxes generated in JS -->
+          </div>
+        </div>
       </div>
 
       <!-- Container Hidden Inputs untuk submit ke Controller -->
@@ -236,6 +281,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const editorInputWeight = document.getElementById("editorInputWeight");
   const editorInputMax = document.getElementById("editorInputMax");
   const btnDeleteCurrentCol = document.getElementById("btnDeleteCurrentCol");
+  const btnMoveColLeft = document.getElementById("btnMoveColLeft");
+  const btnMoveColRight = document.getElementById("btnMoveColRight");
+
+  // Sources elements
+  const editorSourcesContainer = document.getElementById("editorSourcesContainer");
+  const editorSourcesColCode = document.getElementById("editorSourcesColCode");
+  const sourcesCheckboxesList = document.getElementById("sourcesCheckboxesList");
+  const btnSelectAllSources = document.getElementById("btnSelectAllSources");
+  const btnResetSources = document.getElementById("btnResetSources");
 
   // Sample siswa preview
   const sampleStudents = [
@@ -247,20 +301,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Susunan 10 kolom standar kurikulum SMK
   const standardSmkColumns = [
-    { name: 'Ulangan Harian 1', code: 'UH1', type: 'SCORE', calc: 'AVERAGE', weight: 15, max: 100 },
-    { name: 'Ulangan Harian 2', code: 'UH2', type: 'SCORE', calc: 'AVERAGE', weight: 15, max: 100 },
-    { name: 'Rata-rata Ulangan Harian', code: 'RUH', type: 'SUMMARY', calc: 'AVERAGE', weight: 0, max: 100 },
-    { name: 'Tugas 1', code: 'T1', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100 },
-    { name: 'Tugas 2', code: 'T2', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100 },
-    { name: 'Tugas 3', code: 'T3', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100 },
-    { name: 'Rata-rata Tugas', code: 'RTG', type: 'SUMMARY', calc: 'AVERAGE', weight: 0, max: 100 },
-    { name: 'Penilaian Tengah Semester', code: 'MID', type: 'SCORE', calc: 'AVERAGE', weight: 20, max: 100 },
-    { name: 'Penilaian Akhir Semester', code: 'SEM', type: 'SCORE', calc: 'AVERAGE', weight: 20, max: 100 },
-    { name: 'Nilai Akhir Bersih', code: 'NSB', type: 'SUMMARY', calc: 'WEIGHTED_AVERAGE', weight: 100, max: 100 }
+    { name: 'Ulangan Harian 1', code: 'UH1', type: 'SCORE', calc: 'AVERAGE', weight: 15, max: 100, sources: [] },
+    { name: 'Ulangan Harian 2', code: 'UH2', type: 'SCORE', calc: 'AVERAGE', weight: 15, max: 100, sources: [] },
+    { name: 'Rata-rata Ulangan Harian', code: 'RUH', type: 'SUMMARY', calc: 'AVERAGE', weight: 0, max: 100, sources: ['UH1', 'UH2'] },
+    { name: 'Tugas 1', code: 'T1', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100, sources: [] },
+    { name: 'Tugas 2', code: 'T2', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100, sources: [] },
+    { name: 'Tugas 3', code: 'T3', type: 'SCORE', calc: 'AVERAGE', weight: 10, max: 100, sources: [] },
+    { name: 'Rata-rata Tugas', code: 'RTG', type: 'SUMMARY', calc: 'AVERAGE', weight: 0, max: 100, sources: ['T1', 'T2', 'T3'] },
+    { name: 'Penilaian Tengah Semester', code: 'MID', type: 'SCORE', calc: 'AVERAGE', weight: 20, max: 100, sources: [] },
+    { name: 'Penilaian Akhir Semester', code: 'SEM', type: 'SCORE', calc: 'AVERAGE', weight: 20, max: 100, sources: [] },
+    { name: 'Nilai Akhir Bersih', code: 'NSB', type: 'SUMMARY', calc: 'WEIGHTED_AVERAGE', weight: 100, max: 100, sources: ['RUH', 'RTG', 'MID', 'SEM'] }
   ];
 
   let columns = JSON.parse(JSON.stringify(standardSmkColumns));
   let selectedIndex = 0; // Kolom yang sedang aktif diedit
+
+  // Pindahkan urutan kolom (Geser Kiri / Kanan)
+  function moveColumn(fromIndex, toIndex) {
+    if (toIndex < 0 || toIndex >= columns.length || fromIndex === toIndex) return;
+    const item = columns.splice(fromIndex, 1)[0];
+    columns.splice(toIndex, 0, item);
+    selectedIndex = toIndex;
+    renderSpreadsheet();
+    loadColumnToEditor();
+
+    // Scroll kolom terpilih ke viewport
+    setTimeout(() => {
+      const ths = headerRow.querySelectorAll("th");
+      // offset 2 karena index 0 = No, index 1 = Nama Siswa
+      if (ths[toIndex + 2]) {
+        ths[toIndex + 2].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }, 50);
+  }
 
   // Render Horizontal Spreadsheet
   function renderSpreadsheet() {
@@ -272,31 +345,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
     columns.forEach((col, idx) => {
       const isSelected = (idx === selectedIndex);
+      const isSummary = col.type === 'SUMMARY';
       const th = document.createElement("th");
-      th.className = `p-2 min-w-[110px] text-center cursor-pointer transition-all border-r border-slate-200 select-none ${
+      th.className = `p-2 min-w-[125px] text-center cursor-pointer transition-all border-r border-slate-200 select-none ${
         isSelected 
           ? 'bg-blue-100 text-bluedark ring-2 ring-blueprim ring-inset shadow-xs' 
           : 'bg-white hover:bg-bluelight/50 text-slate-700'
       }`;
-      th.title = "Klik untuk mengedit kolom ini";
+      th.title = isSummary 
+        ? `Kalkulasi dari: ${(col.sources && col.sources.length) ? col.sources.join(', ') : 'Semua kolom nilai sebelumnya'}`
+        : 'Klik untuk mengedit kolom ini';
 
-      const isSummary = col.type === 'SUMMARY';
+      const sourcesCount = (col.sources && Array.isArray(col.sources)) ? col.sources.length : 0;
+      const sourcesText = isSummary ? (sourcesCount > 0 ? `${sourcesCount} Sumber` : 'Semua') : `${col.weight}%`;
+
       th.innerHTML = `
         <div class="flex flex-col items-center gap-1">
           <div class="flex items-center justify-between w-full text-[10px] opacity-75">
-            <span class="badge ${isSummary ? 'badge-yellow' : 'badge-blue'} px-1 py-0 text-[9px]">${isSummary ? 'RATA' : 'NILAI'}</span>
-            <span>${col.weight}%</span>
+            <span class="badge ${isSummary ? 'badge-yellow' : 'badge-blue'} px-1 py-0 text-[9px] font-bold">${isSummary ? 'RATA' : 'NILAI'}</span>
+            <span class="font-mono text-[10px] text-slate-600">${sourcesText}</span>
           </div>
-          <div class="font-heading font-bold text-xs truncate max-w-[100px]">${escapeHtml(col.code || 'COL')}</div>
-          <div class="text-[10px] opacity-80 truncate max-w-[100px]">${escapeHtml(col.name)}</div>
-          ${isSelected ? '<span class="text-[9px] font-bold text-blueprim mt-0.5">&bull; Sedang Diedit</span>' : ''}
+          <div class="font-heading font-bold text-xs truncate max-w-[110px] text-bluedark">${escapeHtml(col.code || 'COL')}</div>
+          <div class="text-[10px] opacity-80 truncate max-w-[110px]">${escapeHtml(col.name)}</div>
+          ${isSelected ? `
+            <div class="flex items-center justify-between w-full mt-1 pt-1 border-t border-blue-200">
+              <button type="button" class="btn-th-left p-0.5 text-blue-700 hover:text-white hover:bg-blueprim rounded ${idx === 0 ? 'opacity-20 pointer-events-none' : ''}" title="Geser ke kiri">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+              </button>
+              <span class="text-[9px] font-bold text-blueprim">Aktif</span>
+              <button type="button" class="btn-th-right p-0.5 text-blue-700 hover:text-white hover:bg-blueprim rounded ${idx === columns.length - 1 ? 'opacity-20 pointer-events-none' : ''}" title="Geser ke kanan">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          ` : ''}
         </div>
       `;
 
-      th.addEventListener("click", () => {
+      th.addEventListener("click", (e) => {
+        if (e.target.closest(".btn-th-left") || e.target.closest(".btn-th-right")) return;
         selectedIndex = idx;
         renderSpreadsheet();
         loadColumnToEditor();
+      });
+
+      // Quick move buttons inside TH
+      th.querySelector(".btn-th-left")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moveColumn(idx, idx - 1);
+      });
+      th.querySelector(".btn-th-right")?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        moveColumn(idx, idx + 1);
       });
 
       headerRow.appendChild(th);
@@ -347,6 +446,77 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHiddenInputs();
   }
 
+  // Render pilihan checkbox sumber kolom untuk tipe SUMMARY
+  function renderSourcesCheckboxes() {
+    if (columns.length === 0 || selectedIndex < 0 || selectedIndex >= columns.length) {
+      return;
+    }
+
+    const col = columns[selectedIndex];
+    if (col.type !== 'SUMMARY') {
+      editorSourcesContainer.classList.add("hidden");
+      return;
+    }
+
+    editorSourcesContainer.classList.remove("hidden");
+    editorSourcesColCode.textContent = col.code || 'SUMMARY';
+    sourcesCheckboxesList.innerHTML = "";
+
+    if (!Array.isArray(col.sources)) {
+      col.sources = [];
+    }
+
+    // Kolom-kolom kandidat adalah semua kolom lain selain kolom ini
+    const candidateColumns = columns.filter((_, i) => i !== selectedIndex);
+
+    if (candidateColumns.length === 0) {
+      sourcesCheckboxesList.innerHTML = `
+        <p class="text-xs text-slate-400 italic col-span-full py-2 text-center">
+          Belum ada kolom lain untuk dijadikan sumber perhitungan. Tambahkan kolom nilai terlebih dahulu.
+        </p>
+      `;
+      return;
+    }
+
+    candidateColumns.forEach(cand => {
+      const isChecked = col.sources.includes(cand.code);
+      const isCandSummary = cand.type === 'SUMMARY';
+
+      const label = document.createElement("label");
+      label.className = `flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none text-xs transition-colors ${
+        isChecked 
+          ? 'bg-blue-50/70 border-blueprim/40 text-bluedark shadow-2xs' 
+          : 'bg-slate-50/50 border-slate-200 text-slate-600 hover:bg-slate-100'
+      }`;
+
+      label.innerHTML = `
+        <input type="checkbox" class="source-checkbox rounded text-blueprim focus:ring-blueprim" value="${escapeHtml(cand.code)}" ${isChecked ? 'checked' : ''}>
+        <div class="truncate flex-1">
+          <div class="flex items-center justify-between gap-1">
+            <span class="font-bold font-mono text-[11px] text-bluedark">${escapeHtml(cand.code)}</span>
+            <span class="text-[9px] px-1 py-0 rounded ${isCandSummary ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}">${isCandSummary ? 'Rata' : 'Nilai'}</span>
+          </div>
+          <span class="text-[10px] text-slate-500 block truncate" title="${escapeHtml(cand.name)}">${escapeHtml(cand.name)}</span>
+        </div>
+      `;
+
+      const cb = label.querySelector(".source-checkbox");
+      cb.addEventListener("change", () => {
+        if (cb.checked) {
+          if (!col.sources.includes(cand.code)) {
+            col.sources.push(cand.code);
+          }
+        } else {
+          col.sources = col.sources.filter(s => s !== cand.code);
+        }
+        renderSourcesCheckboxes();
+        renderSpreadsheet();
+      });
+
+      sourcesCheckboxesList.appendChild(label);
+    });
+  }
+
   // Load kolom terpilih ke Panel Editor
   function loadColumnToEditor() {
     if (columns.length === 0 || selectedIndex < 0 || selectedIndex >= columns.length) {
@@ -364,19 +534,37 @@ document.addEventListener("DOMContentLoaded", () => {
     editorInputWeight.value = col.weight;
     editorInputMax.value = col.max;
 
+    // Tombol Geser Status
+    btnMoveColLeft.disabled = (selectedIndex <= 0);
+    btnMoveColRight.disabled = (selectedIndex >= columns.length - 1);
+
     if (col.type === 'SUMMARY') {
       editorCalcGroup.classList.remove("opacity-50", "pointer-events-none");
     } else {
       editorCalcGroup.classList.add("opacity-50", "pointer-events-none");
     }
+
+    renderSourcesCheckboxes();
   }
 
   // Update Live saat mengetik di Panel Editor
   function updateCurrentColumnFromEditor() {
     if (!columns[selectedIndex]) return;
     const col = columns[selectedIndex];
+    const oldCode = col.code;
+    const newCode = (editorInputCode.value || 'COL').toUpperCase();
+
+    // Jika kode berubah, update referensi di kolom-kolom summary lainnya
+    if (oldCode !== newCode) {
+      columns.forEach(c => {
+        if (c.sources && Array.isArray(c.sources)) {
+          c.sources = c.sources.map(s => s === oldCode ? newCode : s);
+        }
+      });
+    }
+
     col.name = editorInputName.value || 'Kolom';
-    col.code = (editorInputCode.value || 'COL').toUpperCase();
+    col.code = newCode;
     col.type = editorSelectType.value;
     col.calc = editorSelectCalc.value;
     col.weight = parseFloat(editorInputWeight.value) || 0;
@@ -384,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     editorColTitle.textContent = `${col.name} (${col.code})`;
     renderSpreadsheet();
+    renderSourcesCheckboxes();
   }
 
   editorInputName.addEventListener("input", updateCurrentColumnFromEditor);
@@ -396,15 +585,48 @@ document.addEventListener("DOMContentLoaded", () => {
   editorInputWeight.addEventListener("input", updateCurrentColumnFromEditor);
   editorInputMax.addEventListener("input", updateCurrentColumnFromEditor);
 
+  // Button Geser Kiri / Kanan di Editor
+  btnMoveColLeft.addEventListener("click", () => {
+    moveColumn(selectedIndex, selectedIndex - 1);
+  });
+
+  btnMoveColRight.addEventListener("click", () => {
+    moveColumn(selectedIndex, selectedIndex + 1);
+  });
+
+  // Pilih Semua Sumber
+  btnSelectAllSources.addEventListener("click", () => {
+    if (!columns[selectedIndex] || columns[selectedIndex].type !== 'SUMMARY') return;
+    columns[selectedIndex].sources = columns.filter((_, i) => i !== selectedIndex).map(c => c.code);
+    renderSourcesCheckboxes();
+    renderSpreadsheet();
+  });
+
+  // Kosongkan Sumber
+  btnResetSources.addEventListener("click", () => {
+    if (!columns[selectedIndex] || columns[selectedIndex].type !== 'SUMMARY') return;
+    columns[selectedIndex].sources = [];
+    renderSourcesCheckboxes();
+    renderSpreadsheet();
+  });
+
   // Hapus Kolom yang Sedang Diedit
   btnDeleteCurrentCol.addEventListener("click", () => {
     if (columns.length <= 1) {
       alert("Buku nilai minimal harus memiliki 1 kolom penilaian.");
       return;
     }
-    const delName = columns[selectedIndex].name;
-    if (confirm(`Hapus kolom "${delName}"?`)) {
+    const delCol = columns[selectedIndex];
+    if (confirm(`Hapus kolom "${delCol.name}"?`)) {
+      const delCode = delCol.code;
       columns.splice(selectedIndex, 1);
+      // Hapus referensi dari kolom summary lain
+      columns.forEach(c => {
+        if (c.sources && Array.isArray(c.sources)) {
+          c.sources = c.sources.filter(s => s !== delCode);
+        }
+      });
+
       selectedIndex = Math.max(0, selectedIndex - 1);
       renderSpreadsheet();
       loadColumnToEditor();
@@ -412,14 +634,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Tambah Kolom Baru ke Samping
-  function addNewColumn(name, code, type, calc = 'AVERAGE', weight = 10, max = 100) {
+  function addNewColumn(name, code, type, calc = 'AVERAGE', weight = 10, max = 100, sources = []) {
     columns.push({
       name: name,
       code: code,
       type: type,
       calc: calc,
       weight: weight,
-      max: max
+      max: max,
+      sources: sources
     });
     selectedIndex = columns.length - 1; // Otomatis pilih kolom yang baru ditambahkan
     renderSpreadsheet();
@@ -432,16 +655,18 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tombol Toolbar Preset
   document.getElementById("btnAddTugasCol").addEventListener("click", () => {
     const num = columns.filter(c => c.code.startsWith("T")).length + 1;
-    addNewColumn(`Tugas ${num}`, `T${num}`, 'SCORE', '', 10, 100);
+    addNewColumn(`Tugas ${num}`, `T${num}`, 'SCORE', '', 10, 100, []);
   });
 
   document.getElementById("btnAddUHCol").addEventListener("click", () => {
     const num = columns.filter(c => c.code.startsWith("UH")).length + 1;
-    addNewColumn(`Ulangan Harian ${num}`, `UH${num}`, 'SCORE', '', 15, 100);
+    addNewColumn(`Ulangan Harian ${num}`, `UH${num}`, 'SCORE', '', 15, 100, []);
   });
 
   document.getElementById("btnAddSummaryCol").addEventListener("click", () => {
-    addNewColumn('Rata-rata Nilai', 'RUH', 'SUMMARY', 'AVERAGE', 0, 100);
+    // Sumber default adalah semua kolom SCORE sebelumnya
+    const prevScoreCodes = columns.filter(c => c.type === 'SCORE').map(c => c.code);
+    addNewColumn('Rata-rata Nilai', 'R' + (columns.filter(c => c.type === 'SUMMARY').length + 1), 'SUMMARY', 'AVERAGE', 0, 100, prevScoreCodes);
   });
 
   document.getElementById("btnPresetSMK").addEventListener("click", () => {
@@ -465,6 +690,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <input type="hidden" name="columns[${idx}][weight]" value="${col.weight}">
         <input type="hidden" name="columns[${idx}][max_score]" value="${col.max}">
       `;
+
+      if (col.type === 'SUMMARY' && Array.isArray(col.sources)) {
+        col.sources.forEach(src => {
+          hiddenContainer.innerHTML += `
+            <input type="hidden" name="columns[${idx}][sources][]" value="${escapeHtml(src)}">
+          `;
+        });
+      }
     });
   }
 

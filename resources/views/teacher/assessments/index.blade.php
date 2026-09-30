@@ -49,7 +49,7 @@
           $subjectName = $assign->subject?->name ?? 'Matematika';
         @endphp
 
-        <button type="button" class="kelas-card w-full"
+        <button type="button" class="kelas-card w-full text-left"
           data-id="{{ $assign->id }}"
           data-kode="{{ $className }}"
           data-jurusan="{{ $deptName }}"
