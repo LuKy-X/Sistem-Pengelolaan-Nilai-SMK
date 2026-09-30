@@ -11,7 +11,7 @@
     $artMap  = config('public_site.department_art', []);
     $keyA    = strtoupper((string) $department->short_name);
     $keyB    = strtoupper((string) $department->code);
-    $artPath = $artMap[$keyA] ?? $artMap[$keyB] ?? $artMap['default'] ?? 'assets/img/hero-jurusan.png';
+    $artPath = $artMap[$keyA] ?? $artMap[$keyB] ?? $artMap['default'] ?? 'assets/images/hero/hero-jurusan.png';
     $artUrl  = asset($artPath);
 @endphp
 

@@ -23,21 +23,21 @@ return [
     |   Rekayasa Perangkat Lunak (RPL) → jurusan-rpl.png
     */
     'department_covers' => [
-        'default' => 'assets/img/hero-jurusan.png',
+        'default' => 'assets/images/hero/hero-jurusan.png',
 
         // By short_name (uppercase)
-        'RPL' => 'assets/img/jurusan-rpl.png',
-        'MESIN' => 'assets/img/jurusan-pemesinan.png',
-        'TEKSTIL' => 'assets/img/jurusan-kain.png',
-        'OTOMOTIF' => 'assets/img/jurusan-ototronik.png',
-        'OTOTRONIK' => 'assets/img/jurusan-ototronik.png',
+        'RPL' => 'assets/images/jurusan/jurusan-rpl.png',
+        'MESIN' => 'assets/images/jurusan/jurusan-pemesinan.png',
+        'TEKSTIL' => 'assets/images/jurusan/jurusan-kain.png',
+        'OTOMOTIF' => 'assets/images/jurusan/jurusan-ototronik.png',
+        'OTOTRONIK' => 'assets/images/jurusan/jurusan-ototronik.png',
 
         // By code (various formats)
-        'TKR' => 'assets/img/jurusan-ototronik.png',
-        'TPK' => 'assets/img/jurusan-kain.png',
-        'TPM' => 'assets/img/jurusan-pemesinan.png',
-        'DKV' => 'assets/img/jurusan-kain.png',
-        'Mekatronika' => 'assets/img/jurusan-pemesinan.png',
+        'TKR' => 'assets/images/jurusan/jurusan-ototronik.png',
+        'TPK' => 'assets/images/jurusan/jurusan-kain.png',
+        'TPM' => 'assets/images/jurusan/jurusan-pemesinan.png',
+        'DKV' => 'assets/images/jurusan/jurusan-kain.png',
+        'Mekatronika' => 'assets/images/jurusan/jurusan-pemesinan.png',
     ],
 
     /*
@@ -45,26 +45,26 @@ return [
     | Keys match `short_name` or `code` in uppercase — first match wins.
     */
     'department_art' => [
-        'default' => 'assets/img/hero-jurusan.png',
-        'RPL' => 'assets/img/jurusan-rpl.png',
-        'MESIN' => 'assets/img/jurusan-pemesinan.png',
-        'TEKSTIL' => 'assets/img/jurusan-kain.png',
-        'OTOMOTIF' => 'assets/img/jurusan-ototronik.png',
-        'OTOTRONIK' => 'assets/img/jurusan-ototronik.png',
-        'TKR' => 'assets/img/jurusan-ototronik.png',
-        'TPK' => 'assets/img/jurusan-kain.png',
-        'TPM' => 'assets/img/jurusan-pemesinan.png',
-        'DKV' => 'assets/img/jurusan-kain.png',
-        'Mekatronika' => 'assets/img/jurusan-pemesinan.png',
+        'default' => 'assets/images/hero/hero-jurusan.png',
+        'RPL' => 'assets/images/jurusan/jurusan-rpl.png',
+        'MESIN' => 'assets/images/jurusan/jurusan-pemesinan.png',
+        'TEKSTIL' => 'assets/images/jurusan/jurusan-kain.png',
+        'OTOMOTIF' => 'assets/images/jurusan/jurusan-ototronik.png',
+        'OTOTRONIK' => 'assets/images/jurusan/jurusan-ototronik.png',
+        'TKR' => 'assets/images/jurusan/jurusan-ototronik.png',
+        'TPK' => 'assets/images/jurusan/jurusan-kain.png',
+        'TPM' => 'assets/images/jurusan/jurusan-pemesinan.png',
+        'DKV' => 'assets/images/jurusan/jurusan-kain.png',
+        'Mekatronika' => 'assets/images/jurusan/jurusan-pemesinan.png',
     ],
 
     /*
     | Fallback artwork used when `school_profile.hero_image` or
     | `school_profile.logo` is null.
     */
-    'hero_fallback' => 'assets/img/hero-jurusan.png',
+    'hero_fallback' => 'assets/images/hero/hero-jurusan.png',
 
-    'logo_fallback' => 'assets/img/logo-smk-bisa-hebat.png',
+    'logo_fallback' => 'assets/images/logo/logo-smk-bisa-hebat.png',
 
     /*
     | Number of items shown on the landing page for each section.

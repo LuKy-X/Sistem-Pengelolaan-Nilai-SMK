@@ -12,7 +12,7 @@
 
         {{-- Brand --}}
         <a href="{{ route('public.home') }}" class="flex items-center gap-2.5 md:gap-3 min-w-0">
-            <img src="{{ asset('assets/img/logo.png') }}"
+            <img src="{{ asset('assets/images/logo/logo.png') }}"
                 alt="Logo {{ $schoolName }}"
                 class="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0">
             <span class="font-heading leading-tight truncate">

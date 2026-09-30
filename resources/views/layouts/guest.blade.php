@@ -7,13 +7,7 @@
 
     <title>@yield('title', 'Masuk') — {{ $schoolName ?? config('app.name') }}</title>
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
