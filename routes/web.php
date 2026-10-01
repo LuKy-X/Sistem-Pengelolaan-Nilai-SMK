@@ -23,11 +23,19 @@ use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
+use App\Http\Controllers\BK\AppealController;
+use App\Http\Controllers\BK\CounselingController;
+use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
+use App\Http\Controllers\BK\DisciplinaryLetterController;
+use App\Http\Controllers\BK\DisciplineController;
+use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
 use App\Http\Controllers\Public\ArticleController;
 use App\Http\Controllers\Public\CareerController;
+use App\Http\Controllers\Public\ChatbotController;
 use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
@@ -62,7 +70,7 @@ Route::get('/', function (Request $request) {
         return redirect()->route('login');
     }
 
-    return redirect()->route($request->user()->dashboardRoute());
+    return redirect()->route($request->user()->dashboardRouteName());
 })->name('home');
 
 // ==========================================
@@ -92,6 +100,17 @@ Route::name('public.')->group(function () {
     Route::redirect('/karir', '/karier')->name('career.legacy');
 
     Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
+
+    // ==========================================
+    // 1b. PUBLIC CHATBOT (JSON, read-only)
+    // ==========================================
+    // `throttle` keeps a single visitor from hammering the CMS queries behind the
+    // assistant. The endpoint stays outside the `auth` groups on purpose so both
+    // guests and signed-in staff browsing the public site get the same answers.
+    Route::prefix('tanya-ai')->middleware('throttle:30,1')->group(function () {
+        Route::get('/', [ChatbotController::class, 'opening'])->name('chatbot.opening');
+        Route::post('/', [ChatbotController::class, 'reply'])->name('chatbot.reply');
+    });
 });
 
 // ==========================================
@@ -103,7 +122,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    // GET is supported so visiting /logout directly in the browser also clears
+    // the session; the navbar/profile dropdown still submits a POST form.
+    Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
 
     // ==========================================
     // 3. ADMIN ROUTES (role:admin)

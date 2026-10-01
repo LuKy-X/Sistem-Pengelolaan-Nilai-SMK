@@ -3,6 +3,7 @@
 namespace App\Http\Requests\BK;
 
 use App\Enums\DisciplineCategoryType;
+use App\Http\Requests\BK\Concerns\ValidatesCounselorStudent;
 use App\Models\DisciplineCategory;
 use App\Models\DisciplineRecord;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -12,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class StoreDisciplineRecordRequest extends FormRequest
 {
+    use ValidatesCounselorStudent;
+
     /**
      * Sumber catatan yang tersedia untuk pencatatan oleh Guru BK.
      *
@@ -40,7 +43,7 @@ class StoreDisciplineRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id' => ['required', 'integer', 'exists:student_profiles,id'],
+            'student_id' => ['required', 'integer', $this->counselorStudentRule()],
             'category_id' => ['required', 'integer', Rule::exists(DisciplineCategory::class, 'id')->where('is_active', true)],
             'points_delta' => ['required', 'integer', 'not_in:0', 'min:-1000', 'max:1000'],
             'occurred_at' => ['required', 'date', 'before_or_equal:today'],

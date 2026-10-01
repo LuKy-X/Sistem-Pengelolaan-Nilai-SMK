@@ -105,7 +105,7 @@
 
     @if ($relatedProducts->isNotEmpty())
         <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 pb-20 sm:pb-24 md:pb-28">
-            <x-public.section-heading eyebrow="Karya Siswa &amp; Sekolah" title="Produk Lainnya" />
+            <x-public.section-heading eyebrow="Karya Siswa & Sekolah" title="Produk Lainnya" />
 
             <div class="mt-6 sm:mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-group">
                 @foreach ($relatedProducts as $related)

@@ -43,6 +43,23 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'role_user');
     }
 
+    /**
+     * Kelas binaan untuk Guru BK.
+     */
+    public function counseledClasses(): BelongsToMany
+    {
+        return $this->belongsToMany(SchoolClass::class, 'counselor_class', 'user_id', 'class_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function counseledClassIds(): array
+    {
+        return $this->counseledClasses()->pluck('classes.id')->all();
+    }
+
     public function teacherProfile(): HasOne
     {
         return $this->hasOne(TeacherProfile::class);

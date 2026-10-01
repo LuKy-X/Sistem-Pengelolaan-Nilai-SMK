@@ -217,114 +217,322 @@ function initAutoDismissFlash() {
 
 /* =========================================================
    AI CHAT WIDGET
+
+   Every answer comes from `POST /tanya-ai`, which reads the live
+   CMS tables server-side. The widget owns presentation only:
+   open/close, optimistic echo, typing indicator, suggestion chips
+   and a tiny safe renderer for the `**bold**` / newline subset the
+   backend emits (no innerHTML, so a CMS value can never inject
+   markup into the page).
    ========================================================= */
 function initAiChat() {
-    var aiFab     = document.getElementById('aiChatFab');
-    var aiReset   = document.getElementById('aiChatReset');
-    var aiPanel   = document.getElementById('aiChatPanel');
-    var aiClose   = document.getElementById('aiChatClose');
-    var aiForm    = document.getElementById('aiChatForm');
-    var aiInput   = document.getElementById('aiChatInput');
-    var aiMessages = document.getElementById('aiChatMessages');
+    var panel     = document.getElementById('aiChatPanel');
+    var fab       = document.getElementById('aiChatFab');
+    var resetBtn  = document.getElementById('aiChatReset');
+    var resetTop  = document.getElementById('aiChatResetTop');
+    var closeBtn  = document.getElementById('aiChatClose');
+    var form      = document.getElementById('aiChatForm');
+    var input     = document.getElementById('aiChatInput');
+    var list      = document.getElementById('aiChatMessages');
+    var suggestionBar = document.getElementById('aiChatSuggestions');
 
-    if (!aiFab || !aiPanel) return;
+    if (!panel || !fab || !list || !form || !input) return;
 
-    var aiGreeting = 'Halo! 👋 Aku asisten virtual SMK Negeri 2 Karanganyar. Ada yang bisa dibantu seputar PPDB, jurusan, PKL, atau produk unggulan sekolah?';
+    var replyUrl  = panel.dataset.replyUrl;
+    var csrfToken = panel.dataset.csrf;
+    var busy      = false;
+
+    var MIN_MESSAGE_LENGTH = 2;
+    var MIN_TYPING_MS = 420;
+
+    /* ---------- rendering helpers ---------- */
+
+    function scrollToLatest() {
+        list.scrollTop = list.scrollHeight;
+    }
+
+    function bubbleClass(who) {
+        return 'ai-chat-bubble ai-chat-bubble--' + who;
+    }
+
+    var BOT_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M8 7V5a4 4 0 018 0v2"/></svg>';
+
+    /**
+     * Build a message row. `reply` may contain newlines and `**bold**`
+     * markers; everything is appended as text nodes, never as HTML.
+     */
+    function addMessage(text, who, links) {
+        var row = document.createElement('div');
+        row.className = 'ai-chat-row ai-chat-row--' + who;
+
+        if (who === 'bot') {
+            var avatar = document.createElement('span');
+            avatar.className = 'ai-chat-row__avatar';
+            avatar.innerHTML = BOT_ICON;
+            row.appendChild(avatar);
+        }
+
+        var bubble = document.createElement('div');
+        bubble.className = bubbleClass(who);
+
+        String(text).split('\n').forEach(function (line, index) {
+            if (index > 0) bubble.appendChild(document.createElement('br'));
+            appendRichLine(bubble, line);
+        });
+
+        if (links && links.length) {
+            var linkWrap = document.createElement('div');
+            linkWrap.className = 'ai-chat-links';
+
+            links.forEach(function (link) {
+                var anchor = document.createElement('a');
+                anchor.href = link.url;
+                anchor.textContent = link.label;
+                anchor.rel = 'noopener';
+                linkWrap.appendChild(anchor);
+            });
+
+            bubble.appendChild(linkWrap);
+        }
+
+        row.appendChild(bubble);
+        list.appendChild(row);
+        scrollToLatest();
+
+        return row;
+    }
+
+    /** Split on `**bold**` and append text/strong nodes only. */
+    function appendRichLine(target, line) {
+        var parts = line.split(/\*\*/);
+
+        parts.forEach(function (part, index) {
+            if (part === '') return;
+
+            if (index % 2 === 1) {
+                var strong = document.createElement('strong');
+                strong.textContent = part;
+                target.appendChild(strong);
+            } else {
+                target.appendChild(document.createTextNode(part));
+            }
+        });
+    }
+
+    function showTyping() {
+        var row = document.createElement('div');
+        row.className = 'ai-chat-row ai-chat-row--bot';
+        row.dataset.typing = 'true';
+
+        var avatar = document.createElement('span');
+        avatar.className = 'ai-chat-row__avatar';
+        avatar.innerHTML = BOT_ICON;
+        row.appendChild(avatar);
+
+        var bubble = document.createElement('div');
+        // `ai-chat-typing` is what drives the three bouncing dots in CSS.
+        bubble.className = bubbleClass('bot') + ' ai-chat-typing';
+        bubble.setAttribute('aria-label', 'Asisten sedang mengetik');
+
+        [0, 1, 2].forEach(function () {
+            bubble.appendChild(document.createElement('span'));
+        });
+
+        row.appendChild(bubble);
+        list.appendChild(row);
+        scrollToLatest();
+
+        return row;
+    }
+
+    function removeTyping(node) {
+        if (node && node.parentNode) node.parentNode.removeChild(node);
+    }
+
+    function setBusy(value) {
+        busy = value;
+        var send = form.querySelector('button[type="submit"]');
+        if (send) {
+            send.disabled = value;
+            send.setAttribute('aria-label', value ? 'Menunggu jawaban' : 'Kirim pertanyaan');
+        }
+        input.disabled = value;
+    }
+
+    /* ---------- suggestion chips ---------- */
+
+    function renderSuggestions(items) {
+        if (!suggestionBar) return;
+
+        suggestionBar.innerHTML = '';
+
+        (items || []).forEach(function (label) {
+            var chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'ai-chat-suggestion';
+            chip.textContent = label;
+            chip.addEventListener('click', function () {
+                if (busy) return;
+                ask(label);
+            });
+            suggestionBar.appendChild(chip);
+        });
+
+        suggestionBar.hidden = !items || !items.length;
+    }
+
+    /* ---------- network ---------- */
+
+    function post(url, payload) {
+        var body = new FormData();
+        body.append('_token', csrfToken);
+        Object.keys(payload).forEach(function (key) { body.append(key, payload[key]); });
+
+        return fetch(url, {
+            method: 'POST',
+            body: body,
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        }).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (data) {
+                if (!response.ok) {
+                    var message = (data.errors && data.errors.message && data.errors.message[0])
+                        || (data.message || 'Maaf, layanan sedang tidak tersedia.');
+
+                    throw new Error(message);
+                }
+
+                return data;
+            });
+        });
+    }
+
+    /** Keep the dots on screen long enough to read, even on a fast reply. */
+    function minimumDelay(startedAt) {
+        var elapsed = Date.now() - startedAt;
+
+        return elapsed < MIN_TYPING_MS
+            ? new Promise(function (resolve) { window.setTimeout(resolve, MIN_TYPING_MS - elapsed); })
+            : Promise.resolve();
+    }
+
+    function ask(question) {
+        if (busy) return;
+
+        var value = String(question).trim();
+
+        // Guard the length here so a stray keystroke never becomes a round trip
+        // that comes back as a validation error.
+        if (value.length < MIN_MESSAGE_LENGTH) {
+            addMessage('Tulis pertanyaan yang sedikit lebih lengkap ya, minimal ' + MIN_MESSAGE_LENGTH + ' huruf.', 'bot');
+            input.focus();
+            scrollToLatest();
+            return;
+        }
+
+        addMessage(value, 'user');
+        input.value = '';
+
+        var typing = showTyping();
+        var startedAt = Date.now();
+
+        setBusy(true);
+        renderSuggestions([]);
+
+        post(replyUrl, { message: value })
+            .then(function (data) {
+                return minimumDelay(startedAt).then(function () { return data; });
+            })
+            .then(function (data) {
+                removeTyping(typing);
+                addMessage(data.reply || 'Maaf, aku belum bisa menjawab itu.', 'bot', data.links);
+                renderSuggestions(data.suggestions);
+            })
+            .catch(function (error) {
+                return minimumDelay(startedAt).then(function () { throw error; });
+            })
+            .catch(function (error) {
+                removeTyping(typing);
+                addMessage(error.message || 'Koneksi ke server terputus. Coba beberapa saat lagi.', 'bot');
+                renderSuggestions([]);
+            })
+            .then(function () {
+                setBusy(false);
+                input.focus();
+                scrollToLatest();
+            });
+    }
+
+    /* ---------- lifecycle ---------- */
+
+    function greet() {
+        list.innerHTML = '';
+
+        // Render a local greeting immediately so the panel never opens empty,
+        // then let the backend replace it with the real opening message.
+        addMessage('Menghubungkan ke data sekolah...', 'bot');
+
+        fetch(panel.dataset.openingUrl, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+        })
+            .then(function (response) { return response.ok ? response.json() : null; })
+            .then(function (data) {
+                if (!data || !data.reply) return;
+                list.innerHTML = '';
+                addMessage(data.reply, 'bot');
+                renderSuggestions(data.suggestions);
+            })
+            .catch(function () {
+                if (!list.querySelector('.ai-chat-bubble')) {
+                    list.innerHTML = '';
+                    addMessage('Halo! Saya asisten virtual sekolah. Silakan tulis pertanyaanmu.', 'bot');
+                }
+            });
+    }
 
     function openPanel() {
-        aiPanel.hidden = false;
-        aiFab.setAttribute('aria-expanded', 'true');
-        aiFab.setAttribute('aria-label', 'Tutup chat AI');
-        if (aiReset) aiReset.classList.add('is-visible');
-        setTimeout(function () { aiInput && aiInput.focus(); }, 150);
+        if (!panel.hidden) return;
+
+        panel.hidden = false;
+        fab.setAttribute('aria-expanded', 'true');
+        fab.setAttribute('aria-label', 'Tutup chat AI');
+        if (resetBtn) resetBtn.classList.add('is-visible');
+
+        if (!list.children.length) greet();
+
+        window.setTimeout(function () { input.focus(); }, 180);
     }
 
     function closePanel() {
-        aiPanel.hidden = true;
-        aiFab.setAttribute('aria-expanded', 'false');
-        aiFab.setAttribute('aria-label', 'Buka chat AI');
-        if (aiReset) aiReset.classList.remove('is-visible');
+        if (panel.hidden) return;
+
+        panel.hidden = true;
+        fab.setAttribute('aria-expanded', 'false');
+        fab.setAttribute('aria-label', 'Buka chat AI');
+        if (resetBtn) resetBtn.classList.remove('is-visible');
     }
 
-    aiFab.addEventListener('click', function () {
-        aiPanel.hidden ? openPanel() : closePanel();
+    fab.addEventListener('click', function () { panel.hidden ? openPanel() : closePanel(); });
+    if (closeBtn) closeBtn.addEventListener('click', closePanel);
+    if (resetBtn) resetBtn.addEventListener('click', greet);
+    if (resetTop) resetTop.addEventListener('click', greet);
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        var value = input.value.trim();
+        if (!value || busy) return;
+
+        ask(value);
     });
 
-    if (aiClose) aiClose.addEventListener('click', closePanel);
-
-    function addMessage(text, who) {
-        var bubble       = document.createElement('div');
-        bubble.className = 'ai-chat-msg ai-chat-msg--' + who;
-        bubble.textContent = text;
-        aiMessages.appendChild(bubble);
-        aiMessages.scrollTop = aiMessages.scrollHeight;
-        return bubble;
-    }
-
-    function resetChat() {
-        if (!aiMessages) return;
-        aiMessages.innerHTML = '';
-        addMessage(aiGreeting, 'bot');
-        if (aiInput) { aiInput.value = ''; aiInput.focus(); }
-    }
-
-    if (aiReset) aiReset.addEventListener('click', resetChat);
-
-    var aiFaq = [
-        {
-            keys:  ['ppdb', 'daftar', 'pendaftaran'],
-            reply: 'Pendaftaran PPDB sudah dibuka! Cek alur, syarat, dan link pendaftaran online lengkap di bagian "PPDB" pada halaman ini.'
-        },
-        {
-            keys:  ['jurusan', 'program keahlian'],
-            reply: 'Kami punya 4 jurusan unggulan: Teknik Pemesinan, Teknik Pembuatan Kain, Teknik Ototronik, dan Rekayasa Perangkat Lunak. Detailnya ada di bagian "Jurusan Unggulan".'
-        },
-        {
-            keys:  ['pkl', 'magang', 'karier', 'bkk', 'kerja'],
-            reply: 'Info PKL, lowongan kerja, dan mitra industri bisa kamu lihat di bagian "PKL & Career Center".'
-        },
-        {
-            keys:  ['produk', 'jasa', 'harga', 'katalog'],
-            reply: 'Produk & jasa unggulan hasil karya siswa bisa kamu lihat di bagian "Produk Unggulan Sekolah", lengkap dengan deskripsi, fitur, dan harga.'
-        },
-        {
-            keys:  ['alumni', 'lulusan'],
-            reply: 'Lulusan kami banyak yang terserap kerja atau kuliah. Cerita alumni ada di bagian "Lulusan Terbaik".'
-        },
-        {
-            keys:  ['kontak', 'telepon', 'email', 'alamat'],
-            reply: 'Info kontak lengkap ada di bagian footer halaman ini, termasuk nomor telepon dan email sekolah.'
-        },
-    ];
-
-    function getReply(message) {
-        var lower = message.toLowerCase();
-        for (var i = 0; i < aiFaq.length; i++) {
-            for (var j = 0; j < aiFaq[i].keys.length; j++) {
-                if (lower.indexOf(aiFaq[i].keys[j]) !== -1) return aiFaq[i].reply;
-            }
-        }
-        return 'Terima kasih atas pertanyaanmu! Untuk info lebih detail, silakan jelajahi bagian PPDB, Jurusan, PKL & Career Center, atau Produk Unggulan Sekolah di halaman ini, ya.';
-    }
-
-    if (aiForm && aiInput) {
-        aiForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            var value = aiInput.value.trim();
-            if (!value) return;
-
-            addMessage(value, 'user');
-            aiInput.value = '';
-
-            var typing       = document.createElement('div');
-            typing.className = 'ai-chat-msg ai-chat-msg--bot';
-            typing.textContent = 'Mengetik...';
-            aiMessages.appendChild(typing);
-            aiMessages.scrollTop = aiMessages.scrollHeight;
-
-            setTimeout(function () { typing.textContent = getReply(value); }, 600);
-        });
-    }
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !panel.hidden) closePanel();
+    });
 }
 
 /* =========================================================
