@@ -943,6 +943,19 @@ body {
 .pagination button.active { background: #2196F3; color: #fff; }
 .pagination button:disabled { opacity: .35; cursor: not-allowed; }
 
+/* Pagination link-based (modul BK, <a> hasil Laravel paginate()->links()) */
+.bk-pagination { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.bk-pagination a, .bk-pagination span {
+  min-width: 30px; height: 30px; padding: 0 .5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #E3F2FD; border-radius: .6rem; background: #fff;
+  color: #0D47A1; font-size: .78rem; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.bk-pagination a:hover { background: #E3F2FD; }
+.bk-pagination a.is-active, .bk-pagination span.is-active { background: #2196F3; border-color: #2196F3; color: #fff; }
+.bk-pagination span.is-disabled, .bk-pagination span.pg-ellipsis { opacity: .4; border-color: transparent; background: transparent; }
+
 /* Toggle switch */
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }

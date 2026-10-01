@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\BK;
 
+use App\Http\Requests\BK\Concerns\ValidatesCounselorStudent;
 use App\Models\DisciplineCategory;
 use App\Models\DisciplineRecord;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class StoreCounselingLogRequest extends FormRequest
 {
+    use ValidatesCounselorStudent;
+
     /**
      * Jenis layanan bimbingan & konseling yang direkam sebagai jejak konseling.
      *
@@ -34,7 +37,7 @@ class StoreCounselingLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_id' => ['required', 'integer', 'exists:student_profiles,id'],
+            'student_id' => ['required', 'integer', $this->counselorStudentRule()],
             'service_type' => ['required', Rule::in(self::SERVICE_TYPES)],
             'category_id' => ['required', 'integer', Rule::exists(DisciplineCategory::class, 'id')->where('is_active', true)],
             'occurred_at' => ['required', 'date', 'before_or_equal:today'],
@@ -49,6 +52,7 @@ class StoreCounselingLogRequest extends FormRequest
     {
         return [
             'student_id.required' => 'Pilih siswa yang menerima layanan konseling.',
+            'student_id.exists' => 'Siswa yang dipilih tidak termasuk kelas binaan Anda.',
             'service_type.required' => 'Pilih jenis layanan konseling.',
             'service_type.in' => 'Jenis layanan konseling tidak valid.',
             'category_id.required' => 'Pilih kategori catatan konseling.',

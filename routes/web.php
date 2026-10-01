@@ -1,6 +1,13 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BK\AppealController;
+use App\Http\Controllers\BK\CounselingController;
+use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
+use App\Http\Controllers\BK\DisciplinaryLetterController;
+use App\Http\Controllers\BK\DisciplineController;
+use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -10,13 +17,6 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
-use App\Http\Controllers\BK\AppealController;
-use App\Http\Controllers\BK\CounselingController;
-use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
-use App\Http\Controllers\BK\DisciplinaryLetterController;
-use App\Http\Controllers\BK\DisciplineController;
-use App\Http\Controllers\BK\ExitPermitController;
-use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -88,7 +88,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    // GET is supported so visiting /logout directly in the browser also clears
+    // the session; the navbar/profile dropdown still submits a POST form.
+    Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
 
     // ==========================================
     // 3. ADMIN ROUTES (role:admin)

@@ -12,6 +12,7 @@ use App\Models\DisciplineRecord;
 use App\Models\ExitPermit;
 use App\Models\ExitPermitAppeal;
 use App\Models\ExitPermitReason;
+use App\Models\SchoolClass;
 use App\Models\StaffProfile;
 use App\Models\StudentProfile;
 use App\Models\User;
@@ -34,6 +35,15 @@ class SampleBkDataSeeder extends Seeder
             $this->command->warn('Data master (siswa / kategori / alasan) belum lengkap. Jalankan seeder utama dulu.');
 
             return;
+        }
+
+        // ─── 0. Assign kelas binaan ke Guru BK ───────────────────────────────
+        if ($bkUser !== null) {
+            $activeClassIds = SchoolClass::where('is_active', true)->pluck('id')->all();
+
+            if ($activeClassIds !== []) {
+                $bkUser->counseledClasses()->syncWithoutDetaching($activeClassIds);
+            }
         }
 
         // ─── 1. Poin Disiplin (DisciplineRecord) ─────────────────────────────

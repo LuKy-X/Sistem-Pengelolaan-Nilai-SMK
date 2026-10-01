@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BK;
 use App\Enums\DisciplineCategoryType;
 use App\Http\Controllers\BK\Concerns\HandlesDisciplinePoints;
 use App\Http\Controllers\BK\Concerns\RecordsAuditTrail;
+use App\Http\Controllers\BK\Concerns\ResolvesCounselorClasses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BK\StoreDisciplineRecordRequest;
 use App\Models\DisciplineCategory;
@@ -20,7 +21,7 @@ use Illuminate\View\View;
 
 class DisciplineController extends Controller
 {
-    use HandlesDisciplinePoints, RecordsAuditTrail;
+    use HandlesDisciplinePoints, RecordsAuditTrail, ResolvesCounselorClasses;
 
     public function index(Request $request): View
     {
@@ -29,6 +30,10 @@ class DisciplineController extends Controller
         $academicYear = $this->activeAcademicYear();
         $academicYearId = $academicYear?->id;
         $setting = $this->disciplineSetting($academicYearId);
+
+        $counselorStudentIds = $this->counselorClassIds() === []
+            ? []
+            : $this->counselorStudentOptions()->pluck('id')->all();
 
         $filters = [
             'student_id' => $request->integer('student_id') ?: null,
@@ -41,7 +46,8 @@ class DisciplineController extends Controller
         ];
 
         $recordsQuery = DisciplineRecord::query()
-            ->with(['student.currentEnrollment.schoolClass', 'category', 'creator']);
+            ->with(['student.currentEnrollment.schoolClass', 'category', 'creator'])
+            ->whereIn('student_id', $counselorStudentIds === [] ? [0] : $counselorStudentIds);
 
         $recordsQuery
             ->when($filters['student_id'], fn (Builder $query, int $studentId) => $query->where('student_id', $studentId))
@@ -68,18 +74,14 @@ class DisciplineController extends Controller
             ->withQueryString();
 
         $yearRecords = DisciplineRecord::query()
+            ->whereIn('student_id', $counselorStudentIds === [] ? [0] : $counselorStudentIds)
             ->when($academicYearId !== null, fn (Builder $query) => $query->where('academic_year_id', $academicYearId));
 
         $totals = (clone $yearRecords)
             ->selectRaw('COUNT(*) as total_records, COALESCE(SUM(CASE WHEN points_delta < 0 THEN points_delta ELSE 0 END), 0) as total_violation_points, COALESCE(SUM(CASE WHEN points_delta > 0 THEN points_delta ELSE 0 END), 0) as total_reward_points')
             ->first();
 
-        $studentIds = DisciplineRecord::query()
-            ->when($academicYearId !== null, fn (Builder $query) => $query->where('academic_year_id', $academicYearId))
-            ->distinct()
-            ->pluck('student_id');
-
-        $balances = $this->pointBalanceMap($studentIds->all(), $setting, $academicYearId);
+        $balances = $this->pointBalanceMap($counselorStudentIds, $setting, $academicYearId);
         $thresholdCounts = $this->countStudentsReaching($balances, $setting);
 
         $balanceStudents = StudentProfile::query()
@@ -98,6 +100,7 @@ class DisciplineController extends Controller
         return view('bk.discipline.index', [
             'records' => $records,
             'students' => $this->studentOptions(),
+            'counselorClasses' => $this->counselorClasses(),
             'categories' => $this->categoryOptions(),
             'balanceStudents' => $balanceStudents,
             'setting' => $setting,
@@ -201,11 +204,7 @@ class DisciplineController extends Controller
      */
     protected function studentOptions(): Collection
     {
-        return StudentProfile::query()
-            ->with('currentEnrollment.schoolClass')
-            ->where('status', 'ACTIVE')
-            ->orderBy('full_name')
-            ->get();
+        return $this->counselorStudentOptions();
     }
 
     /**
