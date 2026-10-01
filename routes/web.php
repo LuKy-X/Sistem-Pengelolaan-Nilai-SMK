@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedChatbotController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BK\AppealController;
 use App\Http\Controllers\BK\CounselingController;
@@ -103,6 +104,16 @@ Route::middleware('auth')->group(function () {
     // GET is supported so visiting /logout directly in the browser also clears
     // the session; the navbar/profile dropdown still submits a POST form.
     Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // ==========================================
+    // 2b. AUTHENTICATED CHATBOT (per-role, private data)
+    // ==========================================
+    // All answers are scoped strictly to the authenticated user's own data.
+    // Siswa never sees other students' grades; teachers only see their own classes.
+    Route::prefix('tanya-ai/portal')->middleware('throttle:60,1')->group(function () {
+        Route::get('/', [AuthenticatedChatbotController::class, 'opening'])->name('auth.chatbot.opening');
+        Route::post('/', [AuthenticatedChatbotController::class, 'reply'])->name('auth.chatbot.reply');
+    });
 
     // ==========================================
     // 3. ADMIN ROUTES (role:admin)

@@ -68,13 +68,14 @@
     <div class="ai-chat-launcher">
         <button id="aiChatReset" type="button" aria-label="Mulai obrolan baru"
             class="ai-chat-fab ai-chat-fab--reset">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                 <path d="M21 12a9 9 0 11-2.9-6.6"/>
                 <path d="M21 3v6h-6"/>
             </svg>
         </button>
         <button id="aiChatFab" type="button" aria-label="Buka chat AI" aria-expanded="false"
             class="ai-chat-fab ai-chat-fab--main">
+            <span class="ai-chat-fab__pulse" aria-hidden="true"></span>
             <span class="ai-chat-fab__icon ai-chat-fab__icon--chat">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" aria-hidden="true">
                     <rect x="4" y="7" width="16" height="12" rx="4"/>
@@ -86,50 +87,59 @@
                 </svg>
             </span>
             <span class="ai-chat-fab__icon ai-chat-fab__icon--close">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
             </span>
-        </button>
+            </button>
     </div>
 
-    <div id="aiChatPanel" class="ai-chat-panel" hidden>
-        <div class="bg-gradient-to-r from-blueprim to-bluedark px-4 py-3.5 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" aria-hidden="true">
-                        <rect x="4" y="7" width="16" height="12" rx="4"/>
-                        <path d="M8 7V5a4 4 0 018 0v2"/>
-                        <circle cx="9" cy="13" r="1.2" fill="white" stroke="none"/>
-                        <circle cx="15" cy="13" r="1.2" fill="white" stroke="none"/>
-                    </svg>
-                </div>
-                <div>
-                    <p class="font-heading font-semibold text-white text-sm leading-tight">Tanya AI {{ $schoolName ?? 'SMKN' }}</p>
-                    <p class="text-[11px] text-white/70 leading-tight">Siap bantu jawab pertanyaanmu</p>
-                </div>
-            </div>
-            <button id="aiChatClose" type="button" aria-label="Tutup chat"
-                class="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center text-white transition-colors shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+    <div id="aiChatPanel" class="ai-chat-panel" hidden
+        data-opening-url="{{ route('public.chatbot.opening') }}"
+        data-reply-url="{{ route('public.chatbot.reply') }}"
+        data-csrf="{{ csrf_token() }}">
+
+        <div class="ai-chat-head">
+            <div class="ai-chat-avatar" aria-hidden="true">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <rect x="4" y="7" width="16" height="12" rx="4"/>
+                    <path d="M8 7V5a4 4 0 018 0v2"/>
+                    <circle cx="9" cy="13" r="1.2" fill="currentColor" stroke="none"/>
+                    <circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none"/>
+                    <path d="M9 16.5c1 .8 5 .8 6 0"/>
                 </svg>
-            </button>
+            </div>
+            <div class="ai-chat-head__text">
+                <p class="ai-chat-head__title">Tanya Chatbot</p>
+            </div>
+            <div class="ai-chat-head__actions">
+                <button id="aiChatResetTop" type="button" aria-label="Mulai obrolan baru" class="ai-chat-icon-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M21 12a9 9 0 11-2.9-6.6"/>
+                        <path d="M21 3v6h-6"/>
+                    </svg>
+                </button>
+                <button id="aiChatClose" type="button" aria-label="Tutup chat" class="ai-chat-icon-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <div id="aiChatMessages"
-            class="flex-1 min-h-0 overflow-y-auto px-4 py-4 flex flex-col gap-3 bg-[#F7FBFF]">
-            <div class="ai-chat-msg ai-chat-msg--bot">Halo! 👋 Aku asisten virtual {{ $schoolName ?? 'SMK' }}. Ada yang bisa dibantu seputar PPDB, jurusan, PKL, atau produk unggulan sekolah?</div>
-        </div>
+        <div id="aiChatMessages" class="ai-chat-body" role="log" aria-live="polite" aria-atomic="false"></div>
 
-        <form id="aiChatForm" class="border-t border-bluelight p-3 flex items-center gap-2 shrink-0 bg-white">
-            <input id="aiChatInput" type="text" autocomplete="off" placeholder="Tulis pertanyaanmu..."
-                class="flex-1 text-sm bg-bluelight/60 rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-blueprim/40 text-bluedark placeholder:text-bluedark/40">
-            <button type="submit" aria-label="Kirim pertanyaan"
-                class="w-10 h-10 shrink-0 rounded-full bg-blueprim hover:bg-bluedark transition-colors flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" aria-hidden="true">
+        <div id="aiChatSuggestions" class="ai-chat-suggestions" hidden></div>
+
+        <form id="aiChatForm" class="ai-chat-composer" autocomplete="off">
+            <label for="aiChatInput" class="sr-only">Tulis pertanyaanmu</label>
+            <input id="aiChatInput" name="message" type="text" maxlength="500" autocomplete="off"
+                placeholder="Tulis pertanyaanmu..."
+                class="ai-chat-input">
+            <button type="submit" aria-label="Kirim pertanyaan" class="ai-chat-send" data-send-label="Kirim pertanyaan">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M22 2L11 13"/>
                     <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
                 </svg>
