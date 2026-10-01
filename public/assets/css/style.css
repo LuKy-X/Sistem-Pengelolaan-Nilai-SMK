@@ -592,58 +592,34 @@ body {
 
 /* Sidebar */
 .db-sidebar {
-  background: #EAF3FB;
-  border-right: 1px solid #D6E8F7;
+  background: #F7FBFF;
+  border-right: 1px solid #E3F2FD;
   position: sticky;
   top: 0;
   align-self: flex-start;
   height: 100vh;
   overflow-y: auto;
 }
-.db-sidebar nav {
-  gap: 0.8rem !important;
-}
 .db-nav-item {
   position: relative;
   display: flex;
   align-items: center;
-  gap: .85rem;
-  padding: .85rem 1.25rem;
-  min-height: 48px;
-  border-radius: 20px;
-  font-size: .92rem;
-  font-weight: 500;
-  color: #FFFFFF;
-  background: #82C2F8;
-  transition: background .15s ease, color .15s ease, transform .15s ease, box-shadow .15s ease;
+  gap: .75rem;
+  padding: .75rem 1rem;
+  border-radius: .9rem;
+  font-size: .87rem;
+  font-weight: 600;
+  color: #5C7C9E;
+  transition: background .15s ease, color .15s ease, box-shadow .15s ease;
 }
-.db-nav-item svg {
-  width: 20px;
-  height: 20px;
-  color: #FFFFFF;
-  stroke: #FFFFFF;
-  flex-shrink: 0;
-  transition: color .15s ease, stroke .15s ease;
-}
-.db-nav-item:hover {
-  background: #70B6F4;
-  color: #FFFFFF;
-}
-.db-nav-item:hover svg {
-  color: #FFFFFF;
-  stroke: #FFFFFF;
-}
+.db-nav-item svg { width: 19px; height: 19px; flex-shrink: 0; }
+.db-nav-item:hover { background: #E9F3FE; color: #0D47A1; }
 .db-nav-item.active {
-  background: #1890F6;
-  color: #0A192F;
-  font-weight: 700;
-  box-shadow: 0 4px 14px rgba(24, 144, 246, 0.35);
+  background: #2196F3;
+  color: #fff;
+  box-shadow: 0 10px 22px -8px rgba(33,150,243,.55);
 }
-.db-nav-item.active svg {
-  color: #0A192F;
-  stroke: #0A192F;
-  stroke-width: 2.2px;
-}
+.db-nav-item.active svg { color: #fff; }
 
 
 /* Topbar */
@@ -944,6 +920,19 @@ body {
 .pagination button:hover:not(:disabled) { background: #E3F2FD; }
 .pagination button.active { background: #2196F3; color: #fff; }
 .pagination button:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Pagination link-based (modul BK, <a> hasil Laravel paginate()->links()) */
+.bk-pagination { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.bk-pagination a, .bk-pagination span {
+  min-width: 30px; height: 30px; padding: 0 .5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #E3F2FD; border-radius: .6rem; background: #fff;
+  color: #0D47A1; font-size: .78rem; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.bk-pagination a:hover { background: #E3F2FD; }
+.bk-pagination a.is-active, .bk-pagination span.is-active { background: #2196F3; border-color: #2196F3; color: #fff; }
+.bk-pagination span.is-disabled, .bk-pagination span.pg-ellipsis { opacity: .4; border-color: transparent; background: transparent; }
 
 /* Toggle switch */
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
