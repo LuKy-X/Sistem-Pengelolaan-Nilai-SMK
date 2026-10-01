@@ -101,7 +101,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    // GET is supported so visiting /logout directly in the browser also clears
+    // the session; the navbar/profile dropdown still submits a POST form.
+    Route::match(['get', 'post'], '/logout', [LoginController::class, 'logout'])->name('logout');
 
     // ==========================================
     // 2b. AUTHENTICATED CHATBOT (per-role, private data)

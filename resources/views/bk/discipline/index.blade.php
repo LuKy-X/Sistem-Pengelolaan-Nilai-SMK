@@ -250,100 +250,149 @@
     <x-bk.pagination :paginator="$records" />
   </div>
 
-  @can('create', App\Models\DisciplineRecord::class)
-    <div class="modal-overlay" id="recordModal" role="dialog" aria-modal="true">
-      <div class="modal-box max-w-2xl">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="font-heading font-bold text-bluedark">Catat Poin Kedisiplinan</h3>
-            <p class="text-xs text-bluedark/50 mt-0.5">Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }}</p>
-          </div>
-          <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-
-        @if($errors->any())
-          <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
-            <ul class="text-xs text-red-700 space-y-0.5">
-              @foreach($errors->all() as $message)
-                <li>{{ $message }}</li>
-              @endforeach
-            </ul>
-          </div>
-        @endif
-
-        <form action="{{ route('counselor.discipline.store') }}" method="POST">
-          @csrf
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="f-label" for="student_id_modal">Siswa <span class="text-red-500">*</span></label>
-              <select id="student_id_modal" name="student_id" required class="f-select">
-                <option value="">Pilih siswa</option>
-                @foreach($students as $student)
-                  <option value="{{ $student->id }}" @selected(old('student_id') === $student->id)>
-                    {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
-                  </option>
-                @endforeach
-              </select>
-              @error('student_id')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-            <div>
-              <label class="f-label" for="category_id_modal">Kategori <span class="text-red-500">*</span></label>
-              <select id="category_id_modal" name="category_id" required class="f-select">
-                <option value="">Pilih kategori</option>
-                @foreach($categories as $category)
-                  <option value="{{ $category->id }}" data-points="{{ $category->default_points }}" @selected(old('category_id') === $category->id)>
-                    {{ $category->name }} ({{ $category->type->value }})
-                  </option>
-                @endforeach
-              </select>
-              @error('category_id')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-            <div>
-              <label class="f-label" for="points_delta">Besar Poin <span class="text-red-500">*</span></label>
-              <input type="number" id="points_delta" name="points_delta" value="{{ old('points_delta') }}" required
-                     min="0" max="1000" class="f-input" placeholder="Ikuti kategori">
-              <p class="text-[11px] text-bluedark/45 mt-1">Pelanggaran otomatis dikurangi, penghargaan ditambahkan.</p>
-              @error('points_delta')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-            <div>
-              <label class="f-label" for="occurred_at">Tanggal Kejadian <span class="text-red-500">*</span></label>
-              <input type="date" id="occurred_at" name="occurred_at" value="{{ old('occurred_at', now()->toDateString()) }}" required class="f-input">
-              @error('occurred_at')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-            <div class="sm:col-span-2">
-              <label class="f-label" for="description">Uraian <span class="text-red-500">*</span></label>
-              <textarea id="description" name="description" rows="3" required class="f-textarea"
-                        placeholder="Contoh: Terlambat masuk pelajaran PJOK 15 menit tanpa keterangan">{{ old('description') }}</textarea>
-              @error('description')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-          </div>
-
-          <div class="flex gap-2 mt-5">
-            <button type="submit" class="btn btn-primary flex-1">Simpan Catatan</button>
-            <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  @endcan
-
 </div>
 @endsection
 
+@can('create', App\Models\DisciplineRecord::class)
+@push('modals')
+<div class="modal-overlay" id="recordModal" role="dialog" aria-modal="true">
+  <div class="modal-box max-w-2xl w-full">
+
+    <div class="flex items-start justify-between mb-5">
+      <div>
+        <h3 class="font-heading font-bold text-bluedark text-base">Catat Poin Kedisiplinan</h3>
+        <p class="text-xs text-bluedark/50 mt-0.5">Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }}</p>
+      </div>
+      <button type="button" data-modal-close class="shrink-0 ml-4 p-1 rounded-lg text-bluedark/40 hover:text-bluedark hover:bg-bluelight transition-colors" aria-label="Tutup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    @if($errors->any())
+      <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
+        <ul class="text-xs text-red-700 space-y-0.5 list-disc list-inside">
+          @foreach($errors->all() as $message)
+            <li>{{ $message }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
+    <form action="{{ route('counselor.discipline.store') }}" method="POST">
+      @csrf
+      <div class="grid sm:grid-cols-2 gap-4">
+
+        @if($counselorClasses->isNotEmpty())
+          <div class="sm:col-span-2">
+            <label class="f-label" for="record_class_id">Kelas</label>
+            <select id="record_class_id" class="f-select">
+              <option value="">— Tampilkan semua kelas —</option>
+              @foreach($counselorClasses as $class)
+                <option value="{{ $class->id }}">{{ $class->name }}</option>
+              @endforeach
+            </select>
+            <p class="text-[11px] text-bluedark/45 mt-1">Pilih kelas untuk menyaring daftar siswa di bawah.</p>
+          </div>
+        @endif
+
+        <div>
+          <label class="f-label" for="student_id_modal">Siswa <span class="text-red-500">*</span></label>
+          <select id="student_id_modal" name="student_id" required class="f-select">
+            <option value="">Pilih siswa</option>
+            @foreach($students as $student)
+              <option value="{{ $student->id }}"
+                      data-class="{{ $student->currentEnrollment?->schoolClass?->id ?? '' }}"
+                      @selected(old('student_id') == $student->id)>
+                {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
+              </option>
+            @endforeach
+          </select>
+          @error('student_id')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="category_id_modal">Kategori <span class="text-red-500">*</span></label>
+          <select id="category_id_modal" name="category_id" required class="f-select">
+            <option value="">Pilih kategori</option>
+            @foreach($categories as $category)
+              <option value="{{ $category->id }}" data-points="{{ $category->default_points }}" @selected(old('category_id') == $category->id)>
+                {{ $category->name }} ({{ $category->type->value }})
+              </option>
+            @endforeach
+          </select>
+          @error('category_id')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="points_delta">Besar Poin <span class="text-red-500">*</span></label>
+          <input type="number" id="points_delta" name="points_delta" value="{{ old('points_delta') }}" required
+                 min="0" max="1000" class="f-input" placeholder="Ikuti kategori">
+          <p class="text-[11px] text-bluedark/45 mt-1">Pelanggaran otomatis dikurangi, penghargaan ditambahkan.</p>
+          @error('points_delta')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="occurred_at">Tanggal Kejadian <span class="text-red-500">*</span></label>
+          <input type="date" id="occurred_at" name="occurred_at" value="{{ old('occurred_at', now()->toDateString()) }}" required class="f-input">
+          @error('occurred_at')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="f-label" for="description">Uraian <span class="text-red-500">*</span></label>
+          <textarea id="description" name="description" rows="3" required class="f-textarea"
+                    placeholder="Contoh: Terlambat masuk pelajaran PJOK 15 menit tanpa keterangan">{{ old('description') }}</textarea>
+          @error('description')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button type="submit" class="btn btn-primary flex-1">Simpan Catatan</button>
+        <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+@endpush
+@endcan
+
 @push('scripts')
 <script>
+  (function () {
+    var classSelect = document.getElementById('record_class_id');
+    var studentSelect = document.getElementById('student_id_modal');
+
+    if (!classSelect || !studentSelect) return;
+
+    var allOptions = Array.prototype.slice.call(studentSelect.options).slice(1);
+
+    classSelect.addEventListener('change', function () {
+      var selectedClass = this.value;
+      var currentValue = studentSelect.value;
+
+      while (studentSelect.options.length > 1) {
+        studentSelect.remove(1);
+      }
+
+      allOptions.forEach(function (option) {
+        if (!selectedClass || option.dataset.class === selectedClass) {
+          studentSelect.add(option.cloneNode(true));
+        }
+      });
+
+      studentSelect.value = currentValue;
+    });
+  }());
+
   document.addEventListener('change', function (event) {
     var select = event.target.closest('#category_id_modal');
 
@@ -357,7 +406,6 @@
     }
   });
 
-  // Buka kembali modal saat validasi gagal agar input tidak hilang.
   @if($errors->any())
     openModal('recordModal');
   @endif

@@ -59,11 +59,22 @@
 
   <div class="panel p-5">
     <form method="GET" action="{{ route('counselor.counseling.index') }}" class="flex flex-wrap items-end gap-3 mb-4">
-      <div class="flex-1 min-w-[220px]">
+      <div class="flex-1 min-w-[200px]">
         <label class="f-label" for="q">Cari</label>
         <input type="search" id="q" name="q" value="{{ $search }}" placeholder="Nama/NIS/ringkasan" class="f-input">
       </div>
-      <div class="w-full sm:w-56">
+      @if($counselorClasses->isNotEmpty())
+        <div class="w-full sm:w-44">
+          <label class="f-label" for="class_id">Kelas</label>
+          <select id="class_id" name="class_id" class="f-select">
+            <option value="">Semua Kelas</option>
+            @foreach($counselorClasses as $class)
+              <option value="{{ $class->id }}" @selected($classIdFilter === $class->id)>{{ $class->name }}</option>
+            @endforeach
+          </select>
+        </div>
+      @endif
+      <div class="w-full sm:w-52">
         <label class="f-label" for="student_id">Siswa</label>
         <select id="student_id" name="student_id" class="f-select">
           <option value="">Semua Siswa</option>
@@ -74,7 +85,7 @@
           @endforeach
         </select>
       </div>
-      <div class="w-full sm:w-52">
+      <div class="w-full sm:w-48">
         <label class="f-label" for="service_type">Jenis Layanan</label>
         <select id="service_type" name="service_type" class="f-select">
           <option value="">Semua Layanan</option>
@@ -84,16 +95,16 @@
         </select>
       </div>
       <button type="submit" class="btn btn-primary">Terapkan</button>
-      @if($search !== '' || $serviceTypeFilter || $studentIdFilter)
+      @if($search !== '' || $serviceTypeFilter || $studentIdFilter || $classIdFilter)
         <a href="{{ route('counselor.counseling.index') }}" class="btn btn-outline">Reset</a>
       @endif
     </form>
 
     <div class="flex flex-wrap gap-2 mb-4">
-      <a href="{{ route('counselor.counseling.index', array_filter(['q' => $search, 'student_id' => $studentIdFilter])) }}"
+      <a href="{{ route('counselor.counseling.index', array_filter(['q' => $search, 'student_id' => $studentIdFilter, 'class_id' => $classIdFilter])) }}"
          class="badge {{ $serviceTypeFilter ? 'badge-gray' : 'badge-blue' }}">Semua ({{ $totalLogs }})</a>
       @foreach($serviceTypes as $value => $label)
-        <a href="{{ route('counselor.counseling.index', array_filter(['q' => $search, 'student_id' => $studentIdFilter, 'service_type' => $value])) }}"
+        <a href="{{ route('counselor.counseling.index', array_filter(['q' => $search, 'student_id' => $studentIdFilter, 'class_id' => $classIdFilter, 'service_type' => $value])) }}"
            class="badge {{ $serviceTypeFilter === $value ? 'badge-blue' : 'badge-gray' }}">
           {{ $label }} ({{ $serviceCounts[$value] ?? 0 }})
         </a>
@@ -144,107 +155,162 @@
     <x-bk.pagination :paginator="$logs" />
   </div>
 
-  @can('create', App\Models\DisciplineRecord::class)
-    <div class="modal-overlay" id="counselingModal" role="dialog" aria-modal="true">
-      <div class="modal-box max-w-2xl">
-        <div class="flex items-start justify-between mb-4">
-          <div>
-            <h3 class="font-heading font-bold text-bluedark">Catat Layanan Konseling</h3>
-            <p class="text-xs text-bluedark/50 mt-0.5">
-              Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }} &middot; saldo poin siswa tidak berubah
-            </p>
-          </div>
-          <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
+</div>
+@endsection
 
-        @if($errors->any())
-          <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
-            <ul class="text-xs text-red-700 space-y-0.5">
-              @foreach($errors->all() as $message)
-                <li>{{ $message }}</li>
+@can('create', App\Models\DisciplineRecord::class)
+@push('modals')
+<div class="modal-overlay" id="counselingModal" role="dialog" aria-modal="true">
+  <div class="modal-box max-w-2xl w-full">
+
+    <div class="flex items-start justify-between mb-5">
+      <div>
+        <h3 class="font-heading font-bold text-bluedark text-base">Catat Layanan Konseling</h3>
+        <p class="text-xs text-bluedark/50 mt-0.5">
+          Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }}
+          &middot; saldo poin siswa <strong class="text-blueprim">tidak berubah</strong>
+        </p>
+      </div>
+      <button type="button" data-modal-close class="shrink-0 ml-4 p-1 rounded-lg text-bluedark/40 hover:text-bluedark hover:bg-bluelight transition-colors" aria-label="Tutup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    @if($errors->any())
+      <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
+        <ul class="text-xs text-red-700 space-y-0.5 list-disc list-inside">
+          @foreach($errors->all() as $message)
+            <li>{{ $message }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
+    <form action="{{ route('counselor.counseling.store') }}" method="POST">
+      @csrf
+      <div class="grid sm:grid-cols-2 gap-4">
+
+        @if($counselorClasses->isNotEmpty())
+          <div class="sm:col-span-2">
+            <label class="f-label" for="modal_class_id">Kelas</label>
+            <select id="modal_class_id" class="f-select">
+              <option value="">— Tampilkan semua kelas —</option>
+              @foreach($counselorClasses as $class)
+                <option value="{{ $class->id }}">{{ $class->name }}</option>
               @endforeach
-            </ul>
+            </select>
+            <p class="text-[11px] text-bluedark/45 mt-1">Pilih kelas untuk menyaring daftar siswa di bawah.</p>
           </div>
         @endif
 
-        <form action="{{ route('counselor.counseling.store') }}" method="POST">
-          @csrf
-          <div class="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label class="f-label" for="c_student_id">Siswa <span class="text-red-500">*</span></label>
-              <select id="c_student_id" name="student_id" required class="f-select">
-                <option value="">Pilih siswa</option>
-                @foreach($students as $student)
-                  <option value="{{ $student->id }}" @selected(old('student_id') === $student->id)>
-                    {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
-                  </option>
-                @endforeach
-              </select>
-              @error('student_id')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
+        <div>
+          <label class="f-label" for="c_student_id">Siswa <span class="text-red-500">*</span></label>
+          <select id="c_student_id" name="student_id" required class="f-select">
+            <option value="">Pilih siswa</option>
+            @foreach($students as $student)
+              <option value="{{ $student->id }}"
+                      data-class="{{ $student->currentEnrollment?->schoolClass?->id ?? '' }}"
+                      @selected(old('student_id') == $student->id)>
+                {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
+              </option>
+            @endforeach
+          </select>
+          @error('student_id')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
 
-            <div>
-              <label class="f-label" for="service_type_modal">Jenis Layanan <span class="text-red-500">*</span></label>
-              <select id="service_type_modal" name="service_type" required class="f-select">
-                <option value="">Pilih layanan</option>
-                @foreach($serviceTypes as $value => $label)
-                  <option value="{{ $value }}" @selected(old('service_type') === $value)>{{ $label }}</option>
-                @endforeach
-              </select>
-              @error('service_type')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
+        <div>
+          <label class="f-label" for="service_type_modal">Jenis Layanan <span class="text-red-500">*</span></label>
+          <select id="service_type_modal" name="service_type" required class="f-select">
+            <option value="">Pilih layanan</option>
+            @foreach($serviceTypes as $value => $label)
+              <option value="{{ $value }}" @selected(old('service_type') === $value)>{{ $label }}</option>
+            @endforeach
+          </select>
+          @error('service_type')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
 
-            <div>
-              <label class="f-label" for="c_category_id">Topik <span class="text-red-500">*</span></label>
-              <select id="c_category_id" name="category_id" required class="f-select">
-                <option value="">Pilih topik</option>
-                @foreach($categories as $category)
-                  <option value="{{ $category->id }}" @selected(old('category_id') === $category->id)>{{ $category->name }}</option>
-                @endforeach
-              </select>
-              <p class="text-[11px] text-bluedark/45 mt-1">Dipakai sebagai klasifikasi topik, bukan pengurang poin.</p>
-              @error('category_id')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
+        <div>
+          <label class="f-label" for="c_category_id">Topik <span class="text-red-500">*</span></label>
+          <select id="c_category_id" name="category_id" required class="f-select">
+            <option value="">Pilih topik</option>
+            @foreach($categories as $category)
+              <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
+            @endforeach
+          </select>
+          <p class="text-[11px] text-bluedark/45 mt-1">Klasifikasi topik, bukan pengurang poin.</p>
+          @error('category_id')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
 
-            <div>
-              <label class="f-label" for="c_occurred_at">Tanggal <span class="text-red-500">*</span></label>
-              <input type="date" id="c_occurred_at" name="occurred_at" value="{{ old('occurred_at', now()->toDateString()) }}" required class="f-input">
-              @error('occurred_at')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
+        <div>
+          <label class="f-label" for="c_occurred_at">Tanggal <span class="text-red-500">*</span></label>
+          <input type="date" id="c_occurred_at" name="occurred_at"
+                 value="{{ old('occurred_at', now()->toDateString()) }}" required class="f-input">
+          @error('occurred_at')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
 
-            <div class="sm:col-span-2">
-              <label class="f-label" for="summary">Ringkasan Hasil <span class="text-red-500">*</span></label>
-              <textarea id="summary" name="summary" rows="4" required class="f-textarea"
-                        placeholder="Contoh: Siswa Didiskusikan kendala akademik, menyusun rencana belajar, dan berjanji melapor setiap Senin.">{{ old('summary') }}</textarea>
-              <p class="text-[11px] text-bluedark/45 mt-1">Hindari mencatat data pribadi sensitif yang tidak diperlukan.</p>
-              @error('summary')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-          </div>
-
-          <div class="rounded-xl bg-bluelight/50 p-3 text-[11px] text-bluedark/70 mb-5">
-            Rekam konseling disimpan dengan nilai poin <strong>0</strong> sehingga tidak memengaruhi saldo dan ambang Surat Peringatan.
-          </div>
-
-          <div class="flex gap-2">
-            <button type="submit" class="btn btn-primary flex-1">Simpan Rekam</button>
-            <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-          </div>
-        </form>
+        <div class="sm:col-span-2">
+          <label class="f-label" for="summary">Ringkasan Hasil <span class="text-red-500">*</span></label>
+          <textarea id="summary" name="summary" rows="4" required class="f-textarea"
+                    placeholder="Contoh: Siswa mendiskusikan kendala akademik, menyusun rencana belajar, dan berjanji melapor setiap Senin.">{{ old('summary') }}</textarea>
+          <p class="text-[11px] text-bluedark/45 mt-1">Hindari mencatat data pribadi sensitif yang tidak diperlukan.</p>
+          @error('summary')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
       </div>
-    </div>
-  @endcan
 
+      <div class="rounded-xl bg-bluelight/50 border border-bluelight p-3 text-[11px] text-bluedark/70 my-4">
+        Rekam konseling disimpan dengan nilai poin <strong>0</strong> sehingga tidak memengaruhi saldo dan ambang Surat Peringatan.
+      </div>
+
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-primary flex-1">Simpan Rekam</button>
+        <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+      </div>
+    </form>
+  </div>
 </div>
-@endsection
+@endpush
+@endcan
+
+@push('scripts')
+<script>
+  (function () {
+    var classSelect = document.getElementById('modal_class_id');
+    var studentSelect = document.getElementById('c_student_id');
+
+    if (!classSelect || !studentSelect) return;
+
+    var allOptions = Array.prototype.slice.call(studentSelect.options).slice(1);
+
+    classSelect.addEventListener('change', function () {
+      var selectedClass = this.value;
+      var currentValue = studentSelect.value;
+
+      while (studentSelect.options.length > 1) {
+        studentSelect.remove(1);
+      }
+
+      allOptions.forEach(function (option) {
+        if (!selectedClass || option.dataset.class === selectedClass) {
+          studentSelect.add(option.cloneNode(true));
+        }
+      });
+
+      studentSelect.value = currentValue;
+    });
+  }());
+
+  @if($errors->any())
+    openModal('counselingModal');
+  @endif
+</script>
+@endpush
