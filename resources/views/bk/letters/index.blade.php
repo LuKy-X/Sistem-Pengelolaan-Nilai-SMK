@@ -197,108 +197,111 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="letterModal" role="dialog" aria-modal="true">
-    <div class="modal-box max-w-2xl">
-      <div class="flex items-start justify-between mb-4">
-        <div>
-          <h3 class="font-heading font-bold text-bluedark">Terbitkan Surat Peringatan</h3>
-          <p class="text-xs text-bluedark/50 mt-0.5">Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }}</p>
-        </div>
-        <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-
-      @if($errors->any())
-        <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
-          <ul class="text-xs text-red-700 space-y-0.5">
-            @foreach($errors->all() as $message)
-              <li>{{ $message }}</li>
-            @endforeach
-          </ul>
-        </div>
-      @endif
-
-      <form action="{{ route('counselor.disciplinary-letters.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
-        <div class="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label class="f-label" for="letter_student_id">Siswa <span class="text-red-500">*</span></label>
-            <select id="letter_student_id" name="student_id" required class="f-select">
-              <option value="">Pilih siswa</option>
-              @foreach($students as $student)
-                <option value="{{ $student->id }}" data-balance="{{ $pointHints[$student->id]['balance'] ?? '' }}">
-                  {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
-                </option>
-              @endforeach
-            </select>
-            <p class="text-[11px] text-bluedark/45 mt-1" id="balanceHint">Saldo poin siswa akan tampil di sini.</p>
-            @error('student_id')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <div>
-            <label class="f-label" for="letter_type">Jenis SP <span class="text-red-500">*</span></label>
-            <select id="letter_type" name="type" required class="f-select">
-              <option value="">Pilih jenis</option>
-              @foreach(\App\Enums\DisciplinaryLetterType::cases() as $case)
-                <option value="{{ $case->value }}" @selected(old('type') === $case->value)>
-                  {{ $case->value }} — {{ match ($case->value) { 'SP1' => 'Peringatan pertama', 'SP2' => 'Peringatan kedua', default => 'Peringatan ketiga / terakhir' } }}
-                </option>
-              @endforeach
-            </select>
-            @error('type')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <div>
-            <label class="f-label" for="issued_at">Tanggal Terbit <span class="text-red-500">*</span></label>
-            <input type="date" id="issued_at" name="issued_at" value="{{ old('issued_at', now()->toDateString()) }}" required class="f-input">
-            @error('issued_at')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <div>
-            <label class="f-label" for="document">Berkas Scan (PDF/FOTO)</label>
-            <input type="file" id="document" name="document" accept=".pdf,.jpg,.jpeg,.png" class="f-input">
-            <p class="text-[11px] text-bluedark/45 mt-1">Maks. 2 MB. Dokumen hasil pindai.</p>
-            @error('document')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <div class="sm:col-span-2">
-            <label class="f-label" for="reason">Alasan Penerbitan <span class="text-red-500">*</span></label>
-            <textarea id="reason" name="reason" rows="3" required class="f-textarea"
-                      placeholder="Contoh: Akumulasi 4 pelanggaran Absensi dan 2 pelanggaran Sikap pada semester ini">{{ old('reason') }}</textarea>
-            @error('reason')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-
-          <div class="sm:col-span-2">
-            <label class="f-label" for="notes">Catatan Internal (opsional)</label>
-            <textarea id="notes" name="notes" rows="2" class="f-textarea"
-                      placeholder="Contoh: Sudah melakukan home visit dan telah dikonfirmasi ke wali kelas">{{ old('notes') }}</textarea>
-            @error('notes')
-              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-            @enderror
-          </div>
-        </div>
-
-        <div class="flex gap-2 mt-5">
-          <button type="submit" class="btn btn-primary flex-1">Terbitkan Surat</button>
-          <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
 </div>
 @endsection
+
+@push('modals')
+<div class="modal-overlay" id="letterModal" role="dialog" aria-modal="true">
+  <div class="modal-box max-w-2xl">
+    <div class="flex items-start justify-between mb-4">
+      <div>
+        <h3 class="font-heading font-bold text-bluedark">Terbitkan Surat Peringatan</h3>
+        <p class="text-xs text-bluedark/50 mt-0.5">Tahun ajaran {{ $academicYear?->name ?? 'belum diatur' }}</p>
+      </div>
+      <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    @if($errors->any())
+      <div class="rounded-xl bg-red-50 border border-red-200 p-3 mb-4">
+        <ul class="text-xs text-red-700 space-y-0.5">
+          @foreach($errors->all() as $message)
+            <li>{{ $message }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
+    <form action="{{ route('counselor.disciplinary-letters.store') }}" method="POST" enctype="multipart/form-data">
+      @csrf
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="f-label" for="letter_student_id">Siswa <span class="text-red-500">*</span></label>
+          <select id="letter_student_id" name="student_id" required class="f-select">
+            <option value="">Pilih siswa</option>
+            @foreach($students as $student)
+              <option value="{{ $student->id }}" data-balance="{{ $pointHints[$student->id]['balance'] ?? '' }}">
+                {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
+              </option>
+            @endforeach
+          </select>
+          <p class="text-[11px] text-bluedark/45 mt-1" id="balanceHint">Saldo poin siswa akan tampil di sini.</p>
+          @error('student_id')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="letter_type">Jenis SP <span class="text-red-500">*</span></label>
+          <select id="letter_type" name="type" required class="f-select">
+            <option value="">Pilih jenis</option>
+            @foreach(\App\Enums\DisciplinaryLetterType::cases() as $case)
+              <option value="{{ $case->value }}" @selected(old('type') === $case->value)>
+                {{ $case->value }} — {{ match ($case->value) { 'SP1' => 'Peringatan pertama', 'SP2' => 'Peringatan kedua', default => 'Peringatan ketiga / terakhir' } }}
+              </option>
+            @endforeach
+          </select>
+          @error('type')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="issued_at">Tanggal Terbit <span class="text-red-500">*</span></label>
+          <input type="date" id="issued_at" name="issued_at" value="{{ old('issued_at', now()->toDateString()) }}" required class="f-input">
+          @error('issued_at')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div>
+          <label class="f-label" for="document">Berkas Scan (PDF/FOTO)</label>
+          <input type="file" id="document" name="document" accept=".pdf,.jpg,.jpeg,.png" class="f-input">
+          <p class="text-[11px] text-bluedark/45 mt-1">Maks. 2 MB. Dokumen hasil pindai.</p>
+          @error('document')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="f-label" for="reason">Alasan Penerbitan <span class="text-red-500">*</span></label>
+          <textarea id="reason" name="reason" rows="3" required class="f-textarea"
+                    placeholder="Contoh: Akumulasi 4 pelanggaran Absensi dan 2 pelanggaran Sikap pada semester ini">{{ old('reason') }}</textarea>
+          @error('reason')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+
+        <div class="sm:col-span-2">
+          <label class="f-label" for="notes">Catatan Internal (opsional)</label>
+          <textarea id="notes" name="notes" rows="2" class="f-textarea"
+                    placeholder="Contoh: Sudah melakukan home visit dan telah dikonfirmasi ke wali kelas">{{ old('notes') }}</textarea>
+          @error('notes')
+            <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+          @enderror
+        </div>
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button type="submit" class="btn btn-primary flex-1">Terbitkan Surat</button>
+        <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+      </div>
+    </form>
+  </div>
+</div>
+@endpush
 
 @push('scripts')
 <script>

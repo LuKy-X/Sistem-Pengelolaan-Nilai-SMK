@@ -1,37 +1,30 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="bk-portal-html">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>@yield('title', 'Bimbingan Konseling') — SMK Negeri 2 Karanganyar</title>
-<link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
-<link rel="stylesheet" href="{{ asset('assets/css/fonts.css') }}">
-
-<script src="https://cdn.tailwindcss.com"></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: { bluelight: '#E3F2FD', bluesoft: '#90CAF9', blueprim: '#2196F3', bluedark: '#0D47A1', ink: '#0D2A4A' },
-        fontFamily: { heading: ['Poppins', 'sans-serif'], body: ['Inter', 'sans-serif'] },
-        borderRadius: { '4xl': '2rem', '5xl': '2.5rem' },
-      }
-    }
-  }
-</script>
-<link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
+@vite(['resources/css/app.css'])
 <script src="{{ asset('assets/js/vendor/chart.umd.min.js') }}"></script>
 @stack('styles')
 </head>
-<body class="font-body antialiased">
+<body class="font-body antialiased bk-portal">
 
-<div class="page-transition-overlay" id="pageTransitionOverlay" aria-hidden="true">
+<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
   <div class="page-transition-diagonal">
     <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
   </div>
 </div>
+<script>
+  try {
+    if (sessionStorage.getItem('playPageTransition') === '1') {
+      document.getElementById('pageTransitionOverlay')?.classList.remove('is-hidden');
+    }
+  } catch (e) {}
+</script>
 
 <div class="flex min-h-screen">
 
@@ -39,7 +32,7 @@
 
   <aside class="db-sidebar w-64 flex-shrink-0 flex flex-col p-5" id="dbSidebar">
     <a href="{{ route('counselor.dashboard') }}" class="flex items-center gap-3 px-1 mb-8">
-      <img src="{{ asset('assets/img/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
+      <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-10 h-10 object-contain">
       <div class="leading-tight">
         <div class="font-heading font-bold text-bluedark text-sm">SMK Negeri 2</div>
         <div class="text-[11px] text-bluedark/60 font-medium">Bimbingan Konseling</div>
@@ -181,6 +174,7 @@
 
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
+@stack('modals')
 <script>
   // Delegasi global untuk buka/tutup modal via data-modal-open / data-modal-close.
   document.addEventListener('click', function (event) {
