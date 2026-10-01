@@ -52,7 +52,7 @@ class LoginController extends Controller
         $user->update(['last_login_at' => now()]);
         $request->session()->regenerate();
 
-        return redirect()->intended(route($user->dashboardRoute()));
+        return redirect()->intended(route($user->dashboardRouteName()));
     }
 
     public function logout(Request $request): RedirectResponse

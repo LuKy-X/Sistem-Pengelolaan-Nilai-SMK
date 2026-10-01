@@ -132,4 +132,61 @@ class TeacherGradingFlowTest extends TestCase
             'name' => 'Tugas Mandiri 1',
         ]);
     }
+
+    public function test_teacher_can_edit_gradebook_with_horizontal_columns_builder(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.gradebooks.edit', $this->gradebook));
+
+        $response->assertStatus(200);
+        $response->assertSee('Edit Buku Nilai');
+        $response->assertSee('Lembar Buku Nilai &mdash; Struktur Kolom Penilaian', false);
+        $response->assertSee('Pengaturan Kolom:');
+        $response->assertSee('Preset Standar SMK');
+        $response->assertSee('Simpan Perubahan Buku Nilai');
+
+        $existingColumn = $this->gradebook->columns()->firstOrFail();
+
+        // Update gradebook identity and columns
+        $updateResponse = $this->actingAs($this->teacherUser)->put(route('teacher.gradebooks.update', $this->gradebook), [
+            'name' => 'Buku Nilai Matematika (Updated Version)',
+            'description' => 'Deskripsi hasil revisi',
+            'is_active' => 1,
+            'columns' => [
+                [
+                    'id' => $existingColumn->id,
+                    'name' => 'Ulangan Harian 1 (Revisi)',
+                    'code' => 'UH1R',
+                    'column_type' => 'SCORE',
+                    'calculation_type' => 'AVERAGE',
+                    'weight' => 25,
+                    'max_score' => 100,
+                ],
+                [
+                    'id' => null,
+                    'name' => 'Tugas Baru Tambahan',
+                    'code' => 'TBT',
+                    'column_type' => 'SCORE',
+                    'calculation_type' => 'AVERAGE',
+                    'weight' => 15,
+                    'max_score' => 100,
+                ],
+            ],
+        ]);
+
+        $updateResponse->assertRedirect(route('teacher.gradebooks.index'));
+        $this->assertDatabaseHas('gradebooks', [
+            'id' => $this->gradebook->id,
+            'name' => 'Buku Nilai Matematika (Updated Version)',
+        ]);
+        $this->assertDatabaseHas('gradebook_columns', [
+            'id' => $existingColumn->id,
+            'code' => 'UH1R',
+            'name' => 'Ulangan Harian 1 (Revisi)',
+        ]);
+        $this->assertDatabaseHas('gradebook_columns', [
+            'gradebook_id' => $this->gradebook->id,
+            'code' => 'TBT',
+            'name' => 'Tugas Baru Tambahan',
+        ]);
+    }
 }
