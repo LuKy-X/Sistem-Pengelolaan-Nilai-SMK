@@ -223,6 +223,7 @@
     window.setInterval(tick, 1000);
   });
 </script>
+@stack('modals')
 @stack('scripts')
 </body>
 </html>

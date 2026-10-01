@@ -66,4 +66,13 @@ class SchoolClass extends Model
     {
         return $this->hasMany(TeachingAssignment::class, 'class_id');
     }
+
+    /**
+     * Guru BK yang membina kelas ini.
+     */
+    public function counselors(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'counselor_class', 'class_id', 'user_id')
+            ->withTimestamps();
+    }
 }
