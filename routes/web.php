@@ -16,6 +16,13 @@ use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\TeachingAssignmentController;
 use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\BK\AppealController;
+use App\Http\Controllers\BK\CounselingController;
+use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
+use App\Http\Controllers\BK\DisciplinaryLetterController;
+use App\Http\Controllers\BK\DisciplineController;
+use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -25,13 +32,6 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
-use App\Http\Controllers\BK\AppealController;
-use App\Http\Controllers\BK\CounselingController;
-use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
-use App\Http\Controllers\BK\DisciplinaryLetterController;
-use App\Http\Controllers\BK\DisciplineController;
-use App\Http\Controllers\BK\ExitPermitController;
-use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -158,8 +158,11 @@ Route::middleware('auth')->group(function () {
             // Jadwal Mengajar & Jam Pelajaran
             Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
             Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+            Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
             Route::post('/schedules/periods', [ScheduleController::class, 'storePeriod'])->name('schedules.periods.store');
+            Route::put('/schedules/periods/{period}', [ScheduleController::class, 'updatePeriod'])->name('schedules.periods.update');
+            Route::delete('/schedules/periods/{period}', [ScheduleController::class, 'destroyPeriod'])->name('schedules.periods.destroy');
 
             // Siswa (Rute Akademik Siswa)
             Route::get('/students', [StudentsController::class, 'index'])->name('students.index');
