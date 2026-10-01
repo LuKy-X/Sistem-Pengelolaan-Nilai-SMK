@@ -13,11 +13,13 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" onclick="openPeriodModal()" class="btn btn-outline btn-sm">
-                + Jam Pelajaran Baru
+            <button type="button" onclick="openPeriodModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs">
+                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Jam Pelajaran Baru</span>
             </button>
-            <button type="button" onclick="openScheduleModal()" class="btn btn-primary btn-sm">
-                + Jadwal Mapel Baru
+            <button type="button" onclick="openScheduleModal()" class="btn btn-primary btn-sm flex items-center gap-1.5 shadow-xs">
+                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Jadwal Mapel Baru</span>
             </button>
         </div>
     </div>

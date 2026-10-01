@@ -29,7 +29,7 @@ class SemesterController extends Controller
             Semester::where('is_active', true)->update(['is_active' => false]);
         }
 
-        Semester::create([
+        $semester = Semester::create([
             'academic_year_id' => $validated['academic_year_id'],
             'name' => $validated['name'],
             'semester_number' => $validated['semester_number'],
@@ -37,6 +37,11 @@ class SemesterController extends Controller
             'end_date' => $validated['end_date'],
             'is_active' => $isActive,
         ]);
+
+        if ($isActive && $semester->academicYear && ! $semester->academicYear->is_active) {
+            AcademicYear::where('is_active', true)->update(['is_active' => false]);
+            $semester->academicYear->update(['is_active' => true]);
+        }
 
         return redirect()->back()->with('success', 'Semester berhasil ditambahkan.');
     }
@@ -59,6 +64,11 @@ class SemesterController extends Controller
             'is_active' => $isActive,
         ]);
 
+        if ($isActive && $semester->academicYear && ! $semester->academicYear->is_active) {
+            AcademicYear::where('is_active', true)->update(['is_active' => false]);
+            $semester->academicYear->update(['is_active' => true]);
+        }
+
         return redirect()->back()->with('success', 'Semester berhasil diperbarui.');
     }
 
@@ -67,6 +77,12 @@ class SemesterController extends Controller
         if (! $semester->is_active) {
             Semester::where('is_active', true)->update(['is_active' => false]);
             $semester->update(['is_active' => true]);
+
+            if ($semester->academicYear && ! $semester->academicYear->is_active) {
+                AcademicYear::where('is_active', true)->update(['is_active' => false]);
+                $semester->academicYear->update(['is_active' => true]);
+            }
+
             $message = "Semester {$semester->name} berhasil diaktifkan.";
         } else {
             $semester->update(['is_active' => false]);
@@ -74,5 +90,18 @@ class SemesterController extends Controller
         }
 
         return redirect()->back()->with('success', $message);
+    }
+
+    public function destroy(Semester $semester): RedirectResponse
+    {
+        if ($semester->teachingAssignments()->exists()) {
+            return redirect()->back()
+                ->with('error', "Tidak dapat menghapus semester '{$semester->name}' karena sudah memiliki data penugasan guru terhubung.");
+        }
+
+        $semesterName = $semester->name;
+        $semester->delete();
+
+        return redirect()->back()->with('success', "Semester '{$semesterName}' berhasil dihapus.");
     }
 }

@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/semesters', [SemesterController::class, 'store'])->name('semesters.store');
             Route::put('/semesters/{semester}', [SemesterController::class, 'update'])->name('semesters.update');
             Route::post('/semesters/{semester}/toggle-active', [SemesterController::class, 'toggleActive'])->name('semesters.toggle-active');
+            Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('semesters.destroy');
 
             // Jurusan & Kompetensi
             Route::get('/departments', [AdminDepartmentController::class, 'index'])->name('departments.index');

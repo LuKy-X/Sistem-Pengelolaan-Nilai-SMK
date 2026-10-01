@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAcademicYearRequest;
 use App\Http\Requests\Admin\UpdateAcademicYearRequest;
 use App\Models\AcademicYear;
+use App\Models\Semester;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -13,10 +14,18 @@ class AcademicYearController extends Controller
 {
     public function index(): View
     {
-        $activeYear = AcademicYear::with('semesters')->where('is_active', true)->first();
-        $academicYears = AcademicYear::with('semesters')->latest('start_date')->get();
+        $activeYear = AcademicYear::with(['semesters' => fn ($q) => $q->orderBy('semester_number')])
+            ->where('is_active', true)
+            ->first();
 
-        return view('admin.academic.years.index', compact('activeYear', 'academicYears'));
+        $activeSemester = Semester::with('academicYear')->where('is_active', true)->first();
+
+        $academicYears = AcademicYear::with(['semesters' => fn ($q) => $q->orderBy('semester_number')])
+            ->withCount(['classes', 'semesters'])
+            ->latest('start_date')
+            ->get();
+
+        return view('admin.academic.years.index', compact('activeYear', 'activeSemester', 'academicYears'));
     }
 
     public function store(StoreAcademicYearRequest $request): RedirectResponse

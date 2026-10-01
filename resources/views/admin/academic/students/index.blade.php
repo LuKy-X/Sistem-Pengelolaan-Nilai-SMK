@@ -18,18 +18,38 @@
         </button>
     </div>
 
-    <!-- Step Navigation matching template -->
-    <div class="step-nav max-w-xl">
-        <a href="{{ route('admin.academic.departments.index') }}" class="step-nav-item">
-            1. Daftar Jurusan
+    <!-- Step Navigation (Hierarki Master Data Akademik) -->
+    <nav class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-bluelight shadow-2xs overflow-x-auto max-w-full" aria-label="Hierarki Data Akademik">
+        <!-- Step 1: Daftar Jurusan -->
+        <a href="{{ route('admin.academic.departments.index') }}" 
+           class="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 {{ request()->routeIs('admin.academic.departments.*') ? 'bg-blueprim text-white shadow-xs' : 'text-bluedark/70 hover:text-bluedark hover:bg-slate-50' }}">
+            <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold {{ request()->routeIs('admin.academic.departments.*') ? 'bg-white/20 text-white' : 'bg-bluelight text-blueprim' }}">1</span>
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+            <span>Daftar Jurusan</span>
         </a>
-        <a href="{{ route('admin.academic.classes.index') }}" class="step-nav-item">
-            2. Daftar Kelas
+
+        <!-- Separator -->
+        <svg class="w-3.5 h-3.5 text-bluedark/30 shrink-0 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+
+        <!-- Step 2: Daftar Kelas -->
+        <a href="{{ route('admin.academic.classes.index') }}" 
+           class="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 {{ request()->routeIs('admin.academic.classes.*') ? 'bg-blueprim text-white shadow-xs' : 'text-bluedark/70 hover:text-bluedark hover:bg-slate-50' }}">
+            <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold {{ request()->routeIs('admin.academic.classes.*') ? 'bg-white/20 text-white' : 'bg-bluelight text-blueprim' }}">2</span>
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Daftar Kelas</span>
         </a>
-        <a href="{{ route('admin.academic.students.index') }}" class="step-nav-item active">
-            3. Daftar Siswa
+
+        <!-- Separator -->
+        <svg class="w-3.5 h-3.5 text-bluedark/30 shrink-0 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+
+        <!-- Step 3: Daftar Siswa -->
+        <a href="{{ route('admin.academic.students.index') }}" 
+           class="px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shrink-0 {{ request()->routeIs('admin.academic.students.*') ? 'bg-blueprim text-white shadow-xs' : 'text-bluedark/70 hover:text-bluedark hover:bg-slate-50' }}">
+            <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-bold {{ request()->routeIs('admin.academic.students.*') ? 'bg-white/20 text-white' : 'bg-bluelight text-blueprim' }}">3</span>
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>Daftar Siswa</span>
         </a>
-    </div>
+    </nav>
 
     <!-- Filter & Pencarian -->
     <div class="panel p-4 flex flex-col md:flex-row items-center justify-between gap-3">

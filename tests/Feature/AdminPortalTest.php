@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AcademicYear;
 use App\Models\Department;
 use App\Models\GradeLevel;
+use App\Models\Semester;
 use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -191,5 +192,96 @@ class AdminPortalTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Profil Data Tenaga Pendidik');
+    }
+
+    public function test_admin_can_store_semester(): void
+    {
+        $admin = $this->getAdminUser();
+        $year = AcademicYear::first();
+
+        $response = $this->actingAs($admin)->post(route('admin.academic.semesters.store'), [
+            'academic_year_id' => $year->id,
+            'name' => 'Semester Gasal Baru',
+            'semester_number' => 1,
+            'start_date' => '2026-07-15',
+            'end_date' => '2026-12-20',
+            'is_active' => 1,
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('semesters', [
+            'academic_year_id' => $year->id,
+            'name' => 'Semester Gasal Baru',
+            'semester_number' => 1,
+            'is_active' => 1,
+        ]);
+    }
+
+    public function test_admin_can_update_semester(): void
+    {
+        $admin = $this->getAdminUser();
+        $semester = Semester::first();
+
+        $response = $this->actingAs($admin)->put(route('admin.academic.semesters.update', $semester), [
+            'academic_year_id' => $semester->academic_year_id,
+            'name' => 'Semester Terupdate',
+            'semester_number' => $semester->semester_number,
+            'start_date' => $semester->start_date->toDateString(),
+            'end_date' => $semester->end_date->toDateString(),
+            'is_active' => $semester->is_active ? 1 : 0,
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('semesters', [
+            'id' => $semester->id,
+            'name' => 'Semester Terupdate',
+        ]);
+    }
+
+    public function test_admin_can_toggle_active_semester(): void
+    {
+        $admin = $this->getAdminUser();
+        $semester = Semester::first();
+
+        $response = $this->actingAs($admin)->post(route('admin.academic.semesters.toggle-active', $semester));
+
+        $response->assertSessionHas('success');
+    }
+
+    public function test_admin_can_delete_unused_semester(): void
+    {
+        $admin = $this->getAdminUser();
+        $year = AcademicYear::first();
+
+        $semester = Semester::create([
+            'academic_year_id' => $year->id,
+            'name' => 'Semester Sementara',
+            'semester_number' => 2,
+            'start_date' => '2027-01-05',
+            'end_date' => '2027-06-25',
+            'is_active' => 0,
+        ]);
+
+        $response = $this->actingAs($admin)->delete(route('admin.academic.semesters.destroy', $semester));
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('semesters', [
+            'id' => $semester->id,
+        ]);
+    }
+
+    public function test_admin_cannot_delete_semester_with_teaching_assignments(): void
+    {
+        $admin = $this->getAdminUser();
+        $semester = Semester::whereHas('teachingAssignments')->first();
+
+        if ($semester) {
+            $response = $this->actingAs($admin)->delete(route('admin.academic.semesters.destroy', $semester));
+
+            $response->assertSessionHas('error');
+            $this->assertDatabaseHas('semesters', [
+                'id' => $semester->id,
+            ]);
+        }
     }
 }

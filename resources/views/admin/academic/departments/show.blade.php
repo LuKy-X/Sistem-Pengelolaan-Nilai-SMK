@@ -120,8 +120,9 @@
                 <label class="f-label text-xs">Deskripsi Singkat / Ruang Lingkup</label>
                 <input type="text" name="description" placeholder="Menguasai konsep MVC, inheritance, database relationship..." class="f-input text-xs py-2">
             </div>
-            <button type="submit" class="btn btn-primary btn-sm text-xs py-2 shrink-0">
-                + Tambah Kompetensi
+            <button type="submit" class="btn btn-primary btn-sm text-xs py-2 shrink-0 flex items-center gap-1.5 shadow-xs">
+                <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Tambah Kompetensi</span>
             </button>
         </form>
 
