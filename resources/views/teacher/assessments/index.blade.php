@@ -88,7 +88,7 @@
   <div class="step-panel active" data-panel="1">
     <p class="text-sm text-bluedark/60 mb-4">Pilih kelas untuk mengelola buku nilai dan tugas/remidi</p>
 
-    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4" id="tugasKelasGrid">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="tugasKelasGrid">
       @forelse($assignments as $assign)
         @php
           $classModel = $assign->schoolClass;
@@ -113,15 +113,15 @@
           data-semester="{{ $semesterName }}"
           data-tahun="{{ $academicYear }}"
           data-mapel="{{ $subjectName }}">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-3">
             <div class="crud-card__icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">{{ $className }}</div>
-          <div class="text-xs text-bluedark/50 truncate">{{ $deptName }}</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">{{ $className }}</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">{{ $deptName }}</div>
+          <div class="kelas-card__meta mb-3.5">
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               {{ $studentCount }} Siswa
@@ -131,7 +131,7 @@
               {{ $days }}
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">{{ $semesterName }}</span>
             <span class="badge badge-gray">{{ $academicYear }}</span>
           </div>
@@ -140,17 +140,17 @@
         <!-- Fallback Cards matching mockup if no database assignments -->
         <button type="button" class="kelas-card w-full"
           data-id="1" data-kode="XI RA" data-jurusan="Rekayasa Perangkat Lunak" data-siswa="36" data-hari="Senin &amp; Rabu" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XI RA</div>
-          <div class="text-xs text-bluedark/50 truncate">Rekayasa Perangkat Lunak</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XI RA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Rekayasa Perangkat Lunak</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Senin &amp; Rabu</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -158,17 +158,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="2" data-kode="XI TA" data-jurusan="Tekstil" data-siswa="36" data-hari="Senin &amp; Selasa" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XI TA</div>
-          <div class="text-xs text-bluedark/50 truncate">Tekstil</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XI TA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Tekstil</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Senin &amp; Selasa</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -176,17 +176,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="3" data-kode="XII OA" data-jurusan="Ototronik" data-siswa="35" data-hari="Selasa &amp; Rabu" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XII OA</div>
-          <div class="text-xs text-bluedark/50 truncate">Ototronik</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XII OA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Ototronik</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 35 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Selasa &amp; Rabu</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -194,17 +194,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="4" data-kode="XII MA" data-jurusan="Teknik Mesin" data-siswa="36" data-hari="Rabu &amp; Kamis" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XII MA</div>
-          <div class="text-xs text-bluedark/50 truncate">Teknik Mesin</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XII MA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Teknik Mesin</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Rabu &amp; Kamis</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -405,20 +405,20 @@
 
         <!-- Pengaturan Status Publikasi Tugas (Default DRAFT) -->
         <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
               <span class="font-heading font-semibold text-xs text-bluedark block">Status Publikasi Tugas</span>
               <p class="text-[11px] text-bluedark/60 mt-0.5">
                 Tentukan apakah tugas langsung aktif untuk siswa atau disimpan sebagai draf sementara.
               </p>
             </div>
-            <div class="flex items-center gap-2" id="statusRadiosWrap">
-              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all border-amber-300 bg-amber-50 text-amber-800" id="labelStatusDraft">
+            <div class="flex items-center gap-2 shrink-0" id="statusRadiosWrap">
+              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all border-amber-300 bg-amber-50 text-amber-800 shrink-0" id="labelStatusDraft">
                 <input type="radio" name="status" value="DRAFT" class="sr-only" id="radioStatusDraft" checked>
-                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 <span>Simpan Sebagai Draf</span>
               </label>
-              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100" id="labelStatusPublished">
+              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 shrink-0" id="labelStatusPublished">
                 <input type="radio" name="status" value="PUBLISHED" class="sr-only" id="radioStatusPublished">
                 <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 <span>Publikasikan Sekarang</span>
@@ -433,16 +433,16 @@
 
         <!-- Pengaturan Pengiriman Berkas & Bukti Siswa (Submission - Default Disabled) -->
         <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5" id="submissionConfigCard">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
               <span class="font-heading font-semibold text-xs text-bluedark block">Wajibkan Pengiriman / Bukti Tugas Siswa (Online Submission)</span>
               <p class="text-[11px] text-bluedark/60 mt-0.5">
                 Aktifkan jika siswa harus mengirimkan bukti pengerjaan melalui sistem (file PDF, gambar, link portofolio). Nonaktifkan jika penilaian langsung / tatap muka.
               </p>
             </div>
-            <div class="field-toggle shrink-0">
-              <span class="text-xs font-semibold text-bluedark" id="submissionToggleLabel">Penilaian Langsung</span>
-              <label class="toggle-switch">
+            <div class="field-toggle shrink-0 py-1.5 px-3">
+              <span class="text-xs font-semibold text-bluedark whitespace-nowrap" id="submissionToggleLabel">Penilaian Langsung</span>
+              <label class="toggle-switch shrink-0">
                 <input type="hidden" name="submission_required" value="0">
                 <input type="checkbox" name="submission_required" id="submissionRequiredToggle" value="1">
                 <span class="slider"></span>
@@ -467,16 +467,16 @@
 
         <!-- Pengaturan Pengurangan Nilai Keterlambatan (Dipindah Paling Bawah - Default Nonaktif) -->
         <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5" id="latePolicyCard">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
               <span class="font-heading font-semibold text-xs text-bluedark block">Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat</span>
               <p class="text-[11px] text-bluedark/60 mt-0.5" id="latePolicyHelpText">
                 Aktifkan jika batas maksimal nilai tugas otomatis berkurang ketika siswa terlambat mengumpulkan.
               </p>
             </div>
-            <div class="field-toggle shrink-0">
-              <span class="text-xs font-semibold text-bluedark" id="latePolicyToggleLabel">Nonaktif</span>
-              <label class="toggle-switch">
+            <div class="field-toggle shrink-0 py-1.5 px-3">
+              <span class="text-xs font-semibold text-bluedark whitespace-nowrap" id="latePolicyToggleLabel">Nonaktif</span>
+              <label class="toggle-switch shrink-0">
                 <input type="hidden" name="enable_late_policy" value="0">
                 <input type="checkbox" name="enable_late_policy" id="enableLatePolicyToggle" value="1">
                 <span class="slider"></span>
@@ -486,13 +486,13 @@
 
           <!-- Body Pengaturan Keterlambatan -->
           <div id="latePolicyContentWrap" class="hidden space-y-2.5 pt-2 border-t border-bluelight/60">
-            <div class="flex items-center justify-between gap-3 flex-wrap bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-              <div>
+            <div class="flex items-center justify-between gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+              <div class="flex-1 min-w-0 pr-2">
                 <span class="text-xs font-semibold text-bluedark block">Gunakan Pengaturan Default Sekolah</span>
                 <span class="text-[11px] text-bluedark/60">Pengurangan batas maksimal nilai sebesar 5 poin per 1 minggu keterlambatan (batas minimal nilai 50).</span>
               </div>
-              <div class="field-toggle shrink-0">
-                <label class="toggle-switch">
+              <div class="field-toggle shrink-0 py-1.5 px-3">
+                <label class="toggle-switch shrink-0">
                   <input type="checkbox" name="use_default_policy" id="useDefaultPolicyToggle" value="1" checked>
                   <span class="slider"></span>
                 </label>

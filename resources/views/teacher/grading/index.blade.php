@@ -195,7 +195,7 @@
   <div class="step-panel active" data-panel="1">
     <p class="text-sm text-bluedark/60 mb-4">Pilih kelas untuk mengelola buku nilai dan input penilaian siswa</p>
 
-    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4" id="nilaiKelasGrid">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="nilaiKelasGrid">
       @forelse($assignments as $assign)
         @php
           $classModel = $assign->schoolClass;
@@ -217,15 +217,15 @@
           data-semester="{{ $semesterName }}"
           data-tahun="{{ $academicYear }}"
           data-mapel="{{ $subjectName }}">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-3">
             <div class="crud-card__icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">{{ $className }}</div>
-          <div class="text-xs text-bluedark/50 truncate">{{ $deptName }}</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">{{ $className }}</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">{{ $deptName }}</div>
+          <div class="kelas-card__meta mb-3.5">
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               {{ $studentCount }} Siswa
@@ -235,7 +235,7 @@
               {{ $days }}
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">{{ $semesterName }}</span>
             <span class="badge badge-gray">{{ $academicYear }}</span>
           </div>
