@@ -15,24 +15,33 @@
     </div>
   @endif
 
-  <!-- Breadcrumb -->
-  <p class="text-sm text-bluedark/60">
-    <a href="{{ route('teacher.gradebooks.index') }}" class="font-medium text-blueprim hover:underline">Buku Nilai</a> / 
-    <a href="{{ route('teacher.gradebooks.index', ['assignment_id' => $gradebook->teaching_assignment_id]) }}" class="font-medium text-blueprim hover:underline">{{ $gradebook->teachingAssignment?->schoolClass?->name }}</a> / 
-    <span class="font-semibold text-bluedark">{{ $gradebook->name }}</span>
-  </p>
+  <!-- Breadcrumb & Navigasi Kembali -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-2 text-xs sm:text-sm text-bluedark/60 flex-wrap">
+      <a href="{{ route('teacher.gradebooks.index') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-bluelight text-xs font-semibold text-bluedark/70 hover:text-blueprim hover:border-blueprim transition-all shadow-2xs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span>Kembali ke Buku Nilai</span>
+      </a>
+      <span class="text-bluedark/30">/</span>
+      <a href="{{ route('teacher.gradebooks.index', ['assignment_id' => $gradebook->teaching_assignment_id]) }}" class="hover:text-blueprim font-medium text-bluedark/70">
+        {{ $gradebook->teachingAssignment?->schoolClass?->name }}
+      </a>
+      <span class="text-bluedark/30">/</span>
+      <span class="font-semibold text-bluedark">{{ $gradebook->name }}</span>
+    </div>
+  </div>
 
   <!-- Title & Action Buttons -->
   <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
     <div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
         <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">
           Daftar Nilai: {{ $gradebook->name }}
         </h1>
         @if($gradebook->is_active)
-          <span class="badge badge-green text-xs">Aktif</span>
+          <span class="badge badge-green text-xs font-semibold">Aktif</span>
         @else
-          <span class="badge badge-gray text-xs">Nonaktif</span>
+          <span class="badge badge-gray text-xs font-semibold">Nonaktif</span>
         @endif
       </div>
       <p class="text-xs text-bluedark/60 mt-1">
@@ -42,30 +51,31 @@
       </p>
     </div>
 
-    <!-- Tombol Aksi Langsung (Mengarahkan ke Edit/Atur Kolom, Penilaian, Tugas, dan Export) -->
-    <div class="flex flex-wrap items-center gap-2">
-      <a href="{{ route('teacher.gradebooks.edit', $gradebook) }}" class="btn btn-outline btn-sm text-xs font-semibold" title="Atur dan edit susunan kolom buku nilai">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        <span>Atur Kolom</span>
-      </a>
+    <!-- Tombol Aksi: Rapi, Terstruktur & Proporsional -->
+    <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+      {{-- Kelompok Alat: Atur Kolom & Export Excel --}}
+      <div class="inline-flex items-center bg-white border border-bluelight/90 rounded-xl p-1 shadow-2xs">
+        <a href="{{ route('teacher.gradebooks.edit', $gradebook) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-bluedark/80 hover:text-blueprim hover:bg-bluelight/40 transition-colors" title="Atur dan edit susunan kolom buku nilai">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          <span>Atur Kolom</span>
+        </a>
+        <div class="w-px h-4 bg-bluelight"></div>
+        <a href="{{ route('teacher.gradebooks.export', $gradebook) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-bluedark/80 hover:text-blueprim hover:bg-bluelight/40 transition-colors" title="Unduh rekapitulasi nilai Excel (.xlsx)" data-no-transition="true" download>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Excel</span>
+        </a>
+      </div>
 
-      <a href="{{ route('teacher.grading.index') }}" class="btn btn-primary btn-sm text-xs font-semibold" title="Buka menu input penilaian siswa">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
-        <span>Buka Penilaian</span>
-      </a>
-
-      <a href="{{ route('teacher.assessments.index', ['assignment_id' => $gradebook->teaching_assignment_id]) }}" class="btn btn-outline btn-sm text-xs font-semibold" title="Buka manajemen tugas dan ulangan">
+      {{-- Navigasi Modul: Manajemen Tugas --}}
+      <a href="{{ route('teacher.assessments.index', ['assignment_id' => $gradebook->teaching_assignment_id]) }}" class="btn btn-outline btn-sm text-xs font-semibold gap-1.5" title="Buka manajemen tugas dan ulangan">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/></svg>
         <span>Manajemen Tugas</span>
       </a>
 
-      <a href="{{ route('teacher.gradebooks.export', $gradebook) }}" class="btn btn-outline btn-sm text-xs font-semibold" title="Unduh rekapitulasi nilai Excel (.xlsx)" data-no-transition="true" download>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 
-        <span>Export Excel</span>
-      </a>
-
-      <a href="{{ route('teacher.gradebooks.index') }}" class="btn btn-outline btn-sm text-xs text-bluedark/70">
-        &larr; Kembali
+      {{-- Aksi Utama: Buka Penilaian --}}
+      <a href="{{ route('teacher.grading.index', ['assignment_id' => $gradebook->teaching_assignment_id, 'gradebook_id' => $gradebook->id]) }}" class="btn btn-primary btn-sm text-xs font-semibold gap-1.5 shadow-xs" title="Buka menu input penilaian siswa">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 15 2 2 4-4"/></svg>
+        <span>Buka Penilaian</span>
       </a>
     </div>
   </div>
