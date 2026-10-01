@@ -1,15 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthenticatedChatbotController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Public\AchievementController;
-use App\Http\Controllers\Public\AdmissionController;
-use App\Http\Controllers\Public\AlumniController;
-use App\Http\Controllers\Public\ArticleController;
-use App\Http\Controllers\Public\CareerController;
-use App\Http\Controllers\Public\DepartmentController;
-use App\Http\Controllers\Public\HomeController;
-use App\Http\Controllers\Public\SchoolProfileController;
-use App\Http\Controllers\Public\StudentProductController;
 use App\Http\Controllers\BK\AppealController;
 use App\Http\Controllers\BK\CounselingController;
 use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
@@ -17,6 +9,16 @@ use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
+use App\Http\Controllers\Public\AchievementController;
+use App\Http\Controllers\Public\AdmissionController;
+use App\Http\Controllers\Public\AlumniController;
+use App\Http\Controllers\Public\ArticleController;
+use App\Http\Controllers\Public\CareerController;
+use App\Http\Controllers\Public\ChatbotController;
+use App\Http\Controllers\Public\DepartmentController;
+use App\Http\Controllers\Public\HomeController;
+use App\Http\Controllers\Public\SchoolProfileController;
+use App\Http\Controllers\Public\StudentProductController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -77,6 +79,17 @@ Route::name('public.')->group(function () {
     Route::redirect('/karir', '/karier')->name('career.legacy');
 
     Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
+
+    // ==========================================
+    // 1b. PUBLIC CHATBOT (JSON, read-only)
+    // ==========================================
+    // `throttle` keeps a single visitor from hammering the CMS queries behind the
+    // assistant. The endpoint stays outside the `auth` groups on purpose so both
+    // guests and signed-in staff browsing the public site get the same answers.
+    Route::prefix('tanya-ai')->middleware('throttle:30,1')->group(function () {
+        Route::get('/', [ChatbotController::class, 'opening'])->name('chatbot.opening');
+        Route::post('/', [ChatbotController::class, 'reply'])->name('chatbot.reply');
+    });
 });
 
 // ==========================================
@@ -89,6 +102,16 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // ==========================================
+    // 2b. AUTHENTICATED CHATBOT (per-role, private data)
+    // ==========================================
+    // All answers are scoped strictly to the authenticated user's own data.
+    // Siswa never sees other students' grades; teachers only see their own classes.
+    Route::prefix('tanya-ai/portal')->middleware('throttle:60,1')->group(function () {
+        Route::get('/', [AuthenticatedChatbotController::class, 'opening'])->name('auth.chatbot.opening');
+        Route::post('/', [AuthenticatedChatbotController::class, 'reply'])->name('auth.chatbot.reply');
+    });
 
     // ==========================================
     // 3. ADMIN ROUTES (role:admin)

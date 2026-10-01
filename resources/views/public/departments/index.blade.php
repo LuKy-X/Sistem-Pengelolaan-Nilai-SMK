@@ -22,7 +22,7 @@
             @else
                 {{-- `stagger-group` is required: the department card is a `.stagger-item`
                      and stays hidden unless GSAP is handed an element to animate. --}}
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8 stagger-group">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 stagger-group">
                     @foreach ($departments as $department)
                         <x-public.department-card :department="$department" />
                     @endforeach
