@@ -80,12 +80,21 @@ class HomeController extends Controller
 
     private function latestAchievements(): mixed
     {
-        return Achievement::query()
+        $featured = Achievement::query()
             ->with('category')
-            ->orderByDesc('is_featured')
+            ->where('is_featured', true)
             ->orderByDesc('achievement_date')
             ->orderByDesc('id')
-            ->limit(config('public_site.landing_limits.achievements'))
+            ->get();
+
+        if ($featured->isNotEmpty()) {
+            return $featured;
+        }
+
+        return Achievement::query()
+            ->with('category')
+            ->orderByDesc('achievement_date')
+            ->orderByDesc('id')
             ->get();
     }
 

@@ -17,7 +17,8 @@ class DepartmentController extends Controller
     {
         $departments = Department::withCount(['classes', 'competencies', 'facilities'])
             ->latest()
-            ->get();
+            ->paginate(9)
+            ->withQueryString();
 
         return view('admin.academic.departments.index', compact('departments'));
     }

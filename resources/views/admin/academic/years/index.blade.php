@@ -158,7 +158,7 @@
             <div class="flex items-center gap-2">
                 <h2 class="font-heading font-bold text-bluedark text-base md:text-lg">Daftar Seluruh Tahun Ajaran</h2>
                 <span class="badge badge-gray text-xs font-semibold">
-                    {{ $academicYears->count() }} Tahun
+                    {{ $academicYears->total() }} Tahun
                 </span>
             </div>
             <button type="button" onclick="openYearModal()" class="btn btn-outline btn-sm text-xs flex items-center gap-1.5">
@@ -352,6 +352,12 @@
                 </div>
             @endforelse
         </div>
+
+        @if($academicYears->hasPages())
+            <div class="mt-4 pt-3 border-t border-bluelight">
+                {{ $academicYears->links() }}
+            </div>
+        @endif
     </div>
 
 </div>

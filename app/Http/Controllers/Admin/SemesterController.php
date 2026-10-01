@@ -14,10 +14,22 @@ class SemesterController extends Controller
 {
     public function index(): View
     {
-        $semesters = Semester::with('academicYear')->latest('start_date')->get();
+        $semesters = Semester::with('academicYear')->latest('start_date')->paginate(10)->withQueryString();
         $academicYears = AcademicYear::latest('start_date')->get();
 
-        return view('admin.academic.semesters.index', compact('semesters', 'academicYears'));
+        $activeSemester = Semester::with('academicYear')->where('is_active', true)->first();
+        $gasalCount = Semester::where('semester_number', 1)->count();
+        $genapCount = Semester::where('semester_number', 2)->count();
+        $totalSemesters = Semester::count();
+
+        return view('admin.academic.semesters.index', compact(
+            'semesters',
+            'academicYears',
+            'activeSemester',
+            'gasalCount',
+            'genapCount',
+            'totalSemesters'
+        ));
     }
 
     public function store(StoreSemesterRequest $request): RedirectResponse

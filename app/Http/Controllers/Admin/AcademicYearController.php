@@ -23,7 +23,8 @@ class AcademicYearController extends Controller
         $academicYears = AcademicYear::with(['semesters' => fn ($q) => $q->orderBy('semester_number')])
             ->withCount(['classes', 'semesters'])
             ->latest('start_date')
-            ->get();
+            ->paginate(5)
+            ->withQueryString();
 
         return view('admin.academic.years.index', compact('activeYear', 'activeSemester', 'academicYears'));
     }

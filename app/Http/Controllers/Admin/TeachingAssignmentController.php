@@ -31,7 +31,8 @@ class TeachingAssignmentController extends Controller
                 $query->where('semester_id', $semesterId);
             })
             ->latest()
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         $semesters = Semester::with('academicYear')->latest('start_date')->get();
         $teachers = TeacherProfile::where('status', 'ACTIVE')->orderBy('full_name')->get();

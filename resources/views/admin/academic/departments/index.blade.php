@@ -114,6 +114,12 @@
         @endforelse
     </div>
 
+    @if($departments->hasPages())
+        <div class="mt-4 pt-3 border-t border-bluelight">
+            {{ $departments->links() }}
+        </div>
+    @endif
+
 </div>
 
 <!-- Modal Tambah/Edit Jurusan -->

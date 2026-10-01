@@ -2,6 +2,20 @@
 
 @section('title', 'Detail Kelas — ' . $class->name)
 
+@push('styles')
+<style>
+*::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+* {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+</style>
+@endpush
+
 @section('content')
 <div class="space-y-6">
 
@@ -19,7 +33,14 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('admin.academic.classes.index') }}?promote_id={{ $class->id }}" class="btn btn-outline btn-sm flex items-center gap-1.5 border-emerald-600 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all shadow-2xs font-semibold" title="Naikkan seluruh siswa rombel ini ke tingkat berikutnya">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="18 15 12 9 6 15"/>
+                    <polyline points="18 9 12 3 6 9"/>
+                </svg>
+                <span>Kenaikan Kelas</span>
+            </a>
             <a href="{{ route('admin.academic.schedules.index', ['class_id' => $class->id]) }}" class="btn btn-outline btn-sm">
                 Lihat Jadwal Pelajaran
             </a>

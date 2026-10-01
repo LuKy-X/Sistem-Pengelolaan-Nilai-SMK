@@ -9,6 +9,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="{{ asset('assets/js/vendor/chart.umd.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-dropdowns.css') }}">
     @stack('styles')
 </head>
 <body class="font-body antialiased teacher-portal">
@@ -260,6 +261,7 @@
 <!-- Core Asset Scripts dari public/assets -->
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
+<script src="{{ asset('assets/js/admin-dropdowns.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

@@ -53,7 +53,7 @@
                 <tbody>
                     @forelse($assignments as $idx => $ta)
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ $assignments->firstItem() + $idx }}</td>
                             <td class="font-semibold text-bluedark">
                                 <div class="leading-tight">
                                     <div>{{ $ta->teacher?->full_name }}</div>
@@ -97,6 +97,12 @@
                 </tbody>
             </table>
         </div>
+
+        @if($assignments->hasPages())
+            <div class="mt-4 pt-3 border-t border-bluelight">
+                {{ $assignments->links() }}
+            </div>
+        @endif
     </div>
 
 </div>

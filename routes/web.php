@@ -153,6 +153,8 @@ Route::middleware('auth')->group(function () {
             // Kelas / Rombel
             Route::get('/classes', [ClassController::class, 'index'])->name('classes.index');
             Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
+            Route::post('/classes/promote', [ClassController::class, 'promote'])->name('classes.promote');
+            Route::get('/classes/{class}/students-for-promotion', [ClassController::class, 'studentsForPromotion'])->name('classes.students-for-promotion');
             Route::get('/classes/{class}', [ClassController::class, 'show'])->name('classes.show');
             Route::put('/classes/{class}', [ClassController::class, 'update'])->name('classes.update');
             Route::delete('/classes/{class}', [ClassController::class, 'destroy'])->name('classes.destroy');
@@ -229,16 +231,35 @@ Route::middleware('auth')->group(function () {
             // Berita & Artikel
             Route::get('/articles', [CmsController::class, 'articles'])->name('articles');
             Route::get('/articles/index', [CmsController::class, 'articles'])->name('articles.index');
+            Route::get('/articles/create', [CmsController::class, 'createArticle'])->name('articles.create');
+            Route::post('/articles', [CmsController::class, 'storeArticle'])->name('articles.store');
+            Route::get('/articles/{article}/edit', [CmsController::class, 'editArticle'])->name('articles.edit');
+            Route::put('/articles/{article}', [CmsController::class, 'updateArticle'])->name('articles.update');
+            Route::delete('/articles/{article}', [CmsController::class, 'destroyArticle'])->name('articles.destroy');
+            Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
+            Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
 
             // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
             Route::get('/ppdb/index', [CmsController::class, 'ppdb'])->name('ppdb.index');
             Route::post('/ppdb/periods', [CmsController::class, 'storeAdmissionPeriod'])->name('ppdb.periods.store');
+            Route::get('/ppdb/periods/{period}', [CmsController::class, 'manageAdmissionPeriod'])->name('ppdb.periods.manage');
+            Route::put('/ppdb/periods/{period}', [CmsController::class, 'updateAdmissionPeriod'])->name('ppdb.periods.update');
+            Route::delete('/ppdb/periods/{period}', [CmsController::class, 'destroyAdmissionPeriod'])->name('ppdb.periods.destroy');
+            Route::put('/ppdb/periods/{period}/schedules', [CmsController::class, 'updateAdmissionSchedules'])->name('ppdb.periods.schedules.update');
+            Route::put('/ppdb/periods/{period}/paths', [CmsController::class, 'updateAdmissionPaths'])->name('ppdb.periods.paths.update');
+            Route::put('/ppdb/periods/{period}/requirements', [CmsController::class, 'updateAdmissionRequirements'])->name('ppdb.periods.requirements.update');
+            Route::put('/ppdb/periods/{period}/fees', [CmsController::class, 'updateAdmissionFees'])->name('ppdb.periods.fees.update');
+            Route::patch('/ppdb/periods/{period}/toggle-status', [CmsController::class, 'togglePeriodStatus'])->name('ppdb.periods.toggle-status');
 
             // Prestasi
             Route::get('/achievements', [CmsController::class, 'achievements'])->name('achievements');
             Route::get('/achievements/index', [CmsController::class, 'achievements'])->name('achievements.index');
             Route::post('/achievements', [CmsController::class, 'storeAchievement'])->name('achievements.store');
+            Route::put('/achievements/{achievement}', [CmsController::class, 'updateAchievement'])->name('achievements.update');
+            Route::delete('/achievements/{achievement}', [CmsController::class, 'destroyAchievement'])->name('achievements.destroy');
+            Route::patch('/achievements/{achievement}/toggle-pin', [CmsController::class, 'togglePinAchievement'])->name('achievements.toggle-pin');
+            Route::get('/achievements/{achievement}/preview', [CmsController::class, 'previewAchievement'])->name('achievements.preview');
 
             // Alumni
             Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
@@ -247,11 +268,32 @@ Route::middleware('auth')->group(function () {
             Route::get('/products', [CmsController::class, 'products'])->name('products');
             Route::get('/products/index', [CmsController::class, 'products'])->name('products.index');
             Route::post('/products', [CmsController::class, 'storeProduct'])->name('products.store');
+            Route::put('/products/{product}', [CmsController::class, 'updateProduct'])->name('products.update');
+            Route::delete('/products/{product}', [CmsController::class, 'destroyProduct'])->name('products.destroy');
+            Route::get('/products/{product}/preview', [CmsController::class, 'previewProduct'])->name('products.preview');
 
             // BKK & Mitra Perusahaan / Karir
             Route::get('/career', [CmsController::class, 'career'])->name('career');
             Route::get('/career/index', [CmsController::class, 'career'])->name('career.index');
             Route::post('/career', [CmsController::class, 'storeCareer'])->name('career.store');
+
+            // Lowongan Karir & Magang
+            Route::post('/career/opportunities', [CmsController::class, 'storeCareerOpportunity'])->name('career.opportunities.store');
+            Route::put('/career/opportunities/{opportunity}', [CmsController::class, 'updateCareerOpportunity'])->name('career.opportunities.update');
+            Route::delete('/career/opportunities/{opportunity}', [CmsController::class, 'destroyCareerOpportunity'])->name('career.opportunities.destroy');
+            Route::get('/career/opportunities/{opportunity}/preview', [CmsController::class, 'previewCareerOpportunity'])->name('career.opportunities.preview');
+            Route::patch('/career/opportunities/{opportunity}/toggle-status', [CmsController::class, 'toggleCareerOpportunityStatus'])->name('career.opportunities.toggle-status');
+
+            // Mitra Perusahaan / DUDI
+            Route::post('/career/companies', [CmsController::class, 'storeCareerCompany'])->name('career.companies.store');
+            Route::put('/career/companies/{company}', [CmsController::class, 'updateCareerCompany'])->name('career.companies.update');
+            Route::delete('/career/companies/{company}', [CmsController::class, 'destroyCareerCompany'])->name('career.companies.destroy');
+
+            // Layanan BKK
+            Route::post('/career/services', [CmsController::class, 'storeCareerService'])->name('career.services.store');
+            Route::put('/career/services/{service}', [CmsController::class, 'updateCareerService'])->name('career.services.update');
+            Route::delete('/career/services/{service}', [CmsController::class, 'destroyCareerService'])->name('career.services.destroy');
+            Route::patch('/career/services/{service}/toggle-status', [CmsController::class, 'toggleCareerServiceStatus'])->name('career.services.toggle-status');
         });
     });
 

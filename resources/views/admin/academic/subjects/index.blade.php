@@ -18,11 +18,63 @@
         </button>
     </div>
 
+    <!-- Filter & Search Bar -->
+    <div class="panel p-4">
+        <form method="GET" action="{{ route('admin.academic.subjects.index') }}" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            <!-- Search -->
+            <div class="lg:col-span-2">
+                <label class="f-label text-xs">Cari Mata Pelajaran</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-bluedark/40">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </span>
+                    <input type="text" name="search" value="{{ $search }}" placeholder="Ketik nama atau kode mapel..." class="f-input pl-9 text-xs w-full">
+                </div>
+            </div>
+
+            <!-- Kategori -->
+            <div>
+                <label class="f-label text-xs">Kategori / Kelompok</label>
+                <select name="category" class="f-select text-xs w-full">
+                    <option value="">Semua Kategori</option>
+                    <option value="MUATAN_NASIONAL" {{ $category === 'MUATAN_NASIONAL' ? 'selected' : '' }}>Muatan Nasional (A)</option>
+                    <option value="MUATAN_KEWILAYAHAN" {{ $category === 'MUATAN_KEWILAYAHAN' ? 'selected' : '' }}>Muatan Kewilayahan (B)</option>
+                    <option value="MUATAN_KEJURUAN" {{ $category === 'MUATAN_KEJURUAN' ? 'selected' : '' }}>Peminatan Kejuruan (C)</option>
+                    <option value="MULOK" {{ $category === 'MULOK' ? 'selected' : '' }}>Muatan Lokal</option>
+                </select>
+            </div>
+
+            <!-- Jurusan -->
+            <div>
+                <label class="f-label text-xs">Jurusan</label>
+                <select name="department_id" class="f-select text-xs w-full">
+                    <option value="">Semua Jurusan</option>
+                    @foreach($departments as $d)
+                        <option value="{{ $d->id }}" {{ (string)$departmentId === (string)$d->id ? 'selected' : '' }}>{{ $d->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Actions (Filter & Reset) -->
+            <div class="flex items-center gap-2">
+                <button type="submit" class="btn btn-primary btn-sm text-xs flex-1 flex items-center justify-center gap-1.5 py-2 shadow-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span>Filter</span>
+                </button>
+                @if($search !== '' || !empty($category) || !empty($departmentId) || $status !== null)
+                    <a href="{{ route('admin.academic.subjects.index') }}" class="btn btn-outline btn-sm text-xs py-2 px-2.5 text-bluedark/60 hover:text-bluedark" title="Reset Filter">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
+
     <!-- Table Mapel matching template/admin/akademik-mapel.html -->
     <div class="panel p-5">
         <div class="flex items-center justify-between mb-4">
             <h2 class="font-heading font-semibold text-bluedark text-[15px]">Daftar Mata Pelajaran</h2>
-            <span class="text-xs text-bluedark/50">Total: {{ $subjects->count() }} Mapel</span>
+            <span class="text-xs text-bluedark/50">Total: {{ $subjects->total() }} Mapel</span>
         </div>
 
         <div class="overflow-x-auto">
@@ -42,7 +94,7 @@
                 <tbody>
                     @forelse($subjects as $idx => $s)
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
+                            <td>{{ $subjects->firstItem() + $idx }}</td>
                             <td class="font-mono font-bold text-blueprim">{{ $s->code }}</td>
                             <td class="font-semibold text-bluedark">{{ $s->name }}</td>
                             <td>
@@ -75,13 +127,19 @@
                     @empty
                         <tr>
                             <td colspan="8" class="text-center py-8 text-xs text-bluedark/40">
-                                Belum ada mata pelajaran terdaftar.
+                                Belum ada mata pelajaran terdaftar yang sesuai filter.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+
+        @if($subjects->hasPages())
+            <div class="mt-4 pt-3 border-t border-bluelight">
+                {{ $subjects->links() }}
+            </div>
+        @endif
     </div>
 
 </div>

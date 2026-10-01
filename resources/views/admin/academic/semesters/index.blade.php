@@ -43,9 +43,10 @@
     </div>
 
     @php
-        $activeSemester = $semesters->firstWhere('is_active', true);
-        $gasalCount = $semesters->where('semester_number', 1)->count();
-        $genapCount = $semesters->where('semester_number', 2)->count();
+        $activeSemester = $activeSemester ?? $semesters->firstWhere('is_active', true);
+        $gasalCount = $gasalCount ?? $semesters->where('semester_number', 1)->count();
+        $genapCount = $genapCount ?? $semesters->where('semester_number', 2)->count();
+        $totalSemesters = $totalSemesters ?? $semesters->total();
     @endphp
 
     <!-- KPI Summary Highlight Cards -->
@@ -57,7 +58,7 @@
             </div>
             <div class="min-w-0">
                 <div class="text-[10px] sm:text-[11px] font-semibold text-bluedark/60 uppercase tracking-wider truncate">Total Semester</div>
-                <div class="font-heading font-extrabold text-lg sm:text-xl text-bluedark leading-tight mt-0.5">{{ $semesters->count() }}</div>
+                <div class="font-heading font-extrabold text-lg sm:text-xl text-bluedark leading-tight mt-0.5">{{ $totalSemesters }}</div>
                 <div class="text-[10px] text-bluedark/50 truncate">Semua tahun ajaran</div>
             </div>
         </div>
@@ -335,12 +336,18 @@
         <!-- Table Footer Info -->
         <div class="flex items-center justify-between text-xs text-bluedark/60 pt-1 flex-wrap gap-2">
             <div>
-                Menampilkan <strong id="visibleCount">{{ $semesters->count() }}</strong> dari <strong>{{ $semesters->count() }}</strong> total semester.
+                Menampilkan <strong id="visibleCount">{{ $semesters->count() }}</strong> dari <strong>{{ $semesters->total() }}</strong> total semester.
             </div>
             <div class="text-[11px] text-bluedark/50">
                 Data disinkronkan otomatis dengan kalender akademik.
             </div>
         </div>
+
+        @if($semesters->hasPages())
+            <div class="mt-4 pt-3 border-t border-bluelight">
+                {{ $semesters->links() }}
+            </div>
+        @endif
 
     </div>
 

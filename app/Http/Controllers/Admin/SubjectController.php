@@ -8,20 +8,49 @@ use App\Http\Requests\Admin\UpdateSubjectRequest;
 use App\Models\Department;
 use App\Models\Subject;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class SubjectController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = $request->string('search')->trim()->toString();
+        $category = $request->input('category');
+        $departmentId = $request->input('department_id');
+        $status = $request->input('status');
+
         $subjects = Subject::with('department')
             ->withCount('teachingAssignments')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            })
+            ->when(! empty($category), function ($query) use ($category) {
+                $query->where('category', $category);
+            })
+            ->when(! empty($departmentId), function ($query) use ($departmentId) {
+                $query->where('department_id', $departmentId);
+            })
+            ->when($status !== null && $status !== '', function ($query) use ($status) {
+                $query->where('is_active', (bool) $status);
+            })
             ->orderBy('code')
-            ->get();
+            ->paginate(10)
+            ->withQueryString();
 
-        $departments = Department::where('is_active', true)->get();
+        $departments = Department::where('is_active', true)->orderBy('name')->get();
 
-        return view('admin.academic.subjects.index', compact('subjects', 'departments'));
+        return view('admin.academic.subjects.index', compact(
+            'subjects',
+            'departments',
+            'search',
+            'category',
+            'departmentId',
+            'status'
+        ));
     }
 
     public function store(StoreSubjectRequest $request): RedirectResponse
