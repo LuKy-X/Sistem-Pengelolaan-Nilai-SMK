@@ -9,6 +9,7 @@ use App\Models\ClassJournal;
 use App\Models\JournalAttendance;
 use App\Models\LessonPeriod;
 use App\Models\TeachingAssignment;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,7 @@ class JournalController extends Controller
 
         $assignments = TeachingAssignment::with([
             'schoolClass.gradeLevel',
+            'schoolClass.department',
             'subject',
             'semester.academicYear',
             'schedules.startPeriod',
@@ -34,21 +36,32 @@ class JournalController extends Controller
 
         $selectedAssignmentId = $request->query('assignment_id');
         $selectedAssignment = $selectedAssignmentId ? $assignments->firstWhere('id', $selectedAssignmentId) : null;
+        $selectedDate = $request->query('date', now()->format('Y-m-d'));
 
         $journals = collect();
         $enrolledStudents = collect();
         $lessonPeriods = LessonPeriod::orderBy('period_number')->get();
+        $previousJournalAttendances = collect();
+        $previousJournalInfo = null;
+        $defaultStartPeriodId = null;
+        $defaultEndPeriodId = null;
 
         if ($selectedAssignment) {
+            // Journals displayed ONLY for the single selected day, ordered chronologically from period 1 to the end
             $journals = ClassJournal::with([
                 'startPeriod',
                 'endPeriod',
                 'attendances.student',
-                'creator',
+                'creator.user',
+                'teachingAssignment.subject',
             ])
-                ->where('teaching_assignment_id', $selectedAssignment->id)
-                ->latest('journal_date')
-                ->get();
+                ->whereHas('teachingAssignment', function ($q) use ($selectedAssignment) {
+                    $q->where('class_id', $selectedAssignment->class_id);
+                })
+                ->whereDate('journal_date', $selectedDate)
+                ->get()
+                ->sortBy(fn ($j) => $j->startPeriod?->period_number ?? 0)
+                ->values();
 
             $enrolledStudents = ClassEnrollment::with('student')
                 ->where('class_id', $selectedAssignment->class_id)
@@ -56,15 +69,86 @@ class JournalController extends Controller
                 ->get()
                 ->pluck('student')
                 ->filter()
-                ->sortBy('full_name');
+                ->sortBy('full_name')
+                ->values();
+
+            // Find previous journal entry for this class to allow copying attendance
+            // Prefers the latest session from today if exists; otherwise falls back to the most recent historical session
+            $latestJournal = $journals->last() ?? ClassJournal::with([
+                'startPeriod',
+                'endPeriod',
+                'attendances.student',
+                'creator.user',
+                'teachingAssignment.subject',
+            ])
+                ->whereHas('teachingAssignment', function ($q) use ($selectedAssignment) {
+                    $q->where('class_id', $selectedAssignment->class_id);
+                })
+                ->whereDate('journal_date', '<=', $selectedDate)
+                ->orderByDesc('journal_date')
+                ->orderByDesc('start_period_id')
+                ->first();
+
+            if ($latestJournal) {
+                $previousJournalInfo = [
+                    'date' => $latestJournal->journal_date?->format('d/m/Y'),
+                    'start_period' => $latestJournal->startPeriod?->period_number,
+                    'end_period' => $latestJournal->endPeriod?->period_number,
+                    'subject' => $latestJournal->teachingAssignment?->subject?->name ?? 'Mata Pelajaran',
+                    'teacher' => $latestJournal->creator?->user?->name ?? $latestJournal->creator?->full_name ?? 'Guru',
+                    'hadir_count' => $latestJournal->hadir_count,
+                    'sakit_count' => $latestJournal->sakit_count,
+                    'izin_count' => $latestJournal->izin_count,
+                    'alpha_count' => $latestJournal->alpha_count,
+                ];
+
+                $previousJournalAttendances = $latestJournal->attendances
+                    ->filter(fn ($att) => $att->status !== AttendanceStatus::Present)
+                    ->map(function ($att) {
+                        return [
+                            'student_id' => $att->student_id,
+                            'student_name' => $att->student?->full_name ?? ('Siswa #'.$att->student_id),
+                            'status' => match ($att->status) {
+                                AttendanceStatus::Sick => 'SAKIT',
+                                AttendanceStatus::Permit => 'IZIN',
+                                AttendanceStatus::Absent => 'ALPHA',
+                                default => 'HADIR',
+                            },
+                            'note' => $att->note ?? '',
+                        ];
+                    })
+                    ->values();
+            }
+
+            // Determine smart default start and end periods for today
+            $dayOfWeekNumber = Carbon::parse($selectedDate)->dayOfWeekIso;
+            $todaySchedule = $selectedAssignment->schedules->firstWhere('day_of_week', $dayOfWeekNumber);
+
+            if ($todaySchedule) {
+                $defaultStartPeriodId = $todaySchedule->start_period_id;
+                $defaultEndPeriodId = $todaySchedule->end_period_id;
+            } elseif ($journals->isNotEmpty()) {
+                $lastPeriodNumber = $journals->last()->endPeriod?->period_number;
+                if ($lastPeriodNumber) {
+                    $nextStart = $lessonPeriods->firstWhere('period_number', $lastPeriodNumber + 1);
+                    $nextEnd = $lessonPeriods->firstWhere('period_number', $lastPeriodNumber + 2) ?? $nextStart;
+                    $defaultStartPeriodId = $nextStart?->id;
+                    $defaultEndPeriodId = $nextEnd?->id;
+                }
+            }
         }
 
         return view('teacher.journals.index', compact(
             'assignments',
             'selectedAssignment',
+            'selectedDate',
             'journals',
             'enrolledStudents',
-            'lessonPeriods'
+            'lessonPeriods',
+            'previousJournalAttendances',
+            'previousJournalInfo',
+            'defaultStartPeriodId',
+            'defaultEndPeriodId'
         ));
     }
 
@@ -132,15 +216,17 @@ class JournalController extends Controller
 
             // Save individual absent/sick/permitted students if submitted
             if (! empty($validated['absences'])) {
+                $processedStudentIds = [];
                 foreach ($validated['absences'] as $abs) {
-                    if (empty($abs['student_id'])) {
+                    if (empty($abs['student_id']) || in_array($abs['student_id'], $processedStudentIds)) {
                         continue;
                     }
+                    $processedStudentIds[] = $abs['student_id'];
 
                     $statusEnum = match (strtoupper($abs['status'])) {
-                        'SAKIT', 'S' => AttendanceStatus::Sick,
-                        'IZIN', 'I' => AttendanceStatus::Permitted,
-                        'ALPHA', 'A' => AttendanceStatus::Absent,
+                        'SAKIT', 'S', 'SICK' => AttendanceStatus::Sick,
+                        'IZIN', 'I', 'PERMIT', 'PERMITTED' => AttendanceStatus::Permit,
+                        'ALPHA', 'A', 'ABSENT' => AttendanceStatus::Absent,
                         default => AttendanceStatus::Present,
                     };
 
@@ -156,6 +242,7 @@ class JournalController extends Controller
 
         return redirect()->route('teacher.journals.index', [
             'assignment_id' => $validated['teaching_assignment_id'],
+            'date' => $validated['journal_date'],
         ])->with('success', 'Jurnal kelas dan absensi berhasil disimpan.');
     }
 
