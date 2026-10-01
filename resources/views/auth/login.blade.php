@@ -16,16 +16,23 @@
 {{-- Marks JS as available so scroll-reveal only hides content when it can be revealed again. --}}
 <script>document.documentElement.classList.add('js');</script>
 
-<div class="page-transition-overlay" id="pageTransitionOverlay" aria-hidden="true">
+<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
   <div class="page-transition-diagonal">
     <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
   </div>
 </div>
+<script>
+  try {
+    if (sessionStorage.getItem('playPageTransition') === '1') {
+      document.getElementById('pageTransitionOverlay')?.classList.remove('is-hidden');
+    }
+  } catch (e) {}
+</script>
 
-<div class="min-h-screen flex flex-col lg:flex-row">
+<div class="min-h-screen flex flex-col lg:flex-row bg-[#FAFDFF]">
 
   {{-- Left brand panel --}}
-  <div class="relative isolate overflow-hidden flex flex-col p-7 pb-12 lg:w-1/2 lg:min-h-screen lg:p-12 bg-gradient-to-br from-bluedark to-blueprim">
+  <div class="relative isolate overflow-hidden flex flex-col p-7 pb-12 lg:w-1/2 lg:min-h-screen lg:p-12 bg-gradient-to-br from-bluedark to-blueprim text-white">
     <div class="login-dot-grid"></div>
     <span class="absolute rounded-full bg-white/10 blur-[2px] w-[280px] h-[280px] -top-[120px] -right-[90px] lg:w-[420px] lg:h-[420px] lg:-top-40 lg:-right-[140px]"></span>
     <span class="absolute rounded-full bg-white/[0.08] blur-[2px] w-[180px] h-[180px] -bottom-[60px] -left-[60px] lg:w-[280px] lg:h-[280px] lg:-bottom-24 lg:-left-24"></span>
