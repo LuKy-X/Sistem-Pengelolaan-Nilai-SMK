@@ -26,9 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SampleClassSeeder::class,
             SampleTeachingAssignmentSeeder::class,
-<<<<<<< HEAD
             SampleBkDataSeeder::class,
-=======
             DepartmentDetailSeeder::class,
             ProductCategorySeeder::class,
             StudentProductSeeder::class,
@@ -42,7 +40,6 @@ class DatabaseSeeder extends Seeder
             AchievementCategorySeeder::class,
             AchievementSeeder::class,
             SiteStatisticSeeder::class,
->>>>>>> ad921520bf629a2225abf00dd8665c0358b0629a
         ]);
     }
 }
