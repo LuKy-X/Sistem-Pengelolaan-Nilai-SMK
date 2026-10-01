@@ -110,4 +110,17 @@ class AuthTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect(route('login'));
     }
+
+    public function test_user_can_logout_by_visiting_the_url_directly(): void
+    {
+        $user = User::where('username', 'guru.agus')->first();
+
+        $response = $this->actingAs($user)->get('/logout');
+
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+
+        // The session was cleared, so the login form can be shown again.
+        $this->get('/login')->assertOk()->assertSee('Masuk ke Akun');
+    }
 }

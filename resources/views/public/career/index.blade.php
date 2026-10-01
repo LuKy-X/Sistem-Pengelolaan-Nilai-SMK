@@ -5,10 +5,10 @@
 
 @section('content')
     <x-public.page-header
-        eyebrow="BKK &amp; Karier"
+        eyebrow="BKK & Karier"
         title="Pendampingan Karier dan Peluang Kerja"
         description="Layanan pendampingan karier dan lowongan magang dari mitra industri."
-        :breadcrumb="['Beranda' => route('public.home'), 'BKK &amp; Karier' => null]" />
+        :breadcrumb="['Beranda' => route('public.home'), 'BKK & Karier' => null]" />
 
     <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">

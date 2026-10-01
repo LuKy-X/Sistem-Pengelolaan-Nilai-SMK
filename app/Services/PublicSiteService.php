@@ -62,6 +62,7 @@ class PublicSiteService
 
         try {
             return $this->activeDepartments = Department::query()
+                ->withCount('competencies')
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get();
