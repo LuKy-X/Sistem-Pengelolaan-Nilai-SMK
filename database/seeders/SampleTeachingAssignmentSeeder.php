@@ -4,18 +4,22 @@ namespace Database\Seeders;
 
 use App\Enums\AssessmentStatus;
 use App\Enums\AssessmentType;
+use App\Enums\AttendanceStatus;
 use App\Enums\GradebookCalculationType;
 use App\Enums\GradebookColumnType;
 use App\Enums\LateReductionType;
 use App\Models\Assessment;
 use App\Models\AssessmentLatePolicy;
 use App\Models\ClassEnrollment;
+use App\Models\ClassJournal;
 use App\Models\Gradebook;
 use App\Models\GradebookCategory;
 use App\Models\GradebookColumn;
 use App\Models\GradebookColumnSource;
 use App\Models\GradebookScore;
 use App\Models\GradebookStudent;
+use App\Models\JournalAttendance;
+use App\Models\LessonPeriod;
 use App\Models\SchoolClass;
 use App\Models\Semester;
 use App\Models\Subject;
@@ -322,5 +326,84 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 'is_included_in_average' => true,
             ]
         );
+
+        // SAMPLE CLASS JOURNALS & ATTENDANCE FOR XII-RPL-1
+        $period1 = LessonPeriod::where('period_number', 1)->first();
+        $period2 = LessonPeriod::where('period_number', 2)->first();
+        $period3 = LessonPeriod::where('period_number', 3)->first();
+        $period4 = LessonPeriod::where('period_number', 4)->first();
+
+        // Assignment Guru Budi: Bahasa Indonesia XII RPL 1
+        $assignBudi = null;
+        if ($teacherBudi && $mapelBin) {
+            $assignBudi = TeachingAssignment::firstOrCreate(
+                [
+                    'teacher_id' => $teacherBudi->id,
+                    'subject_id' => $mapelBin->id,
+                    'class_id' => $classXiiRpl1->id,
+                    'semester_id' => $semesterGanjil->id,
+                ],
+                ['weekly_hours' => 2, 'is_active' => true]
+            );
+        }
+
+        // Journal Jam 1-2 Bahasa Indonesia (Guru Budi)
+        if ($assignBudi && $period1 && $period2) {
+            $journalBin = ClassJournal::firstOrCreate(
+                [
+                    'teaching_assignment_id' => $assignBudi->id,
+                    'journal_date' => now()->format('Y-m-d'),
+                    'start_period_id' => $period1->id,
+                    'end_period_id' => $period2->id,
+                ],
+                [
+                    'material' => 'Menganalisis Kaidah Kebahasaan dan Struktur Teks Editorial',
+                    'notes' => "Diskusi kelompok aktif. Materi tuntas disampaikan.\nHadir: 34 | Sakit: 1 | Izin: 1 | Alpha: 0",
+                    'created_by' => $teacherBudi->id,
+                ]
+            );
+
+            // Students: Ahmad Fajar (Izin), Siti Nurhaliza (Sakit)
+            $firstStudent = ClassEnrollment::where('class_id', $classXiiRpl1->id)->orderBy('id')->first()?->student;
+            $secondStudent = ClassEnrollment::where('class_id', $classXiiRpl1->id)->orderBy('id')->skip(1)->first()?->student;
+
+            if ($firstStudent) {
+                JournalAttendance::firstOrCreate(
+                    ['journal_id' => $journalBin->id, 'student_id' => $firstStudent->id],
+                    ['status' => AttendanceStatus::Permit, 'note' => 'Izin keperluan keluarga']
+                );
+            }
+            if ($secondStudent) {
+                JournalAttendance::firstOrCreate(
+                    ['journal_id' => $journalBin->id, 'student_id' => $secondStudent->id],
+                    ['status' => AttendanceStatus::Sick, 'note' => 'Sakit demam']
+                );
+            }
+        }
+
+        // Previous Journal Jam 3-4 Matematika (Guru Agus) on yesterday
+        if ($assign1 && $period3 && $period4) {
+            $journalMtk = ClassJournal::firstOrCreate(
+                [
+                    'teaching_assignment_id' => $assign1->id,
+                    'journal_date' => now()->subDay()->format('Y-m-d'),
+                    'start_period_id' => $period3->id,
+                    'end_period_id' => $period4->id,
+                ],
+                [
+                    'material' => 'Sistem Persamaan Linear Dua Variabel (SPLDV) dan Matriks',
+                    'notes' => "Latihan soal mandiri berjalan tertib.\nHadir: 35 | Sakit: 0 | Izin: 1 | Alpha: 0",
+                    'created_by' => $teacherAgus->id,
+                ]
+            );
+
+            $firstStudent = ClassEnrollment::where('class_id', $classXiiRpl1->id)->orderBy('id')->first()?->student;
+            if ($firstStudent) {
+                JournalAttendance::firstOrCreate(
+                    ['journal_id' => $journalMtk->id, 'student_id' => $firstStudent->id],
+                    ['status' => AttendanceStatus::Permit, 'note' => 'Izin dispensasi OSIS']
+                );
+            }
+        }
     }
 }

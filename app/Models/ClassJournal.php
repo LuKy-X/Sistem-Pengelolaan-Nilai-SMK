@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -57,5 +58,51 @@ class ClassJournal extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(JournalAttendance::class, 'journal_id');
+    }
+
+    public function getSakitCountAttribute(): int
+    {
+        $count = $this->attendances->where('status', AttendanceStatus::Sick)->count();
+        if ($count === 0 && preg_match('/Sakit:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+    }
+
+    public function getIzinCountAttribute(): int
+    {
+        $count = $this->attendances->where('status', AttendanceStatus::Permit)->count();
+        if ($count === 0 && preg_match('/Izin:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+    }
+
+    public function getAlphaCountAttribute(): int
+    {
+        $count = $this->attendances->where('status', AttendanceStatus::Absent)->count();
+        if ($count === 0 && preg_match('/Alpha:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+    }
+
+    public function getHadirCountAttribute(): int
+    {
+        if (preg_match('/Hadir:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+        $present = $this->attendances->where('status', AttendanceStatus::Present)->count();
+        if ($present > 0) {
+            return $present;
+        }
+        $total = $this->teachingAssignment?->schoolClass?->enrollments()->where('status', 'ACTIVE')->count()
+            ?? $this->teachingAssignment?->schoolClass?->students_count
+            ?? 36;
+
+        return max(0, $total - ($this->sakit_count + $this->izin_count + $this->alpha_count));
     }
 }
