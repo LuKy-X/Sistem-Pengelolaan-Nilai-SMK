@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('gradebook_column_id')->nullable()->constrained('gradebook_columns')->nullOnDelete();
             $table->foreignId('teaching_assignment_id')->constrained('teaching_assignments')->restrictOnDelete();
-            $table->enum('type', ['TASK', 'QUIZ', 'PROJECT', 'EXAM', 'OTHER'])->default('TASK');
+            $table->enum('type', ['TASK', 'QUIZ', 'PROJECT', 'EXAM', 'REMEDIAL', 'OTHER'])->default('TASK');
             $table->string('title', 200);
             $table->text('description')->nullable();
             $table->longText('instructions')->nullable();

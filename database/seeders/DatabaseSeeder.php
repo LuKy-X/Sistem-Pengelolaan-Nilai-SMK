@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SampleClassSeeder::class,
             SampleTeachingAssignmentSeeder::class,
+            SampleBkDataSeeder::class,
             DepartmentDetailSeeder::class,
             ProductCategorySeeder::class,
             StudentProductSeeder::class,

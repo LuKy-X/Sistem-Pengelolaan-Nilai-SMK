@@ -41,6 +41,16 @@
   color: #065f46 !important;
   font-weight: 700 !important;
 }
+.quick-col-btn .quick-task-draft-badge {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+.quick-col-btn.active-quick-btn .quick-task-draft-badge {
+  background-color: #ffffff !important;
+  color: #92400e !important;
+  font-weight: 700 !important;
+}
 .quick-col-btn.active-quick-btn .quick-new-badge {
   color: #BFDBFE !important;
 }
@@ -78,7 +88,7 @@
   <div class="step-panel active" data-panel="1">
     <p class="text-sm text-bluedark/60 mb-4">Pilih kelas untuk mengelola buku nilai dan tugas/remidi</p>
 
-    <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4" id="tugasKelasGrid">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="tugasKelasGrid">
       @forelse($assignments as $assign)
         @php
           $classModel = $assign->schoolClass;
@@ -103,15 +113,15 @@
           data-semester="{{ $semesterName }}"
           data-tahun="{{ $academicYear }}"
           data-mapel="{{ $subjectName }}">
-          <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center justify-between mb-3">
             <div class="crud-card__icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">{{ $className }}</div>
-          <div class="text-xs text-bluedark/50 truncate">{{ $deptName }}</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">{{ $className }}</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">{{ $deptName }}</div>
+          <div class="kelas-card__meta mb-3.5">
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               {{ $studentCount }} Siswa
@@ -121,7 +131,7 @@
               {{ $days }}
             </span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">{{ $semesterName }}</span>
             <span class="badge badge-gray">{{ $academicYear }}</span>
           </div>
@@ -130,17 +140,17 @@
         <!-- Fallback Cards matching mockup if no database assignments -->
         <button type="button" class="kelas-card w-full"
           data-id="1" data-kode="XI RA" data-jurusan="Rekayasa Perangkat Lunak" data-siswa="36" data-hari="Senin &amp; Rabu" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XI RA</div>
-          <div class="text-xs text-bluedark/50 truncate">Rekayasa Perangkat Lunak</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XI RA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Rekayasa Perangkat Lunak</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Senin &amp; Rabu</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -148,17 +158,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="2" data-kode="XI TA" data-jurusan="Tekstil" data-siswa="36" data-hari="Senin &amp; Selasa" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XI TA</div>
-          <div class="text-xs text-bluedark/50 truncate">Tekstil</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XI TA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Tekstil</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Senin &amp; Selasa</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -166,17 +176,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="3" data-kode="XII OA" data-jurusan="Ototronik" data-siswa="35" data-hari="Selasa &amp; Rabu" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XII OA</div>
-          <div class="text-xs text-bluedark/50 truncate">Ototronik</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XII OA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Ototronik</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 35 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Selasa &amp; Rabu</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -184,17 +194,17 @@
 
         <button type="button" class="kelas-card w-full"
           data-id="4" data-kode="XII MA" data-jurusan="Teknik Mesin" data-siswa="36" data-hari="Rabu &amp; Kamis" data-semester="Gasal" data-tahun="2026/2027" data-mapel="Matematika">
-          <div class="flex items-center justify-between mb-2">
-            <div class="crud-card__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
+          <div class="flex items-center justify-between mb-3">
+            <div class="crud-card__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft"><polyline points="9 18 15 12 9 6"/></svg>
           </div>
-          <div class="font-heading font-bold text-bluedark text-sm">XII MA</div>
-          <div class="text-xs text-bluedark/50 truncate">Teknik Mesin</div>
-          <div class="kelas-card__meta">
+          <div class="font-heading font-bold text-bluedark text-base leading-snug mb-1">XII MA</div>
+          <div class="text-xs text-bluedark/60 truncate mb-3">Teknik Mesin</div>
+          <div class="kelas-card__meta mb-3.5">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 36 Siswa</span>
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Rabu &amp; Kamis</span>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 mt-auto">
             <span class="badge badge-blue">Gasal</span>
             <span class="badge badge-gray">2026/2027</span>
           </div>
@@ -335,10 +345,12 @@
           <div>
             <label class="f-label">Tipe Tugas / Asesmen <span class="text-blueprim font-bold">*</span></label>
             <select name="type" class="f-select" id="formTipeSelect">
-              <option value="TUGAS">Tugas</option>
-              <option value="REMEDIAL">Remidi</option>
-              <option value="MANDIRI">Mandiri</option>
-              <option value="ULANGAN_HARIAN">Ulangan Harian</option>
+              <option value="TASK">Tugas (Task)</option>
+              <option value="QUIZ">Kuis (Quiz)</option>
+              <option value="PROJECT">Projek / Praktik (Project)</option>
+              <option value="EXAM">Ulangan / Ujian (Exam)</option>
+              <option value="REMEDIAL">Remidi (Remedial)</option>
+              <option value="OTHER">Lainnya (Other)</option>
             </select>
           </div>
         </div>
@@ -350,7 +362,7 @@
 
         <div>
           <label class="f-label">Deskripsi Tugas</label>
-          <textarea name="description" id="formDescInput" class="f-textarea" rows="2" placeholder="Tuliskan instruksi atau keterangan tambahan calon tugas"></textarea>
+          <textarea name="description" id="formDescInput" class="f-textarea" rows="2" placeholder="Tuliskan petunjuk umum atau keterangan tambahan tugas"></textarea>
         </div>
 
         <div class="form-row cols-2">
@@ -364,51 +376,8 @@
           </div>
         </div>
 
-        <!-- Pengaturan Pengurangan Nilai Keterlambatan -->
-        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <span class="font-heading font-semibold text-xs text-bluedark block">Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat</span>
-              <p class="text-[11px] text-bluedark/60 mt-0.5" id="latePolicyHelpText">
-                Aturan default sekolah: Pengurangan batas maksimal nilai sebesar 5 poin per 1 Minggu keterlambatan (batas minimal nilai 50).
-              </p>
-            </div>
-            <div class="field-toggle shrink-0">
-              <span class="text-xs font-semibold text-bluedark">Gunakan Pengaturan Default</span>
-              <label class="toggle-switch">
-                <input type="checkbox" name="use_default_policy" id="useDefaultPolicyToggle" value="1" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-
-          <div id="customLatePenaltyWrap" class="grid sm:grid-cols-2 gap-3 pt-2 border-t border-bluelight/60 items-center">
-            <div>
-              <label class="f-label text-xs">Nilai Pengurangan Poin</label>
-              <div class="relative">
-                <input type="number" name="reduction_value" id="reductionValueInput" class="f-input" value="5" min="0" max="100">
-                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-bluedark/50 font-medium pointer-events-none">Poin</span>
-              </div>
-            </div>
-            <div>
-              <label class="f-label text-xs">Interval Keterlambatan</label>
-              <select name="interval" id="intervalSelect" class="f-select">
-                <option value="MINGGU" selected>Per Minggu (7 Hari)</option>
-                <option value="HARI">Per Hari (1 Hari)</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="defaultPolicyBadge" class="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
-            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span>Pengaturan default aktif: Nilai maksimal tugas otomatis berkurang <strong>5 poin per minggu</strong> terlambat.</span>
-          </div>
-        </div>
-
-        <input type="hidden" name="enable_late_policy" value="1">
-
-        <!-- Pengaturan Rubrik Penilaian dengan Preview Interaktif -->
-        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-3">
+        <!-- Pengaturan Rubrik Penilaian dengan Preview Interaktif (Di bawah Info Tugas) -->
+        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-3" id="rubricConfigCard">
           <div class="field-toggle">
             <div>
               <span class="font-heading font-semibold text-xs text-bluedark block">Gunakan Rubrik Penilaian</span>
@@ -431,6 +400,131 @@
 
             <!-- Container Preview Rubrik -->
             <div id="rubricPreviewContainer"></div>
+          </div>
+        </div>
+
+        <!-- Pengaturan Status Publikasi Tugas (Default DRAFT) -->
+        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
+              <span class="font-heading font-semibold text-xs text-bluedark block">Status Publikasi Tugas</span>
+              <p class="text-[11px] text-bluedark/60 mt-0.5">
+                Tentukan apakah tugas langsung aktif untuk siswa atau disimpan sebagai draf sementara.
+              </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0" id="statusRadiosWrap">
+              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all border-amber-300 bg-amber-50 text-amber-800 shrink-0" id="labelStatusDraft">
+                <input type="radio" name="status" value="DRAFT" class="sr-only" id="radioStatusDraft" checked>
+                <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                <span>Simpan Sebagai Draf</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 shrink-0" id="labelStatusPublished">
+                <input type="radio" name="status" value="PUBLISHED" class="sr-only" id="radioStatusPublished">
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Publikasikan Sekarang</span>
+              </label>
+            </div>
+          </div>
+          <div id="statusDraftNotice" class="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-800 flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span><strong>Mode Draf:</strong> Tugas disimpan namun belum ditampilkan di portal siswa sampai Anda mempublikasikannya.</span>
+          </div>
+        </div>
+
+        <!-- Pengaturan Pengiriman Berkas & Bukti Siswa (Submission - Default Disabled) -->
+        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5" id="submissionConfigCard">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
+              <span class="font-heading font-semibold text-xs text-bluedark block">Wajibkan Pengiriman / Bukti Tugas Siswa (Online Submission)</span>
+              <p class="text-[11px] text-bluedark/60 mt-0.5">
+                Aktifkan jika siswa harus mengirimkan bukti pengerjaan melalui sistem (file PDF, gambar, link portofolio). Nonaktifkan jika penilaian langsung / tatap muka.
+              </p>
+            </div>
+            <div class="field-toggle shrink-0 py-1.5 px-3">
+              <span class="text-xs font-semibold text-bluedark whitespace-nowrap" id="submissionToggleLabel">Penilaian Langsung</span>
+              <label class="toggle-switch shrink-0">
+                <input type="hidden" name="submission_required" value="0">
+                <input type="checkbox" name="submission_required" id="submissionRequiredToggle" value="1">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div id="submissionInstructionsWrap" class="hidden space-y-2 pt-2 border-t border-bluelight/60">
+            <label class="f-label text-xs">Petunjuk Pengiriman Bukti / Format Berkas Siswa</label>
+            <textarea name="instructions" id="formInstructionsInput" class="f-textarea" rows="2" placeholder="cth. Unggah bukti pengerjaan format PDF/foto dokumentasi. Pastikan hasil pekerjaan terbaca jelas."></textarea>
+            <div class="flex items-center gap-1.5 text-[11px] text-blueprim bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-200">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Siswa dapat melampirkan berkas bukti pengerjaan tugas langsung saat mengumpulkan jawaban di akun siswa mereka.</span>
+            </div>
+          </div>
+
+          <div id="noSubmissionNotice" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><strong>Penilaian Langsung / Observasi:</strong> Siswa tidak perlu mengunggah berkas online. Guru dapat langsung mengisi perolehan nilai siswa pada buku nilai.</span>
+          </div>
+        </div>
+
+        <!-- Pengaturan Pengurangan Nilai Keterlambatan (Dipindah Paling Bawah - Default Nonaktif) -->
+        <div class="panel p-3.5 rounded-xl border border-bluelight bg-white space-y-2.5" id="latePolicyCard">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex-1 min-w-0 pr-2">
+              <span class="font-heading font-semibold text-xs text-bluedark block">Pengurangan Batas Maksimal Nilai Tugas Karena Terlambat</span>
+              <p class="text-[11px] text-bluedark/60 mt-0.5" id="latePolicyHelpText">
+                Aktifkan jika batas maksimal nilai tugas otomatis berkurang ketika siswa terlambat mengumpulkan.
+              </p>
+            </div>
+            <div class="field-toggle shrink-0 py-1.5 px-3">
+              <span class="text-xs font-semibold text-bluedark whitespace-nowrap" id="latePolicyToggleLabel">Nonaktif</span>
+              <label class="toggle-switch shrink-0">
+                <input type="hidden" name="enable_late_policy" value="0">
+                <input type="checkbox" name="enable_late_policy" id="enableLatePolicyToggle" value="1">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Body Pengaturan Keterlambatan -->
+          <div id="latePolicyContentWrap" class="hidden space-y-2.5 pt-2 border-t border-bluelight/60">
+            <div class="flex items-center justify-between gap-4 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+              <div class="flex-1 min-w-0 pr-2">
+                <span class="text-xs font-semibold text-bluedark block">Gunakan Pengaturan Default Sekolah</span>
+                <span class="text-[11px] text-bluedark/60">Pengurangan batas maksimal nilai sebesar 5 poin per 1 minggu keterlambatan (batas minimal nilai 50).</span>
+              </div>
+              <div class="field-toggle shrink-0 py-1.5 px-3">
+                <label class="toggle-switch shrink-0">
+                  <input type="checkbox" name="use_default_policy" id="useDefaultPolicyToggle" value="1" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div id="customLatePenaltyWrap" class="grid sm:grid-cols-2 gap-3 pt-1 items-center">
+              <div>
+                <label class="f-label text-xs">Nilai Pengurangan Poin</label>
+                <div class="relative">
+                  <input type="number" name="reduction_value" id="reductionValueInput" class="f-input bg-slate-100 cursor-not-allowed" value="5" min="0" max="100" readonly>
+                  <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-bluedark/50 font-medium pointer-events-none">Poin</span>
+                </div>
+              </div>
+              <div>
+                <label class="f-label text-xs">Interval Keterlambatan</label>
+                <select name="interval" id="intervalSelect" class="f-select bg-slate-100 cursor-not-allowed" disabled>
+                  <option value="MINGGU" selected>Per Minggu (7 Hari)</option>
+                  <option value="HARI">Per Hari (1 Hari)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="defaultPolicyBadge" class="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1.5 rounded-lg border border-emerald-200">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Pengaturan default aktif: Nilai maksimal tugas otomatis berkurang <strong>5 poin per minggu</strong> terlambat.</span>
+            </div>
+          </div>
+
+          <div id="noLatePolicyNotice" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2">
+            <svg class="w-4 h-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span><strong>Tanpa Pengurangan Nilai:</strong> Siswa yang terlambat mengumpulkan tidak akan terkena potongan batas maksimal nilai tugas.</span>
           </div>
         </div>
 
@@ -509,6 +603,9 @@
                         id: {{ $linkedAssessment->id }},
                         title: @json($linkedAssessment->title),
                         type: @json($linkedAssessment->type?->value ?? 'TASK'),
+                        status: @json($linkedAssessment->status?->value ?? 'PUBLISHED'),
+                        submission_required: {{ $linkedAssessment->submission_required ? 'true' : 'false' }},
+                        instructions: @json($linkedAssessment->instructions ?? ''),
                         description: @json($linkedAssessment->description ?? ''),
                         due_at: @json($linkedAssessment->due_at?->format('Y-m-d') ?? ''),
                         max_score: {{ (float) $linkedAssessment->max_score }},
@@ -715,54 +812,85 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  // Pengaturan Keterlambatan (Default vs Custom)
+  // Pengaturan Keterlambatan (Enable/Disable & Default vs Custom)
+  const enableLatePolicyToggle = document.getElementById("enableLatePolicyToggle");
   const useDefaultPolicyToggle = document.getElementById("useDefaultPolicyToggle");
   const customLatePenaltyWrap = document.getElementById("customLatePenaltyWrap");
   const defaultPolicyBadge = document.getElementById("defaultPolicyBadge");
   const reductionValueInput = document.getElementById("reductionValueInput");
   const intervalSelect = document.getElementById("intervalSelect");
   const latePolicyHelpText = document.getElementById("latePolicyHelpText");
+  const latePolicyContentWrap = document.getElementById("latePolicyContentWrap");
+  const noLatePolicyNotice = document.getElementById("noLatePolicyNotice");
+  const latePolicyToggleLabel = document.getElementById("latePolicyToggleLabel");
 
   function updateLatePolicyUI() {
-    if (!useDefaultPolicyToggle) return;
-    const isDefault = useDefaultPolicyToggle.checked;
+    const isEnabled = enableLatePolicyToggle ? enableLatePolicyToggle.checked : true;
+    const isDefault = useDefaultPolicyToggle ? useDefaultPolicyToggle.checked : true;
 
-    if (isDefault) {
-      if (defaultPolicyBadge) defaultPolicyBadge.classList.remove("hidden");
-      if (customLatePenaltyWrap) customLatePenaltyWrap.classList.add("opacity-50");
+    if (latePolicyToggleLabel) {
+      latePolicyToggleLabel.textContent = isEnabled ? 'Aktif' : 'Nonaktif';
+    }
+
+    if (isEnabled) {
+      if (latePolicyContentWrap) latePolicyContentWrap.classList.remove("hidden");
+      if (noLatePolicyNotice) noLatePolicyNotice.classList.add("hidden");
+
+      if (isDefault) {
+        if (defaultPolicyBadge) defaultPolicyBadge.classList.remove("hidden");
+        if (customLatePenaltyWrap) customLatePenaltyWrap.classList.add("opacity-50");
+        if (reductionValueInput) {
+          reductionValueInput.value = 5;
+          reductionValueInput.readOnly = true;
+          reductionValueInput.classList.add("bg-slate-100", "cursor-not-allowed");
+        }
+        if (intervalSelect) {
+          intervalSelect.value = "MINGGU";
+          intervalSelect.disabled = true;
+          intervalSelect.classList.add("bg-slate-100", "cursor-not-allowed");
+        }
+        if (latePolicyHelpText) {
+          latePolicyHelpText.textContent = "Aturan default sekolah: Pengurangan batas maksimal nilai sebesar 5 poin per 1 Minggu keterlambatan (batas minimal nilai 50).";
+        }
+      } else {
+        if (defaultPolicyBadge) defaultPolicyBadge.classList.add("hidden");
+        if (customLatePenaltyWrap) customLatePenaltyWrap.classList.remove("opacity-50");
+        if (reductionValueInput) {
+          reductionValueInput.readOnly = false;
+          reductionValueInput.classList.remove("bg-slate-100", "cursor-not-allowed");
+        }
+        if (intervalSelect) {
+          intervalSelect.disabled = false;
+          intervalSelect.classList.remove("bg-slate-100", "cursor-not-allowed");
+        }
+        if (latePolicyHelpText) {
+          latePolicyHelpText.textContent = "Pengaturan kustom: Tentukan nilai pengurangan poin dan interval keterlambatan sendiri untuk tugas ini.";
+        }
+      }
+    } else {
+      if (latePolicyContentWrap) latePolicyContentWrap.classList.add("hidden");
+      if (noLatePolicyNotice) noLatePolicyNotice.classList.remove("hidden");
       if (reductionValueInput) {
-        reductionValueInput.value = 5;
         reductionValueInput.readOnly = true;
         reductionValueInput.classList.add("bg-slate-100", "cursor-not-allowed");
       }
       if (intervalSelect) {
-        intervalSelect.value = "MINGGU";
         intervalSelect.disabled = true;
         intervalSelect.classList.add("bg-slate-100", "cursor-not-allowed");
       }
       if (latePolicyHelpText) {
-        latePolicyHelpText.textContent = "Aturan default sekolah: Pengurangan batas maksimal nilai sebesar 5 poin per 1 Minggu keterlambatan (batas minimal nilai 50).";
-      }
-    } else {
-      if (defaultPolicyBadge) defaultPolicyBadge.classList.add("hidden");
-      if (customLatePenaltyWrap) customLatePenaltyWrap.classList.remove("opacity-50");
-      if (reductionValueInput) {
-        reductionValueInput.readOnly = false;
-        reductionValueInput.classList.remove("bg-slate-100", "cursor-not-allowed");
-      }
-      if (intervalSelect) {
-        intervalSelect.disabled = false;
-        intervalSelect.classList.remove("bg-slate-100", "cursor-not-allowed");
-      }
-      if (latePolicyHelpText) {
-        latePolicyHelpText.textContent = "Pengaturan kustom: Tentukan nilai pengurangan poin dan interval keterlambatan sendiri untuk tugas ini.";
+        latePolicyHelpText.textContent = "Pengurangan nilai keterlambatan dinonaktifkan untuk tugas ini.";
       }
     }
   }
 
+  if (enableLatePolicyToggle) {
+    enableLatePolicyToggle.addEventListener("change", updateLatePolicyUI);
+  }
   if (useDefaultPolicyToggle) {
     useDefaultPolicyToggle.addEventListener("change", updateLatePolicyUI);
   }
+  updateLatePolicyUI();
 
   // Pilih Kelas dari Tab 1 -> Render Tab 2
   function selectClass(card) {
@@ -917,10 +1045,26 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.dataset.colId = col.id;
 
       const hasTask = Boolean(col.assessment);
+      const isDraft = col.assessment && col.assessment.status === 'DRAFT';
+      const isSubReq = col.assessment && col.assessment.submission_required;
+
+      let dotColor = 'bg-slate-300';
+      let badgeHtml = '<span class="quick-new-badge text-[9px] px-1 py-0.5 rounded font-normal">+ Tugas</span>';
+
+      if (hasTask) {
+        if (isDraft) {
+          dotColor = 'bg-amber-400';
+          badgeHtml = '<span class="quick-task-badge quick-task-draft-badge text-[9px] px-1.5 py-0.5 rounded">Draf</span>';
+        } else {
+          dotColor = 'bg-emerald-500';
+          badgeHtml = `<span class="quick-task-badge text-[9px] px-1.5 py-0.5 rounded">${isSubReq ? 'Kirim Berkas' : 'Aktif'}</span>`;
+        }
+      }
+
       btn.innerHTML = `
-        <span class="w-2 h-2 rounded-full ${hasTask ? 'bg-emerald-500' : 'bg-slate-300'} inline-block shrink-0"></span>
+        <span class="w-2 h-2 rounded-full ${dotColor} inline-block shrink-0"></span>
         <span class="quick-col-name font-medium">${escapeHtml(col.code || col.name)}</span>
-        ${hasTask ? '<span class="quick-task-badge text-[9px] px-1.5 py-0.5 rounded">Ada Tugas</span>' : '<span class="quick-new-badge text-[9px] px-1 py-0.5 rounded font-normal">+ Tugas</span>'}
+        ${badgeHtml}
       `;
 
       btn.addEventListener("click", () => {
@@ -975,14 +1119,18 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       } else {
         const hasTask = Boolean(col.assessment);
+        const isDraft = col.assessment && col.assessment.status === 'DRAFT';
+        const taskStatusText = isDraft ? 'Draf' : 'Tugas Aktif';
+        const dotColor = isDraft ? 'bg-amber-400' : 'bg-emerald-500';
+
         row2 += `
           <th class="text-center py-2 px-2 text-[11px] font-bold border-r border-b border-bluelight cursor-pointer select-none transition-all col-select-th ${isSelected ? 'active-col-header' : 'bg-white hover:bg-blue-50 text-blue-900'}" data-col-id="${col.id}" title="Klik untuk kelola tugas pada kolom ini">
             <div class="flex flex-col items-center gap-0.5">
               <div class="flex items-center gap-1">
                 <span>${escapeHtml(col.code || col.name)}</span>
-                ${hasTask ? '<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block shadow-xs" title="Tugas aktif"></span>' : ''}
+                ${hasTask ? `<span class="w-2 h-2 rounded-full ${dotColor} inline-block shadow-xs" title="${taskStatusText}"></span>` : ''}
               </div>
-              <span class="text-[9px] font-medium ${isSelected ? 'text-blue-100' : 'text-blue-600'}">${hasTask ? 'Tugas Aktif' : '+ Pilih'}</span>
+              <span class="text-[9px] font-medium ${isSelected ? 'text-blue-100' : 'text-blue-600'}">${hasTask ? taskStatusText : '+ Pilih'}</span>
             </div>
           </th>
         `;
@@ -1109,7 +1257,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const existingAssessment = col.assessment;
     if (statusEl) {
       if (existingAssessment) {
-        statusEl.innerHTML = `✨ <strong>Sudah ada tugas tertaut:</strong> "${escapeHtml(existingAssessment.title)}" &middot; Bobot: ${existingAssessment.max_score} Poin. Anda dapat meninjau atau memperbarui tugas di bawah.`;
+        const isDraft = existingAssessment.status === 'DRAFT';
+        const isSubReq = existingAssessment.submission_required !== false;
+        const statusBadge = isDraft 
+          ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">Draf</span>' 
+          : '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">Dipublikasikan</span>';
+        const subBadge = isSubReq
+          ? '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 border border-blue-300">Wajib Kirim Berkas</span>'
+          : '<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-300">Penilaian Langsung</span>';
+
+        statusEl.innerHTML = `✨ <strong>Sudah ada tugas tertaut:</strong> "${escapeHtml(existingAssessment.title)}" &middot; Bobot: ${existingAssessment.max_score} Poin ${statusBadge} ${subBadge}. Anda dapat meninjau atau memperbarui tugas di bawah.`;
       } else {
         statusEl.innerHTML = `✨ <strong>Belum ada tugas tertaut.</strong> Lengkapi form di bawah untuk membuat tugas baru pada kolom ini.`;
       }
@@ -1122,6 +1279,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const formDescInput = document.getElementById("formDescInput");
     const formDueInput = document.getElementById("formDueInput");
     const formMaxScoreInput = document.getElementById("formMaxScoreInput");
+    const formInstructionsInput = document.getElementById("formInstructionsInput");
+    const submissionRequiredToggle = document.getElementById("submissionRequiredToggle");
     const submitLabel = document.getElementById("submitTugasLabel");
 
     if (existingAssessment) {
@@ -1130,13 +1289,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const aType = (existingAssessment.type || 'TASK').toUpperCase();
       if (aType.includes('EXAM') || aType.includes('ULANGAN')) {
-        formTipeSelect.value = 'ULANGAN_HARIAN';
+        formTipeSelect.value = 'EXAM';
       } else if (aType.includes('REMEDI')) {
         formTipeSelect.value = 'REMEDIAL';
-      } else if (aType.includes('PROJECT') || aType.includes('MANDIRI')) {
-        formTipeSelect.value = 'MANDIRI';
+      } else if (aType.includes('QUIZ') || aType.includes('KUIS')) {
+        formTipeSelect.value = 'QUIZ';
+      } else if (aType.includes('PROJECT') || aType.includes('PROJEK') || aType.includes('PRAKTIK')) {
+        formTipeSelect.value = 'PROJECT';
+      } else if (aType.includes('OTHER') || aType.includes('LAINNYA')) {
+        formTipeSelect.value = 'OTHER';
       } else {
-        formTipeSelect.value = 'TUGAS';
+        formTipeSelect.value = 'TASK';
       }
 
       formTitleInput.value = existingAssessment.title || '';
@@ -1144,15 +1307,28 @@ document.addEventListener("DOMContentLoaded", () => {
       formDueInput.value = existingAssessment.due_at || '';
       formMaxScoreInput.value = existingAssessment.max_score || 100;
 
+      // Status Publikasi
+      const aStatus = (existingAssessment.status || 'PUBLISHED').toUpperCase();
+      setPublicationStatusUI(aStatus);
+
+      // Submission / Bukti Pengiriman Siswa
+      const isSubReq = existingAssessment.submission_required !== false;
+      if (submissionRequiredToggle) submissionRequiredToggle.checked = isSubReq;
+      if (formInstructionsInput) formInstructionsInput.value = existingAssessment.instructions || '';
+      updateSubmissionUI(isSubReq);
+
       // Pengaturan Keterlambatan
       if (existingAssessment.late_policy) {
-        useDefaultPolicyToggle.checked = Boolean(existingAssessment.late_policy.is_default);
-        reductionValueInput.value = existingAssessment.late_policy.reduction_value || 5;
-        intervalSelect.value = (existingAssessment.late_policy.interval == 1) ? 'HARI' : 'MINGGU';
+        const isPolicyEnabled = existingAssessment.late_policy.enabled !== false;
+        if (enableLatePolicyToggle) enableLatePolicyToggle.checked = isPolicyEnabled;
+        if (useDefaultPolicyToggle) useDefaultPolicyToggle.checked = Boolean(existingAssessment.late_policy.is_default);
+        if (reductionValueInput) reductionValueInput.value = existingAssessment.late_policy.reduction_value || 5;
+        if (intervalSelect) intervalSelect.value = (existingAssessment.late_policy.interval == 1) ? 'HARI' : 'MINGGU';
       } else {
-        useDefaultPolicyToggle.checked = true;
-        reductionValueInput.value = 5;
-        intervalSelect.value = 'MINGGU';
+        if (enableLatePolicyToggle) enableLatePolicyToggle.checked = false;
+        if (useDefaultPolicyToggle) useDefaultPolicyToggle.checked = true;
+        if (reductionValueInput) reductionValueInput.value = 5;
+        if (intervalSelect) intervalSelect.value = 'MINGGU';
       }
 
       // Pengaturan Rubrik
@@ -1176,14 +1352,18 @@ document.addEventListener("DOMContentLoaded", () => {
       formAssessmentId.value = '';
 
       const colNameUpper = (col.name + ' ' + (col.code || '')).toUpperCase();
-      if (colNameUpper.includes('UH') || colNameUpper.includes('ULANGAN')) {
-        formTipeSelect.value = 'ULANGAN_HARIAN';
+      if (colNameUpper.includes('UH') || colNameUpper.includes('ULANGAN') || colNameUpper.includes('EXAM') || colNameUpper.includes('UTS') || colNameUpper.includes('UAS')) {
+        formTipeSelect.value = 'EXAM';
       } else if (colNameUpper.includes('REMIDI') || colNameUpper.includes('REMEDIAL')) {
         formTipeSelect.value = 'REMEDIAL';
-      } else if (colNameUpper.includes('MANDIRI') || colNameUpper.includes('PROJEK') || colNameUpper.includes('PROJECT')) {
-        formTipeSelect.value = 'MANDIRI';
+      } else if (colNameUpper.includes('KUIS') || colNameUpper.includes('QUIZ')) {
+        formTipeSelect.value = 'QUIZ';
+      } else if (colNameUpper.includes('PROJEK') || colNameUpper.includes('PROJECT') || colNameUpper.includes('PRAKTIK')) {
+        formTipeSelect.value = 'PROJECT';
+      } else if (colNameUpper.includes('OTHER') || colNameUpper.includes('LAINNYA')) {
+        formTipeSelect.value = 'OTHER';
       } else {
-        formTipeSelect.value = 'TUGAS';
+        formTipeSelect.value = 'TASK';
       }
 
       // Saran judul otomatis
@@ -1197,10 +1377,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       formMaxScoreInput.value = col.max_score || 100;
 
-      // Pengaturan keterlambatan default aktif
-      useDefaultPolicyToggle.checked = true;
-      reductionValueInput.value = 5;
-      intervalSelect.value = 'MINGGU';
+      // Status Publikasi Default: DRAFT
+      setPublicationStatusUI('DRAFT');
+
+      // Submission Default: Di-disable
+      if (submissionRequiredToggle) submissionRequiredToggle.checked = false;
+      if (formInstructionsInput) formInstructionsInput.value = '';
+      updateSubmissionUI(false);
+
+      // Pengaturan keterlambatan default nonaktif
+      if (enableLatePolicyToggle) enableLatePolicyToggle.checked = false;
+      if (useDefaultPolicyToggle) useDefaultPolicyToggle.checked = true;
+      if (reductionValueInput) reductionValueInput.value = 5;
+      if (intervalSelect) intervalSelect.value = 'MINGGU';
 
       // Rubrik tidak aktif secara default
       rubricToggle.checked = false;
@@ -1214,6 +1403,75 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     updateLatePolicyUI();
+  }
+
+  // Helper untuk update UI Status Publikasi (Radio Buttons)
+  function setPublicationStatusUI(status) {
+    const isDraft = (status === 'DRAFT');
+    const radioPub = document.getElementById('radioStatusPublished');
+    const radioDraft = document.getElementById('radioStatusDraft');
+    const lblPub = document.getElementById('labelStatusPublished');
+    const lblDraft = document.getElementById('labelStatusDraft');
+    const draftNotice = document.getElementById('statusDraftNotice');
+
+    if (isDraft) {
+      if (radioDraft) radioDraft.checked = true;
+      if (lblDraft) {
+        lblDraft.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all border-amber-300 bg-amber-50 text-amber-800';
+      }
+      if (lblPub) {
+        lblPub.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100';
+      }
+      if (draftNotice) draftNotice.classList.remove('hidden');
+    } else {
+      if (radioPub) radioPub.checked = true;
+      if (lblPub) {
+        lblPub.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all border-emerald-300 bg-emerald-50 text-emerald-800';
+      }
+      if (lblDraft) {
+        lblDraft.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100';
+      }
+      if (draftNotice) draftNotice.classList.add('hidden');
+    }
+  }
+
+  // Helper untuk update UI Pengaturan Submission
+  function updateSubmissionUI(isRequired) {
+    const wrap = document.getElementById('submissionInstructionsWrap');
+    const notice = document.getElementById('noSubmissionNotice');
+    const toggleLabel = document.getElementById('submissionToggleLabel');
+
+    if (isRequired) {
+      if (wrap) wrap.classList.remove('hidden');
+      if (notice) notice.classList.add('hidden');
+      if (toggleLabel) toggleLabel.textContent = 'Perlu Pengiriman';
+    } else {
+      if (wrap) wrap.classList.add('hidden');
+      if (notice) notice.classList.remove('hidden');
+      if (toggleLabel) toggleLabel.textContent = 'Penilaian Langsung';
+    }
+  }
+
+  // Event listener untuk radio button status publikasi
+  const radioPub = document.getElementById('radioStatusPublished');
+  const radioDraft = document.getElementById('radioStatusDraft');
+  if (radioPub) {
+    radioPub.addEventListener('change', () => {
+      if (radioPub.checked) setPublicationStatusUI('PUBLISHED');
+    });
+  }
+  if (radioDraft) {
+    radioDraft.addEventListener('change', () => {
+      if (radioDraft.checked) setPublicationStatusUI('DRAFT');
+    });
+  }
+
+  // Event listener untuk toggle submission required
+  const submissionToggle = document.getElementById('submissionRequiredToggle');
+  if (submissionToggle) {
+    submissionToggle.addEventListener('change', (e) => {
+      updateSubmissionUI(e.target.checked);
+    });
   }
 
   // Sinkronisasi saat dropdown Kolom di form diubah manual
@@ -1239,12 +1497,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Pastikan field interval aktif saat form di-submit agar nilai terkirim
+  // Pastikan field interval & reduction value aktif saat form di-submit agar nilai terkirim
   const formManajemen = document.getElementById("formManajemenTugas");
   if (formManajemen) {
     formManajemen.addEventListener("submit", () => {
       if (intervalSelect) {
         intervalSelect.disabled = false;
+      }
+      if (reductionValueInput) {
+        reductionValueInput.readOnly = false;
+        reductionValueInput.disabled = false;
       }
     });
   }

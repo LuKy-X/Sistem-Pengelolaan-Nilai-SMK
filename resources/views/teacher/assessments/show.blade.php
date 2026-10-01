@@ -25,12 +25,19 @@
   <div class="panel p-5">
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-bluelight">
       <div>
-        <div class="flex items-center gap-2 mb-1.5">
+        <div class="flex items-center gap-2 mb-1.5 flex-wrap">
           <span class="badge badge-blue">{{ $assessment->type->name }}</span>
           @if($assessment->status->value === 'PUBLISHED')
-            <span class="badge badge-green">Aktif</span>
+            <span class="badge badge-green">Dipublikasikan</span>
+          @elseif($assessment->status->value === 'DRAFT')
+            <span class="badge badge-yellow">Draf</span>
           @else
-            <span class="badge badge-gray">Selesai</span>
+            <span class="badge badge-gray">Diarsipkan</span>
+          @endif
+          @if($assessment->submission_required)
+            <span class="badge badge-blue">Wajib Bukti Pengiriman</span>
+          @else
+            <span class="badge badge-gray">Penilaian Langsung (Offline)</span>
           @endif
         </div>
         <h2 class="font-heading text-lg md:text-xl font-bold text-bluedark">
@@ -54,6 +61,16 @@
       <div class="mt-4 p-4 rounded-xl bg-bluelight/30 border border-bluelight text-xs text-ink/80 leading-relaxed">
         <h4 class="font-bold text-bluedark mb-1">Petunjuk Tugas:</h4>
         {!! nl2br(e($assessment->description)) !!}
+      </div>
+    @endif
+
+    @if($assessment->instructions)
+      <div class="mt-3 p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-ink/80 leading-relaxed">
+        <h4 class="font-bold text-blueprim mb-1 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-blueprim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          Petunjuk Format &amp; Pengiriman Bukti Siswa:
+        </h4>
+        {!! nl2br(e($assessment->instructions)) !!}
       </div>
     @endif
 
