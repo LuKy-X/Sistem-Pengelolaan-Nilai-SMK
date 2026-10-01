@@ -41,9 +41,9 @@ class TeacherGradingFlowTest extends TestCase
         $response->assertSee('Buku Nilai');
         $response->assertSee('Penilaian');
 
-        // Form Penilaian check
-        $response->assertSee('Penilaian Tugas/Mandiri');
-        $response->assertSee('Kriteria &amp; Rincian Penilaian', false);
+        // Form Manajemen Nilai check
+        $response->assertSee('Manajemen Nilai');
+        $response->assertSee('Kriteria Penilaian');
         $response->assertSee('Simpan Nilai');
     }
 
@@ -188,5 +188,44 @@ class TeacherGradingFlowTest extends TestCase
             'code' => 'TBT',
             'name' => 'Tugas Baru Tambahan',
         ]);
+    }
+
+    public function test_teacher_can_submit_direct_score_via_ajax_without_rubric(): void
+    {
+        $column = $this->gradebook->columns()->where('column_type', 'SCORE')->firstOrFail();
+        $student = StudentProfile::firstOrFail();
+
+        $response = $this->actingAs($this->teacherUser)
+            ->postJson(route('teacher.grading.store'), [
+                'gradebook_column_id' => $column->id,
+                'student_id' => $student->id,
+                'score' => 88.5,
+                'feedback' => 'Bagus sekali langsung dari sel tabel',
+            ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertDatabaseHas('gradebook_scores', [
+            'gradebook_column_id' => $column->id,
+            'student_id' => $student->id,
+            'final_score' => 88.50,
+            'source' => 'MANUAL',
+            'feedback' => 'Bagus sekali langsung dari sel tabel',
+        ]);
+    }
+
+    public function test_teacher_grading_page_contains_direct_score_and_submission_proof_elements(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.grading.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('directScoreSection');
+        $response->assertSee('sectionBuktiPengiriman');
+        $response->assertSee('modalBuktiPengiriman');
+        $response->assertSee('cell-score-direct-input');
+        $response->assertSee('cell-disabled-task');
     }
 }
