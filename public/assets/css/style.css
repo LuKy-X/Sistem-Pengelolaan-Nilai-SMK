@@ -1601,14 +1601,7 @@ body.teacher-portal {
 
 /* Modals */
 .teacher-portal .modal-box {
-<<<<<<< HEAD
   padding: 1.15rem 1.25rem !important;
   border-radius: 1rem !important;
   max-width: 28rem !important;
 }
-=======
-  padding: 1.35rem 1.5rem !important;
-  border-radius: 1.15rem !important;
-  max-width: 30rem !important;
-}
->>>>>>> af235cae94bc0c6877d6cc2e4660fcd8f5b29987
