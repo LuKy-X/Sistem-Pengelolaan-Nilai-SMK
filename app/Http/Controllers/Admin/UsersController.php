@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\Role;
+use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class UsersController extends Controller
         ]);
 
         $user->roles()->attach($validated['role_id']);
+        TeacherProfile::ensureCounselorProfiles();
 
         return redirect()->route('admin.users.index')
             ->with('success', "Akun pengguna {$user->name} berhasil dibuat.");
@@ -77,6 +79,7 @@ class UsersController extends Controller
 
         $user->update($payload);
         $user->roles()->sync([$validated['role_id']]);
+        TeacherProfile::ensureCounselorProfiles();
 
         return redirect()->route('admin.users.index')
             ->with('success', "Data pengguna {$user->name} berhasil diperbarui.");

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -29,7 +30,7 @@ class PublicMediaService
             return null;
         }
 
-        if (str_starts_with($path, ['http://', 'https://', '//', '/', 'data:'])) {
+        if (Str::startsWith($path, ['http://', 'https://', '//', '/', 'data:'])) {
             return $path;
         }
 

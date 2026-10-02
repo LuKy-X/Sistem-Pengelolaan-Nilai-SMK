@@ -243,6 +243,11 @@ Route::middleware('auth')->group(function () {
             Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
             Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
 
+            // Kategori Artikel
+            Route::post('/article-categories', [CmsController::class, 'storeArticleCategory'])->name('article-categories.store');
+            Route::put('/article-categories/{category}', [CmsController::class, 'updateArticleCategory'])->name('article-categories.update');
+            Route::delete('/article-categories/{category}', [CmsController::class, 'destroyArticleCategory'])->name('article-categories.destroy');
+
             // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
             Route::get('/ppdb/index', [CmsController::class, 'ppdb'])->name('ppdb.index');
