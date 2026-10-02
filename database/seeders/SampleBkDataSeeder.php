@@ -25,7 +25,7 @@ class SampleBkDataSeeder extends Seeder
             ?? AcademicYear::first();
 
         $students = StudentProfile::where('status', 'ACTIVE')->get();
-        $categories = DisciplineCategory::all()->keyBy('id');
+        $categories = DisciplineCategory::all()->keyBy('name');
         $reasons = ExitPermitReason::all();
         $bkUser = User::where('username', 'bk.dewi')->first();
         $staff = StaffProfile::where('user_id', $bkUser?->id)->first();
@@ -36,41 +36,60 @@ class SampleBkDataSeeder extends Seeder
             return;
         }
 
+        // Siswa dan kategori dicocokkan berdasarkan identitas (NIS / nama), bukan id
+        // angka. Id angka tidak stabil: pada MySQL AUTO_INCREMENT tidak di-rollback
+        // bersama transaksi, sehingga setiap kali seeder dijalankan ulang pada
+        // database yang sama siswa akan mendapat id baru. Karena itu memakai id
+        // literal di sini hanya kebetulan berhasil di SQLite.
+        $studentByNis = $students->keyBy('nis');
+
+        $ahmad = $studentByNis->get('10001');
+        $siti = $studentByNis->get('10002');
+        $rizky = $studentByNis->get('10003');
+
+        if ($ahmad === null || $siti === null || $rizky === null) {
+            $this->command->warn('Siswa contoh (NIS 10001/10002/10003) belum ada. Jalankan UserSeeder dulu.');
+
+            return;
+        }
+
+        $lateShort = $categories->get('Terlambat Masuk Sekolah (< 15 menit)');
+        $lateLong = $categories->get('Terlambat Masuk Sekolah (> 15 menit)');
+        $uniform = $categories->get('Atribut Seragam Tidak Lengkap');
+        $leaveClass = $categories->get('Meninggalkan Kelas Tanpa Izin');
+        $smoking = $categories->get('Merokok / Membawa Rokok/Vape');
+        $champion = $categories->get('Juara 1 Lomba Tingkat Kabupaten / Kota');
+        $osis = $categories->get('Pengurus Aktif OSIS / MPK / Ekstrakurikuler');
+        $honesty = $categories->get('Aksi Teladan Kejujuran (Mengembalikan Barang Hilang)');
+
+        if ($lateShort === null || $lateLong === null || $uniform === null || $leaveClass === null
+            || $smoking === null || $champion === null || $osis === null || $honesty === null) {
+            $this->command->warn('Kategori disiplin contoh belum lengkap. Jalankan DisciplineCategorySeeder dulu.');
+
+            return;
+        }
+
         // ─── 1. Poin Disiplin (DisciplineRecord) ─────────────────────────────
-        // Kategori pelanggaran (points_delta negatif)
-        $violationCategoryIds = $categories->filter(fn ($c) => str_contains($c->name, 'Terlambat')
-            || str_contains($c->name, 'Atribut')
-            || str_contains($c->name, 'Meninggalkan')
-            || str_contains($c->name, 'Merokok')
-            || str_contains($c->name, 'Perkelahian')
-        )->keys()->values();
-
-        // Kategori prestasi (points_delta positif)
-        $rewardCategoryIds = $categories->filter(fn ($c) => str_contains($c->name, 'Juara')
-            || str_contains($c->name, 'OSIS')
-            || str_contains($c->name, 'Teladan')
-        )->keys()->values();
-
         $disciplineEntries = [
             // Ahmad — banyak pelanggaran kecil, mendekati ambang SP1
-            ['student_id' => 1, 'category_id' => 1, 'points_delta' => -5,  'occurred_at' => now()->subDays(60), 'description' => 'Terlambat 10 menit saat apel pagi', 'source_type' => 'MANUAL'],
-            ['student_id' => 1, 'category_id' => 1, 'points_delta' => -5,  'occurred_at' => now()->subDays(50), 'description' => 'Terlambat masuk setelah jam istirahat', 'source_type' => 'MANUAL'],
-            ['student_id' => 1, 'category_id' => 3, 'points_delta' => -3,  'occurred_at' => now()->subDays(45), 'description' => 'Tidak memakai ikat pinggang sesuai aturan', 'source_type' => 'MANUAL'],
-            ['student_id' => 1, 'category_id' => 2, 'points_delta' => -10, 'occurred_at' => now()->subDays(35), 'description' => 'Terlambat 20 menit, alasan tidak jelas', 'source_type' => 'MANUAL'],
-            ['student_id' => 1, 'category_id' => 4, 'points_delta' => -7,  'occurred_at' => now()->subDays(20), 'description' => 'Keluar kelas saat pelajaran Matematika tanpa izin guru', 'source_type' => 'MANUAL'],
-            ['student_id' => 1, 'category_id' => 9, 'points_delta' => +5,  'occurred_at' => now()->subDays(15), 'description' => 'Aktif sebagai Ketua Seksi di OSIS', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $lateShort->id, 'points_delta' => -5, 'occurred_at' => now()->subDays(60), 'description' => 'Terlambat 10 menit saat apel pagi', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $lateShort->id, 'points_delta' => -5, 'occurred_at' => now()->subDays(50), 'description' => 'Terlambat masuk setelah jam istirahat', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $uniform->id, 'points_delta' => -3, 'occurred_at' => now()->subDays(45), 'description' => 'Tidak memakai ikat pinggang sesuai aturan', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $lateLong->id, 'points_delta' => -10, 'occurred_at' => now()->subDays(35), 'description' => 'Terlambat 20 menit, alasan tidak jelas', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $leaveClass->id, 'points_delta' => -7, 'occurred_at' => now()->subDays(20), 'description' => 'Keluar kelas saat pelajaran Matematika tanpa izin guru', 'source_type' => 'MANUAL'],
+            ['student_id' => $ahmad->id, 'category_id' => $osis->id, 'points_delta' => +5, 'occurred_at' => now()->subDays(15), 'description' => 'Aktif sebagai Ketua Seksi di OSIS', 'source_type' => 'MANUAL'],
 
             // Siti — satu pelanggaran berat + prestasi
-            ['student_id' => 2, 'category_id' => 1, 'points_delta' => -5,  'occurred_at' => now()->subDays(55), 'description' => 'Terlambat masuk pagi hari', 'source_type' => 'MANUAL'],
-            ['student_id' => 2, 'category_id' => 7, 'points_delta' => +15, 'occurred_at' => now()->subDays(40), 'description' => 'Juara 1 Lomba Desain Grafis Tingkat Kota', 'source_type' => 'MANUAL'],
-            ['student_id' => 2, 'category_id' => 3, 'points_delta' => -3,  'occurred_at' => now()->subDays(10), 'description' => 'Seragam tidak rapi saat upacara', 'source_type' => 'MANUAL'],
+            ['student_id' => $siti->id, 'category_id' => $lateShort->id, 'points_delta' => -5, 'occurred_at' => now()->subDays(55), 'description' => 'Terlambat masuk pagi hari', 'source_type' => 'MANUAL'],
+            ['student_id' => $siti->id, 'category_id' => $champion->id, 'points_delta' => +15, 'occurred_at' => now()->subDays(40), 'description' => 'Juara 1 Lomba Desain Grafis Tingkat Kota', 'source_type' => 'MANUAL'],
+            ['student_id' => $siti->id, 'category_id' => $uniform->id, 'points_delta' => -3, 'occurred_at' => now()->subDays(10), 'description' => 'Seragam tidak rapi saat upacara', 'source_type' => 'MANUAL'],
 
             // Rizky — pelanggaran berat, sudah dapat SP1
-            ['student_id' => 3, 'category_id' => 2, 'points_delta' => -10, 'occurred_at' => now()->subDays(70), 'description' => 'Terlambat 30 menit tanpa keterangan', 'source_type' => 'MANUAL'],
-            ['student_id' => 3, 'category_id' => 5, 'points_delta' => -25, 'occurred_at' => now()->subDays(60), 'description' => 'Kedapatan membawa vape di dalam tas sekolah', 'source_type' => 'MANUAL'],
-            ['student_id' => 3, 'category_id' => 4, 'points_delta' => -7,  'occurred_at' => now()->subDays(50), 'description' => 'Keluar kelas saat jam pelajaran berlangsung', 'source_type' => 'MANUAL'],
-            ['student_id' => 3, 'category_id' => 2, 'points_delta' => -10, 'occurred_at' => now()->subDays(30), 'description' => 'Kembali terlambat setelah libur panjang', 'source_type' => 'MANUAL'],
-            ['student_id' => 3, 'category_id' => 10, 'points_delta' => +10, 'occurred_at' => now()->subDays(15), 'description' => 'Mengembalikan dompet milik siswa kelas XI yang tertinggal', 'source_type' => 'MANUAL'],
+            ['student_id' => $rizky->id, 'category_id' => $lateLong->id, 'points_delta' => -10, 'occurred_at' => now()->subDays(70), 'description' => 'Terlambat 30 menit tanpa keterangan', 'source_type' => 'MANUAL'],
+            ['student_id' => $rizky->id, 'category_id' => $smoking->id, 'points_delta' => -25, 'occurred_at' => now()->subDays(60), 'description' => 'Kedapatan membawa vape di dalam tas sekolah', 'source_type' => 'MANUAL'],
+            ['student_id' => $rizky->id, 'category_id' => $leaveClass->id, 'points_delta' => -7, 'occurred_at' => now()->subDays(50), 'description' => 'Keluar kelas saat jam pelajaran berlangsung', 'source_type' => 'MANUAL'],
+            ['student_id' => $rizky->id, 'category_id' => $lateLong->id, 'points_delta' => -10, 'occurred_at' => now()->subDays(30), 'description' => 'Kembali terlambat setelah libur panjang', 'source_type' => 'MANUAL'],
+            ['student_id' => $rizky->id, 'category_id' => $honesty->id, 'points_delta' => +10, 'occurred_at' => now()->subDays(15), 'description' => 'Mengembalikan dompet milik siswa kelas XI yang tertinggal', 'source_type' => 'MANUAL'],
         ];
 
         foreach ($disciplineEntries as $entry) {
@@ -82,7 +101,7 @@ class SampleBkDataSeeder extends Seeder
 
         // ─── 2. Surat Peringatan (DisciplinaryLetter) ────────────────────────
         DisciplinaryLetter::create([
-            'student_id' => 3,
+            'student_id' => $rizky->id,
             'academic_year_id' => $academicYear->id,
             'type' => DisciplinaryLetterType::Sp1,
             'reason' => 'Akumulasi pelanggaran tata tertib: membawa vape dan terlambat berulang kali mencapai ambang batas SP-1.',
@@ -100,7 +119,7 @@ class SampleBkDataSeeder extends Seeder
         $exitPermits = [
             // Ahmad — sudah selesai (normal)
             [
-                'student_id' => 1,
+                'student_id' => $ahmad->id,
                 'reason_id' => $reason1?->id,
                 'reason_detail' => 'Sakit kepala dan demam, perlu ke puskesmas',
                 'requested_at' => now()->subDays(40),
@@ -115,7 +134,7 @@ class SampleBkDataSeeder extends Seeder
             ],
             // Ahmad — ditolak
             [
-                'student_id' => 1,
+                'student_id' => $ahmad->id,
                 'reason_id' => $reason2?->id,
                 'reason_detail' => 'Ingin menemani adik ke dokter',
                 'requested_at' => now()->subDays(25),
@@ -126,7 +145,7 @@ class SampleBkDataSeeder extends Seeder
             ],
             // Siti — sudah selesai, pulang tepat waktu
             [
-                'student_id' => 2,
+                'student_id' => $siti->id,
                 'reason_id' => $reason3?->id,
                 'reason_detail' => 'Mengurus pembuatan KTP di Disdukcapil',
                 'requested_at' => now()->subDays(30),
@@ -141,7 +160,7 @@ class SampleBkDataSeeder extends Seeder
             ],
             // Rizky — terlambat kembali (LATE), sudah ada banding
             [
-                'student_id' => 3,
+                'student_id' => $rizky->id,
                 'reason_id' => $reason1?->id,
                 'reason_detail' => 'Kontrol ulang ke dokter spesialis',
                 'requested_at' => now()->subDays(20),
@@ -156,7 +175,7 @@ class SampleBkDataSeeder extends Seeder
             ],
             // Siti — masih pending
             [
-                'student_id' => 2,
+                'student_id' => $siti->id,
                 'reason_id' => $reason2?->id,
                 'reason_detail' => 'Ayah dirawat di rumah sakit, perlu menengok',
                 'requested_at' => now()->subHours(2),

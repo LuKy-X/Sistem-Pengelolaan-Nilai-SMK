@@ -1,13 +1,6 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\BK\AppealController;
-use App\Http\Controllers\BK\CounselingController;
-use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
-use App\Http\Controllers\BK\DisciplinaryLetterController;
-use App\Http\Controllers\BK\DisciplineController;
-use App\Http\Controllers\BK\ExitPermitController;
-use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -17,6 +10,13 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
+use App\Http\Controllers\BK\AppealController;
+use App\Http\Controllers\BK\CounselingController;
+use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
+use App\Http\Controllers\BK\DisciplinaryLetterController;
+use App\Http\Controllers\BK\DisciplineController;
+use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Student\AppealController as StudentAppealController;
 use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
