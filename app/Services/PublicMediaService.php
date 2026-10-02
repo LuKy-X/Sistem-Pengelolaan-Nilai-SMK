@@ -5,7 +5,6 @@ namespace App\Services;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * Resolves stored media paths into publicly reachable URLs for the public site.
@@ -36,14 +35,39 @@ class PublicMediaService
             return $path;
         }
 
-        $path = preg_replace('#^(?:storage/app/public|storage|public)/+#i', '', $path) ?? $path;
+        if (preg_match('#(?:^|/)(?:storage/app/public|public/storage)/(.+)$#i', $path, $matches) === 1) {
+            $path = $matches[1];
+        }
+
+        $path = preg_replace('#^(?:(?:storage/app/public|public/storage|storage|public)/)+#i', '', $path) ?? $path;
         $disk ??= 'public';
 
-        try {
-            $url = Storage::disk($disk)->url($path);
-        } catch (Throwable) {
+        if (! array_key_exists($disk, config('filesystems.disks', []))) {
             return null;
         }
+
+        if ($disk === 'local') {
+            if (! Storage::disk('public')->exists($path)) {
+                return null;
+            }
+
+            $disk = 'public';
+        }
+
+        $diskConfig = config("filesystems.disks.{$disk}");
+
+        if (
+            $disk === 'public'
+            && ($diskConfig['driver'] ?? null) === 'local'
+            && (
+                blank($diskConfig['url'] ?? null)
+                || rtrim($diskConfig['url'], '/') === rtrim(config('app.url'), '/').'/storage'
+            )
+        ) {
+            return url('/storage/'.ltrim($path, '/'));
+        }
+
+        $url = Storage::disk($disk)->url($path);
 
         return filled($url) ? $url : null;
     }

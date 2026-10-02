@@ -370,6 +370,7 @@ class PublicSitePagesTest extends TestCase
     public function test_public_cards_render_uploaded_images_from_all_supported_sources(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         Storage::disk('public')->put('products/karya-siswa.jpg', 'image');
         Storage::disk('public')->put('news/berita.jpg', 'image');
         Storage::disk('public')->put('achievements/juara.jpg', 'image');
@@ -396,8 +397,8 @@ class PublicSitePagesTest extends TestCase
         ]);
         $product->media()->create([
             'collection' => 'default',
-            'disk' => 'public',
-            'path' => 'products/karya-siswa.jpg',
+            'disk' => 'local',
+            'path' => 'public/storage/products/karya-siswa.jpg',
             'original_name' => 'karya-siswa.jpg',
             'mime_type' => 'image/jpeg',
             'size' => 5,
@@ -439,9 +440,14 @@ class PublicSitePagesTest extends TestCase
             app(PublicMediaService::class)->url($article->thumbnail),
         );
 
-        $this->get('/')
+        config([
+            'app.url' => 'http://stale-app-url.test',
+            'filesystems.disks.public.url' => 'http://stale-app-url.test/storage',
+        ]);
+
+        $this->get('http://school.test/')
             ->assertOk()
-            ->assertSee('/storage/products/karya-siswa.jpg')
+            ->assertSee('http://school.test/storage/products/karya-siswa.jpg')
             ->assertSee('/storage/news/berita.jpg')
             ->assertSee('/storage/partners/logo-mitra.jpg');
 
