@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SubmissionStatus;
+use App\Models\Assessment;
+use App\Models\AssessmentSubmission;
 use App\Models\Gradebook;
 use App\Models\StudentProfile;
 use App\Models\TeachingAssignment;
@@ -227,5 +230,36 @@ class TeacherGradingFlowTest extends TestCase
         $response->assertSee('modalBuktiPengiriman');
         $response->assertSee('cell-score-direct-input');
         $response->assertSee('cell-disabled-task');
+    }
+
+    public function test_teacher_can_view_grading_page_with_active_submission(): void
+    {
+        $column = $this->gradebook->columns()->where('column_type', 'SCORE')->firstOrFail();
+        $student = StudentProfile::firstOrFail();
+
+        $assessment = Assessment::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'title' => 'Tugas Praktik 1',
+            'type' => 'TASK',
+            'status' => 'PUBLISHED',
+            'submission_required' => true,
+            'created_by' => $this->teacherUser->teacherProfile->id,
+        ]);
+
+        AssessmentSubmission::create([
+            'assessment_id' => $assessment->id,
+            'student_id' => $student->id,
+            'status' => SubmissionStatus::Submitted,
+            'content' => 'Ini jawaban tugas siswa untuk pengujian',
+            'submitted_at' => now(),
+            'late_minutes' => 0,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.grading.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Dikumpulkan');
+        $response->assertSee('Ini jawaban tugas siswa untuk pengujian');
     }
 }
