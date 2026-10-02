@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Student;
 
 use App\Enums\AssessmentStatus;
 use App\Enums\SubmissionStatus;
+use App\Http\Controllers\BK\Concerns\RecordsAuditTrail;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\SubmitAssignmentRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentSubmission;
 use App\Models\GradebookScore;
+use App\Models\Subject;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +21,8 @@ use Illuminate\View\View;
 
 class AssignmentController extends Controller
 {
+    use RecordsAuditTrail;
+
     public function index(Request $request): View
     {
         $student = Auth::user()->studentProfile;
@@ -31,14 +36,51 @@ class AssignmentController extends Controller
         $subjectFilter = $request->query('subject');
         $tab = $request->query('tab', 'aktif');
 
-        $assessments = Assessment::query()
+        $baseQuery = fn () => Assessment::query()
             ->where('status', AssessmentStatus::Published->value)
+            ->where('submission_required', true)
             ->whereHas('teachingAssignment', function ($query) use ($classIds) {
                 $query->whereIn('class_id', $classIds)->where('is_active', true);
             })
-            ->when($subjectFilter, function ($query) use ($subjectFilter) {
-                $query->whereHas('teachingAssignment', fn ($inner) => $inner->where('subject_id', $subjectFilter));
-            })
+            ->when($subjectFilter, fn ($query) => $query->whereHas(
+                'teachingAssignment',
+                fn ($inner) => $inner->where('subject_id', $subjectFilter)
+            ));
+
+        // Status tugas siswa diekspresikan sebagai kondisi SQL, bukan dihitung di
+        // PHP, supaya penomoran halaman dan jumlah per tab tetap akurat. Kalau
+        // dihitung di PHP, seluruh tugas kelas harus dimuat sekaligus.
+        $isSubmitted = fn ($query) => $query->whereHas('submissions', fn ($sub) => $sub
+            ->where('student_id', $student->id)
+            ->whereIn('status', [SubmissionStatus::Submitted->value, SubmissionStatus::Reviewed->value]));
+
+        $isUnsubmitted = fn ($query) => $query->where(function (Builder $inner) use ($student) {
+            $inner->whereDoesntHave('submissions', fn ($sub) => $sub->where('student_id', $student->id))
+                ->orWhereHas('submissions', fn ($sub) => $sub
+                    ->where('student_id', $student->id)
+                    ->where('status', SubmissionStatus::Draft->value));
+        });
+
+        $applyState = function (Builder $query, string $state) use ($isSubmitted, $isUnsubmitted) {
+            return match ($state) {
+                'terlewat' => $isUnsubmitted($query)
+                    ->whereNotNull('due_at')
+                    ->where('due_at', '<', now()),
+                'selesai' => $isSubmitted($query),
+                'semua' => $query,
+                default => $isUnsubmitted($query)->where(fn (Builder $inner) => $inner
+                    ->whereNull('due_at')
+                    ->orWhere('due_at', '>=', now())),
+            };
+        };
+
+        $counts = [
+            'aktif' => $applyState($baseQuery(), 'aktif')->count(),
+            'terlewat' => $applyState($baseQuery(), 'terlewat')->count(),
+            'selesai' => $applyState($baseQuery(), 'selesai')->count(),
+        ];
+
+        $filtered = $applyState($baseQuery(), $tab)
             ->with([
                 'teachingAssignment.subject',
                 'teachingAssignment.schoolClass',
@@ -48,52 +90,23 @@ class AssignmentController extends Controller
             ])
             ->orderByRaw('CASE WHEN due_at IS NULL THEN 1 ELSE 0 END')
             ->orderBy('due_at')
+            ->paginate(12)
+            ->withQueryString();
+
+        // Daftar mapel untuk filter, hanya mapel yang dipakai kelas siswa.
+        $subjects = Subject::query()
+            ->whereHas('teachingAssignments', fn ($query) => $query->whereIn('class_id', $classIds))
+            ->orderBy('name')
             ->get();
 
-        // Daftar mapel untuk filter, hanya mapel yang benar-benar punya tugas terbit.
-        $subjects = $assessments
-            ->map(fn (Assessment $assessment) => $assessment->teachingAssignment?->subject)
-            ->filter()
-            ->unique('id')
-            ->sortBy('name')
-            ->values();
-
-        $categorized = $assessments->map(function (Assessment $assessment) {
-            $submission = $assessment->submissions->first();
-            $isSubmitted = $submission !== null && in_array($submission->status, [SubmissionStatus::Submitted, SubmissionStatus::Reviewed], true);
-            $isOverdue = $assessment->due_at !== null && $assessment->due_at->isPast();
-
-            $assessment->student_submission = $submission;
-            $assessment->student_state = match (true) {
-                $isSubmitted => 'selesai',
-                $isOverdue => 'terlewat',
-                default => 'aktif',
-            };
-
-            return $assessment;
-        });
-
-        $counts = [
-            'aktif' => $categorized->where('student_state', 'aktif')->count(),
-            'terlewat' => $categorized->where('student_state', 'terlewat')->count(),
-            'selesai' => $categorized->where('student_state', 'selesai')->count(),
-        ];
-
-        // "semua" menampilkan seluruh riwayat tugas, bukan hanya satu status.
-        $filtered = match ($tab) {
-            'terlewat', 'selesai' => $categorized->where('student_state', $tab)->values(),
-            'semua' => $categorized->values(),
-            default => $categorized->where('student_state', 'aktif')->values(),
-        };
-
-        return view('student.assignments.index', compact(
-            'student',
-            'filtered',
-            'subjects',
-            'subjectFilter',
-            'tab',
-            'counts',
-        ));
+        return view('student.assignments.index', [
+            'student' => $student,
+            'filtered' => $filtered,
+            'subjects' => $subjects,
+            'subjectFilter' => $subjectFilter,
+            'tab' => $tab,
+            'counts' => $counts,
+        ]);
     }
 
     public function show(Assessment $assessment): View
@@ -198,6 +211,14 @@ class AssignmentController extends Controller
                     'uploaded_by' => $request->user()->id,
                 ]);
             }
+
+            $this->audit('ASSIGNMENT_SUBMITTED', $submission, [
+                'assessment_id' => $assessment->id,
+                'student_id' => $student->id,
+                'status' => $submission->status,
+                'late_minutes' => $submission->late_minutes,
+                'has_attachment' => $request->hasFile('attachment'),
+            ]);
         });
 
         $message = $lateMinutes > 0

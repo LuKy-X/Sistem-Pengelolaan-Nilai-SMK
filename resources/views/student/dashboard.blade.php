@@ -244,7 +244,7 @@
         <div class="flex items-center gap-3">
           <div class="font-heading text-3xl font-bold {{ $standing['tone'] === 'safe' ? 'text-emerald-600' : ($standing['tone'] === 'watch' || $standing['tone'] === 'warning' ? 'text-amber-600' : 'text-red-600') }}">{{ $balance }}</div>
           <div>
-            <span class="badge {{ $standing['badge'] }}">{{ $standing['label'] }}</span>
+            <x-bk.point-badge :balance="$balance" :standing="$standing" :show-balance="false" />
             <div class="text-[11px] text-bluedark/50 mt-1">Saldo poin tahun ajaran berjalan</div>
           </div>
         </div>

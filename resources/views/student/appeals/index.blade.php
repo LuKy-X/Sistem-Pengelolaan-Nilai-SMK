@@ -57,7 +57,7 @@
     @endforelse
   </div>
 
-  <div>{{ $appeals->links() }}</div>
+  <x-bk.pagination :paginator="$appeals" />
 
 </div>
 @endsection

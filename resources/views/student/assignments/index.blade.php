@@ -36,13 +36,14 @@
        class="badge {{ $tab === 'selesai' ? 'badge-green' : 'badge-gray' }} !px-3 !py-1.5">Terkumpul ({{ $counts['selesai'] }})</a>
     <a href="{{ route('student.assignments.index', ['tab' => 'semua', 'subject' => $subjectFilter]) }}"
        @if($tab === 'semua') aria-current="page" @endif
-       class="badge {{ $tab === 'semua' ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Riwayat Tugas ({{ $filtered->count() }})</a>
+       class="badge {{ $tab === 'semua' ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Riwayat Tugas ({{ $counts['aktif'] + $counts['terlewat'] + $counts['selesai'] }})</a>
   </nav>
 
   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
     @forelse($filtered as $assessment)
       @php
-        $submission = $assessment->student_submission;
+        $submission = $assessment->submissions->first();
+        $isSubmitted = $submission !== null && in_array($submission->status, [App\Enums\SubmissionStatus::Submitted, App\Enums\SubmissionStatus::Reviewed], true);
         $typeLabels = ['TASK' => 'Tugas', 'QUIZ' => 'Kuis', 'PROJECT' => 'Proyek', 'EXAM' => 'Ujian', 'REMEDIAL' => 'Remedial', 'OTHER' => 'Lainnya'];
       @endphp
       <a href="{{ route('student.assignments.show', $assessment) }}" class="crud-card card-hover block">
@@ -70,9 +71,9 @@
         </div>
 
         <div class="crud-card__foot mt-3">
-          @if($assessment->student_state === 'selesai')
-            <span class="badge badge-green">{{ $submission?->status->value === 'REVIEWED' ? 'Sudah Dinilai' : 'Terkumpul' }}</span>
-          @elseif($assessment->student_state === 'terlewat')
+          @if($isSubmitted)
+            <span class="badge badge-green">{{ $submission?->status === App\Enums\SubmissionStatus::Reviewed ? 'Sudah Dinilai' : 'Terkumpul' }}</span>
+          @elseif($assessment->due_at !== null && $assessment->due_at->isPast())
             <span class="badge badge-red">Terlewat</span>
           @else
             <span class="badge badge-yellow">Belum Dikumpulkan</span>
@@ -85,12 +86,15 @@
         <p class="text-sm text-bluedark/60">
           @if($tab === 'terlewat') Tidak ada tugas yang terlewat.
           @elseif($tab === 'selesai') Belum ada tugas yang dikumpulkan.
+          @elseif($tab === 'semua') Belum ada tugas yang diterbitkan untuk kelas Anda.
           @else Tidak ada tugas aktif saat ini.
           @endif
         </p>
       </div>
     @endforelse
   </div>
+
+  <x-bk.pagination :paginator="$filtered" />
 
 </div>
 @endsection

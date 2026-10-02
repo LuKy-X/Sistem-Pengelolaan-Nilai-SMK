@@ -9,9 +9,36 @@
 
 @vite(['resources/css/app.css'])
 <script src="{{ asset('assets/js/vendor/chart.umd.min.js') }}"></script>
+<style>
+  /* Indikator fokus keyboard untuk portal siswa.
+     Diletakkan di layout ini, bukan di app.css, supaya tidak mengubah
+     tampilan dashboard Guru dan Guru BK. */
+  .teacher-portal :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #2196F3;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Elemen yang sudah punya gaya fokus sendiri tidak perlu outline ganda. */
+  .teacher-portal .f-input:focus-visible,
+  .teacher-portal .f-select:focus-visible,
+  .teacher-portal .f-textarea:focus-visible {
+    outline: none;
+  }
+
+  .teacher-portal .db-nav-item:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Ikon lencana notifikasi tidak boleh hilang indikatornya. */
+  .teacher-portal .badge:focus-visible {
+    outline: 2px solid #0D47A1;
+  }
+</style>
 @stack('styles')
 </head>
 <body class="font-body antialiased teacher-portal">
+<a href="#konten-utama" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-bluedark focus:shadow-lg">Lewati ke konten utama</a>
 
 <div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
   <div class="page-transition-diagonal">
@@ -120,7 +147,7 @@
       </div>
     </header>
 
-    <main class="flex-1 p-2.5 sm:p-4 lg:p-5 space-y-3.5 lg:space-y-4">
+    <main id="konten-utama" class="flex-1 p-2.5 sm:p-4 lg:p-5 space-y-3.5 lg:space-y-4">
 
       @if(session('success'))
         <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-xs">

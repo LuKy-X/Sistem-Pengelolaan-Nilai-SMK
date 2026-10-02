@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Enums\ExitPermitStatus;
+use App\Http\Controllers\BK\Concerns\RecordsAuditTrail;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Student\StoreAppealRequest;
 use App\Http\Requests\Student\StoreExitPermitRequest;
@@ -12,11 +13,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ExitPermitController extends Controller
 {
+    use RecordsAuditTrail;
+
     public function index(Request $request): View
     {
         $student = Auth::user()->studentProfile;
@@ -83,15 +87,39 @@ class ExitPermitController extends Controller
 
         $validated = $request->validated();
 
-        $permit = ExitPermit::create([
-            'student_id' => $student->id,
-            'reason_id' => $validated['reason_id'],
-            'reason_detail' => $validated['reason_detail'],
-            'requested_at' => now(),
-            'planned_exit_at' => $validated['planned_exit_at'],
-            'planned_return_at' => $validated['planned_return_at'],
-            'status' => ExitPermitStatus::Pending,
-        ]);
+        // Pengecekan izin terbuka dan pembuatan izin berada dalam satu transaksi.
+        // Tanpa itu dua pengajuan yang terkirim bersamaan bisa membuat dua izin
+        // PENDING sekaligus, karena tabel ini tidak punya batasan yang mengunci
+        // satu izin terbuka per siswa.
+        $permit = DB::transaction(function () use ($student, $validated) {
+            if ($this->hasOpenPermit($student->id)) {
+                return null;
+            }
+
+            $permit = ExitPermit::create([
+                'student_id' => $student->id,
+                'reason_id' => $validated['reason_id'],
+                'reason_detail' => $validated['reason_detail'],
+                'requested_at' => now(),
+                'planned_exit_at' => $validated['planned_exit_at'],
+                'planned_return_at' => $validated['planned_return_at'],
+                'status' => ExitPermitStatus::Pending,
+            ]);
+
+            $this->audit('EXIT_PERMIT_REQUESTED', $permit, [
+                'student_id' => $student->id,
+                'reason_id' => $permit->reason_id,
+                'planned_return_at' => $permit->planned_return_at?->toDateTimeString(),
+            ]);
+
+            return $permit;
+        });
+
+        if ($permit === null) {
+            return redirect()
+                ->route('student.exit-permits.index')
+                ->with('error', 'Anda masih memiliki izin yang menunggu persetujuan atau sedang aktif.');
+        }
 
         return redirect()
             ->route('student.exit-permits.show', $permit)
@@ -120,10 +148,30 @@ class ExitPermitController extends Controller
             return back()->with('error', 'Banding untuk izin ini sudah pernah diajukan.');
         }
 
-        $permit->appeal()->create([
-            'submitted_at' => now(),
-            'reason' => $request->validated()['reason'],
-        ]);
+        $created = DB::transaction(function () use ($permit, $request) {
+            // Diperiksa ulang di dalam transaksi: dua klik cepat pada tombol
+            // banding bisa sama-sama lolos pengecekan di atas sebelum keduanya
+            // membuat baris, dan kolom exit_permit_id bersifat UNIQUE.
+            if ($permit->appeal()->exists()) {
+                return false;
+            }
+
+            $appeal = $permit->appeal()->create([
+                'submitted_at' => now(),
+                'reason' => $request->validated()['reason'],
+            ]);
+
+            $this->audit('EXIT_PERMIT_APPEAL_SUBMITTED', $appeal, [
+                'exit_permit_id' => $permit->getKey(),
+                'reason' => $appeal->reason,
+            ]);
+
+            return true;
+        });
+
+        if ($created === false) {
+            return back()->with('error', 'Banding untuk izin ini sudah pernah diajukan.');
+        }
 
         return redirect()
             ->route('student.exit-permits.show', $permit)

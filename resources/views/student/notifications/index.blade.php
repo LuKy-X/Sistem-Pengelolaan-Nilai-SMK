@@ -74,7 +74,7 @@
     @endforelse
   </div>
 
-  <div>{{ $notifications->links() }}</div>
+  <x-bk.pagination :paginator="$notifications" />
 
 </div>
 @endsection

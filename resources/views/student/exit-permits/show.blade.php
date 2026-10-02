@@ -4,15 +4,8 @@
 
 @section('content')
 @php
-  $statusMeta = [
-    'PENDING' => ['label' => 'Menunggu Persetujuan', 'badge' => 'badge-yellow'],
-    'APPROVED' => ['label' => 'Disetujui', 'badge' => 'badge-blue'],
-    'REJECTED' => ['label' => 'Ditolak', 'badge' => 'badge-red'],
-    'COMPLETED' => ['label' => 'Selesai Tepat Waktu', 'badge' => 'badge-green'],
-    'LATE' => ['label' => 'Terlambat Kembali', 'badge' => 'badge-red'],
-    'CANCELLED' => ['label' => 'Dibatalkan', 'badge' => 'badge-gray'],
-  ][$permit->status->value] ?? ['label' => $permit->status->value, 'badge' => 'badge-gray'];
-
+  // Status memakai komponen milik dashboard Guru BK supaya warna lencana di
+  // halaman siswa dan di halaman BK sama persis.
   $isActive = in_array($permit->status->value, ['APPROVED', 'LATE'], true) && $permit->actual_return_at === null;
   $appeal = $permit->appeal;
 @endphp
@@ -22,8 +15,9 @@
     <a href="{{ route('student.exit-permits.index') }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Riwayat izin</a>
     <div class="flex flex-wrap items-center gap-2 mt-1">
       <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Izin Keluar — {{ $permit->reason?->name ?? 'Keperluan' }}</h1>
-      <span class="badge {{ $statusMeta['badge'] }}">{{ $statusMeta['label'] }}</span>
+      <x-bk.permit-status :status="$permit->status" />
     </div>
+  </div>
   </div>
 
   @if($isActive)

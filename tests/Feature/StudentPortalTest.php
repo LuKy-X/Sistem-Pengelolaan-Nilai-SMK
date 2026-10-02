@@ -237,7 +237,100 @@ class StudentPortalTest extends TestCase
         $this->assertGreaterThanOrEqual($activeCount, $historyCount);
     }
 
-    public function test_student_can_open_own_gradebook_but_not_others(): void
+    /**
+     * Warna lencana status izin pada portal siswa harus sama dengan yang dipakai
+     * dashboard Guru BK. Sebelumnya keduanya punya warna yang terbalik: siswa melihat
+     * izin "Disetujui" berwarna biru sementara Guru BK melihatnya hijau, dan izin
+     * "Sudah Kembali" sebaliknya.
+     */
+    public function test_permit_status_badge_colours_match_the_counselor_dashboard(): void
+    {
+        $counselor = User::where('username', 'bk.dewi')->firstOrFail();
+
+        $expected = [
+            'PENDING' => ['label' => 'Menunggu', 'badge' => 'badge-yellow'],
+            'APPROVED' => ['label' => 'Disetujui', 'badge' => 'badge-green'],
+            'REJECTED' => ['label' => 'Ditolak', 'badge' => 'badge-red'],
+            'COMPLETED' => ['label' => 'Sudah Kembali', 'badge' => 'badge-blue'],
+            'LATE' => ['label' => 'Kembali Terlambat', 'badge' => 'badge-red'],
+            'CANCELLED' => ['label' => 'Dibatalkan', 'badge' => 'badge-gray'],
+        ];
+
+        foreach ($expected as $status => $meta) {
+            $permit = ExitPermit::create([
+                'student_id' => $this->student->id,
+                'reason_id' => ExitPermitReason::where('is_active', true)->firstOrFail()->id,
+                'reason_detail' => 'Pengajuan untuk memeriksa warna lencana.',
+                'planned_exit_at' => now()->addDay(),
+                'planned_return_at' => now()->addDays(2),
+                'status' => $status,
+            ]);
+
+            // Halaman BK: lencana izin.
+            $counselorResponse = $this->actingAs($counselor)
+                ->get(route('counselor.exit-permits.index'))
+                ->assertOk();
+
+            // Halaman siswa: lencana izin yang sama harus memakai kelas yang sama.
+            $studentResponse = $this->actingAs($this->studentUser)
+                ->get(route('student.exit-permits.show', $permit))
+                ->assertOk();
+
+            $needle = 'badge '.$meta['badge'];
+
+            $this->assertStringContainsString(
+                $needle,
+                $counselorResponse->getContent(),
+                "Dashboard BK seharusnya memakai {$needle} untuk status {$status}."
+            );
+
+            $this->assertStringContainsString(
+                $needle,
+                $studentResponse->getContent(),
+                "Portal siswa seharusnya memakai {$needle} untuk status {$status}."
+            );
+
+            $this->assertStringContainsString(
+                $meta['label'],
+                $studentResponse->getContent(),
+                "Label lencana {$meta['label']} tidak ditemukan di portal siswa."
+            );
+        }
+    }
+
+    public function test_student_write_actions_are_recorded_in_audit_log(): void
+    {
+        $this->actingAs($this->studentUser)
+            ->post(route('student.exit-permits.store'), [
+                'reason_id' => ExitPermitReason::where('is_active', true)->firstOrFail()->id,
+                'reason_detail' => 'Keperluan yang perlu tercatat pada jejak audit.',
+                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
+                'planned_return_at' => now()->addHours(4)->format('Y-m-d\TH:i'),
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'EXIT_PERMIT_REQUESTED',
+            'user_id' => $this->studentUser->id,
+            'auditable_type' => ExitPermit::class,
+        ]);
+
+        $assessment = $this->submittableAssessment();
+
+        $this->actingAs($this->studentUser)
+            ->post(route('student.assignments.submit', $assessment), [
+                'content' => 'Jawaban yang perlu tercatat pada jejak audit.',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'ASSIGNMENT_SUBMITTED',
+            'user_id' => $this->studentUser->id,
+            'auditable_type' => AssessmentSubmission::class,
+        ]);
+    }
+
+    public function test_student_cannot_open_own_gradebook_but_not_others(): void
     {
         $ownGradebook = Gradebook::query()
             ->whereHas('students', fn ($query) => $query->where('student_id', $this->student->id))

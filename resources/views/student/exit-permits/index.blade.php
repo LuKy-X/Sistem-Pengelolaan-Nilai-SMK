@@ -4,13 +4,22 @@
 
 @section('content')
 @php
-  $statusLabels = [
+  // Warna lencana izin disamakan dengan komponen milik dashboard Guru BK
+  // (x-bk.permit-status) supaya siswa dan Guru BK melihat warna yang sama.
+  // APPROVED hijau, COMPLETED biru, bukan sebaliknya.
+  $statusFilters = [
     'PENDING' => ['label' => 'Menunggu', 'badge' => 'badge-yellow'],
-    'APPROVED' => ['label' => 'Disetujui', 'badge' => 'badge-blue'],
+    'APPROVED' => ['label' => 'Disetujui', 'badge' => 'badge-green'],
     'REJECTED' => ['label' => 'Ditolak', 'badge' => 'badge-red'],
-    'COMPLETED' => ['label' => 'Selesai', 'badge' => 'badge-green'],
-    'LATE' => ['label' => 'Terlambat', 'badge' => 'badge-red'],
+    'COMPLETED' => ['label' => 'Sudah Kembali', 'badge' => 'badge-blue'],
+    'LATE' => ['label' => 'Kembali Terlambat', 'badge' => 'badge-red'],
     'CANCELLED' => ['label' => 'Dibatalkan', 'badge' => 'badge-gray'],
+  ];
+
+  $appealFilters = [
+    'PENDING' => ['label' => 'Diproses', 'badge' => 'badge-yellow'],
+    'ACCEPTED' => ['label' => 'Diterima', 'badge' => 'badge-green'],
+    'REJECTED' => ['label' => 'Ditolak', 'badge' => 'badge-red'],
   ];
 @endphp
 <div class="space-y-4 lg:space-y-5">
@@ -38,14 +47,18 @@
     </div>
   @endif
 
-  <div class="flex gap-2 flex-wrap">
-    <a href="{{ route('student.exit-permits.index') }}" class="badge {{ $statusFilter === null ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Semua ({{ $statusCounts->sum() }})</a>
-    @foreach($statusLabels as $statusValue => $meta)
+  <nav class="flex gap-2 flex-wrap" aria-label="Saring izin berdasarkan status">
+    <a href="{{ route('student.exit-permits.index') }}"
+       @if($statusFilter === null) aria-current="page" @endif
+       class="badge {{ $statusFilter === null ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Semua ({{ $statusCounts->sum() }})</a>
+    @foreach($statusFilters as $statusValue => $meta)
       @if(($statusCounts[$statusValue] ?? 0) > 0 || $statusFilter === $statusValue)
-        <a href="{{ route('student.exit-permits.index', ['status' => $statusValue]) }}" class="badge {{ $statusFilter === $statusValue ? $meta['badge'] : 'badge-gray' }} !px-3 !py-1.5">{{ $meta['label'] }} ({{ $statusCounts[$statusValue] ?? 0 }})</a>
+        <a href="{{ route('student.exit-permits.index', ['status' => $statusValue]) }}"
+           @if($statusFilter === $statusValue) aria-current="page" @endif
+           class="badge {{ $statusFilter === $statusValue ? $meta['badge'] : 'badge-gray' }} !px-3 !py-1.5">{{ $meta['label'] }} ({{ $statusCounts[$statusValue] ?? 0 }})</a>
       @endif
     @endforeach
-  </div>
+  </nav>
 
   <div class="panel p-4 lg:p-5 overflow-x-auto">
     <table class="w-full text-xs min-w-[640px]">
@@ -60,7 +73,6 @@
       </thead>
       <tbody>
         @forelse($permits as $permit)
-          @php $meta = $statusLabels[$permit->status->value] ?? ['label' => $permit->status->value, 'badge' => 'badge-gray']; @endphp
           <tr class="border-b border-bluelight/60">
             <td class="py-2.5 pr-3">
               <div class="font-semibold text-bluedark">{{ $permit->reason?->name ?? '-' }}</div>
@@ -74,9 +86,10 @@
               @endif
             </td>
             <td class="py-2.5 pr-3">
-              <span class="badge {{ $meta['badge'] }}">{{ $meta['label'] }}</span>
+              <x-bk.permit-status :status="$permit->status" />
               @if($permit->appeal)
-                <span class="badge {{ ['PENDING' => 'badge-yellow', 'ACCEPTED' => 'badge-green', 'REJECTED' => 'badge-red'][$permit->appeal->decision->value] ?? 'badge-gray' }}">Banding {{ ['PENDING' => 'Diproses', 'ACCEPTED' => 'Diterima', 'REJECTED' => 'Ditolak'][$permit->appeal->decision->value] }}</span>
+                @php $appealMeta = $appealFilters[$permit->appeal->decision->value] ?? ['label' => $permit->appeal->decision->value, 'badge' => 'badge-gray']; @endphp
+                <span class="badge {{ $appealMeta['badge'] }}">Banding {{ $appealMeta['label'] }}</span>
               @endif
             </td>
             <td class="py-2.5 text-right">
@@ -91,7 +104,7 @@
       </tbody>
     </table>
 
-    <div class="mt-4">{{ $permits->links() }}</div>
+    <x-bk.pagination :paginator="$permits" />
   </div>
 
 </div>

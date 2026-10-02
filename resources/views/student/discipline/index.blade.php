@@ -14,8 +14,14 @@
     <div class="panel p-5 text-center">
       <div class="text-[11px] font-semibold uppercase tracking-wide text-bluedark/50">Saldo Poin Saat Ini</div>
       <div class="font-heading text-4xl font-bold mt-2 {{ $standing['tone'] === 'safe' ? 'text-emerald-600' : ($standing['tone'] === 'watch' || $standing['tone'] === 'warning' ? 'text-amber-600' : 'text-red-600') }}">{{ $balance }}</div>
-      <span class="badge {{ $standing['badge'] }} mt-2">{{ $standing['label'] }}</span>
-      <p class="text-[10px] text-bluedark/45 mt-2">Poin awal {{ $setting?->initial_points ?? 100 }}, dihitung dari seluruh catatan pelanggaran dan penghargaan.</p>
+      <x-bk.point-badge :balance="$balance" :standing="$standing" :show-balance="false" class="mt-2" />
+      <p class="text-[10px] text-bluedark/45 mt-2">
+        @if($setting)
+          Poin awal {{ $setting->initial_points }}, dihitung dari seluruh catatan pelanggaran dan penghargaan.
+        @else
+          Pengaturan poin untuk tahun ajaran ini belum dibuat, sehingga saldo memakai nilai bawaan.
+        @endif
+      </p>
     </div>
 
     <div class="panel p-4 lg:p-5">
@@ -127,7 +133,7 @@
       </tbody>
     </table>
 
-    <div class="mt-4">{{ $records->links() }}</div>
+    <x-bk.pagination :paginator="$records" />
   </div>
 
 </div>
