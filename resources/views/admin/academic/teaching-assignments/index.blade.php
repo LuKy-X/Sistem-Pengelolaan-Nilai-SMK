@@ -118,54 +118,81 @@
         <form method="POST" action="{{ route('admin.academic.teaching-assignments.store') }}" class="space-y-4">
             @csrf
 
+            @if($errors->any())
+                <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs">
+                    <p class="font-semibold mb-1">Gagal menyimpan penugasan:</p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        @foreach($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div>
-                <label class="f-label">Semester</label>
-                <select name="semester_id" required class="f-select">
+                <label class="f-label">Semester <span class="text-rose-500">*</span></label>
+                <select name="semester_id" required class="f-select @error('semester_id') border-rose-500 @enderror">
                     @foreach($semesters as $sem)
-                        <option value="{{ $sem->id }}" {{ $selectedSemesterId == $sem->id ? 'selected' : '' }}>
+                        <option value="{{ $sem->id }}" {{ (old('semester_id', $selectedSemesterId) == $sem->id) ? 'selected' : '' }}>
                             {{ $sem->name }} ({{ $sem->academicYear?->name }})
                         </option>
                     @endforeach
                 </select>
+                @error('semester_id')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
-                <label class="f-label">Guru Pengajar</label>
-                <select name="teacher_id" required class="f-select">
+                <label class="f-label">Guru Pengajar <span class="text-rose-500">*</span></label>
+                <select name="teacher_id" required class="f-select @error('teacher_id') border-rose-500 @enderror">
                     <option value="">-- Pilih Guru --</option>
                     @foreach($teachers as $t)
-                        <option value="{{ $t->id }}">{{ $t->full_name }} ({{ $t->nip }})</option>
+                        <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->full_name }} ({{ $t->nip }})</option>
                     @endforeach
                 </select>
+                @error('teacher_id')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
-                <label class="f-label">Mata Pelajaran</label>
-                <select name="subject_id" required class="f-select">
+                <label class="f-label">Mata Pelajaran <span class="text-rose-500">*</span></label>
+                <select name="subject_id" required class="f-select @error('subject_id') border-rose-500 @enderror">
                     <option value="">-- Pilih Mata Pelajaran --</option>
                     @foreach($subjects as $s)
-                        <option value="{{ $s->id }}">[{{ $s->code }}] {{ $s->name }}</option>
+                        <option value="{{ $s->id }}" {{ old('subject_id') == $s->id ? 'selected' : '' }}>[{{ $s->code }}] {{ $s->name }}</option>
                     @endforeach
                 </select>
+                @error('subject_id')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
-                <label class="f-label">Kelas / Rombel</label>
-                <select name="class_id" required class="f-select">
+                <label class="f-label">Kelas / Rombel <span class="text-rose-500">*</span></label>
+                <select name="class_id" required class="f-select @error('class_id') border-rose-500 @enderror">
                     <option value="">-- Pilih Kelas --</option>
                     @foreach($classes as $c)
-                        <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->department?->name }})</option>
+                        <option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->department?->name }})</option>
                     @endforeach
                 </select>
+                @error('class_id')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div>
-                <label class="f-label">Alokasi Jam per Minggu</label>
-                <input type="number" name="weekly_hours" min="1" max="20" value="2" required class="f-input">
+                <label class="f-label">Alokasi Jam per Minggu <span class="text-rose-500">*</span></label>
+                <input type="number" name="weekly_hours" min="1" max="20" value="{{ old('weekly_hours', 2) }}" required class="f-input @error('weekly_hours') border-rose-500 @enderror">
+                <span class="text-[11px] text-bluedark/50 block mt-1">Total jam maksimal yang dapat dijadwalkan untuk guru di kelas ini per minggu</span>
+                @error('weekly_hours')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_active" value="1" checked class="rounded text-blueprim">
+                <input type="checkbox" name="is_active" value="1" {{ old('is_active', '1') ? 'checked' : '' }} class="rounded text-blueprim">
                 <label class="text-xs font-medium text-bluedark">Penugasan Aktif</label>
             </div>
 
@@ -185,6 +212,12 @@
     function closeAssignmentModal() {
         document.getElementById('assignmentModal').classList.add('hidden');
     }
+
+    @if($errors->any() || (session('error') && old('teacher_id')))
+    document.addEventListener('DOMContentLoaded', function() {
+        openAssignmentModal();
+    });
+    @endif
 </script>
 @endpush
 @endsection

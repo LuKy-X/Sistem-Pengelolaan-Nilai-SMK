@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
+    'sort_order',
     'period_number',
     'start_time',
     'end_time',
     'label',
+    'is_break',
 ])]
 class LessonPeriod extends Model
 {
@@ -20,8 +22,20 @@ class LessonPeriod extends Model
     protected function casts(): array
     {
         return [
+            'sort_order' => 'integer',
             'period_number' => 'integer',
+            'is_break' => 'boolean',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (LessonPeriod $period) {
+            if (empty($period->sort_order)) {
+                $maxOrder = static::max('sort_order') ?? 0;
+                $period->sort_order = $maxOrder + 1;
+            }
+        });
     }
 
     public function schedulesAsStart(): HasMany
@@ -32,5 +46,36 @@ class LessonPeriod extends Model
     public function schedulesAsEnd(): HasMany
     {
         return $this->hasMany(TeachingSchedule::class, 'end_period_id');
+    }
+
+    /**
+     * Urutkan ulang nomor jam pelajaran dan sort_order.
+     * Jam istirahat TIDAK memengaruhi urutan nomor jam pelajaran reguler.
+     * Semua jam istirahat memiliki label 'Istirahat' dan period_number null.
+     */
+    public static function resequence(): void
+    {
+        $all = static::orderBy('sort_order')
+            ->orderBy('start_time')
+            ->orderBy('id')
+            ->get();
+
+        $lessonNumber = 0;
+        foreach ($all as $idx => $period) {
+            $period->sort_order = $idx + 1;
+            if ($period->is_break) {
+                $period->period_number = null;
+                if (empty($period->label) || str_starts_with($period->label, 'Jam Ke-') || str_starts_with($period->label, 'Istirahat Ke-')) {
+                    $period->label = 'Istirahat';
+                }
+            } else {
+                $lessonNumber++;
+                $period->period_number = $lessonNumber;
+                if (empty($period->label) || str_starts_with($period->label, 'Jam Ke-') || str_starts_with($period->label, 'Istirahat')) {
+                    $period->label = "Jam Ke-{$lessonNumber}";
+                }
+            }
+            $period->saveQuietly();
+        }
     }
 }

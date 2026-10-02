@@ -152,43 +152,59 @@
             <button type="button" onclick="closeSubjectModal()" class="text-bluedark/40 hover:text-bluedark text-xl font-bold">&times;</button>
         </div>
 
-        <form id="subjectForm" method="POST" action="{{ route('admin.academic.subjects.store') }}" class="space-y-4">
+        <form id="subjectForm" method="POST" action="{{ old('_action', route('admin.academic.subjects.store')) }}" class="space-y-4">
             @csrf
-            <div id="subjectMethodField"></div>
+            <div id="subjectMethodField">
+                @if(old('_method') === 'PUT')
+                    <input type="hidden" name="_method" value="PUT">
+                @endif
+            </div>
 
             <div class="grid grid-cols-3 gap-3">
                 <div class="col-span-1">
-                    <label class="f-label">Kode</label>
-                    <input type="text" name="code" id="subject_code" required placeholder="RPL01" class="f-input">
+                    <label class="f-label">Kode <span class="text-rose-500">*</span></label>
+                    <input type="text" name="code" id="subject_code" value="{{ old('code') }}" data-check-unique="subject_code" required placeholder="RPL01" class="f-input @error('code') border-rose-500 @enderror">
+                    @error('code')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div class="col-span-2">
-                    <label class="f-label">Kategori</label>
-                    <select name="category" id="subject_category" required class="f-select">
-                        <option value="MUATAN_NASIONAL">Muatan Nasional (A)</option>
-                        <option value="MUATAN_KEWILAYAHAN">Muatan Kewilayahan (B)</option>
-                        <option value="MUATAN_KEJURUAN" selected>Peminatan Kejuruan (C)</option>
-                        <option value="MULOK">Muatan Lokal</option>
+                    <label class="f-label">Kategori <span class="text-rose-500">*</span></label>
+                    <select name="category" id="subject_category" required class="f-select @error('category') border-rose-500 @enderror">
+                        <option value="MUATAN_NASIONAL" {{ old('category') == 'MUATAN_NASIONAL' ? 'selected' : '' }}>Muatan Nasional (A)</option>
+                        <option value="MUATAN_KEWILAYAHAN" {{ old('category') == 'MUATAN_KEWILAYAHAN' ? 'selected' : '' }}>Muatan Kewilayahan (B)</option>
+                        <option value="MUATAN_KEJURUAN" {{ old('category', 'MUATAN_KEJURUAN') == 'MUATAN_KEJURUAN' ? 'selected' : '' }}>Peminatan Kejuruan (C)</option>
+                        <option value="MULOK" {{ old('category') == 'MULOK' ? 'selected' : '' }}>Muatan Lokal</option>
                     </select>
+                    @error('category')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div>
-                <label class="f-label">Nama Mata Pelajaran</label>
-                <input type="text" name="name" id="subject_name" required placeholder="Pemrograman Web & Perangkat Bergerak" class="f-input">
+                <label class="f-label">Nama Mata Pelajaran <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="subject_name" value="{{ old('name') }}" required placeholder="Pemrograman Web & Perangkat Bergerak" class="f-input @error('name') border-rose-500 @enderror">
+                @error('name')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
                 <label class="f-label">Khusus Jurusan Tertentu (Opsional)</label>
-                <select name="department_id" id="subject_department_id" class="f-select">
+                <select name="department_id" id="subject_department_id" class="f-select @error('department_id') border-rose-500 @enderror">
                     <option value="">-- Semua Jurusan / Umum --</option>
                     @foreach($departments as $d)
-                        <option value="{{ $d->id }}">{{ $d->name }}</option>
+                        <option value="{{ $d->id }}" {{ old('department_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
                     @endforeach
                 </select>
+                @error('department_id')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_active" id="subject_is_active" value="1" checked class="rounded text-blueprim">
+                <input type="checkbox" name="is_active" id="subject_is_active" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} class="rounded text-blueprim">
                 <label for="subject_is_active" class="text-xs font-medium text-bluedark">Mata Pelajaran Aktif</label>
             </div>
 
@@ -202,14 +218,22 @@
 
 @push('scripts')
 <script>
+    function resetSubjectUnique() {
+        const m = document.getElementById('subjectModal');
+        m.querySelectorAll('.check-unique-feedback').forEach(el => el.innerHTML = '');
+        m.querySelectorAll('input').forEach(el => el.classList.remove('border-emerald-500', 'border-rose-500'));
+    }
+
     function openSubjectModal() {
         document.getElementById('subjectModalTitle').innerText = 'Tambah Mata Pelajaran';
         document.getElementById('subjectForm').action = "{{ route('admin.academic.subjects.store') }}";
         document.getElementById('subjectMethodField').innerHTML = '';
         document.getElementById('subject_code').value = '';
+        document.getElementById('subject_code').removeAttribute('data-ignore-id');
         document.getElementById('subject_name').value = '';
         document.getElementById('subject_department_id').value = '';
         document.getElementById('subject_is_active').checked = true;
+        resetSubjectUnique();
         document.getElementById('subjectModal').classList.remove('hidden');
     }
 
@@ -218,16 +242,24 @@
         document.getElementById('subjectForm').action = "/admin/academic/subjects/" + s.id;
         document.getElementById('subjectMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('subject_code').value = s.code;
+        document.getElementById('subject_code').setAttribute('data-ignore-id', s.id);
         document.getElementById('subject_name').value = s.name;
         document.getElementById('subject_category').value = s.category;
         document.getElementById('subject_department_id').value = s.department_id || '';
         document.getElementById('subject_is_active').checked = !!s.is_active;
+        resetSubjectUnique();
         document.getElementById('subjectModal').classList.remove('hidden');
     }
 
     function closeSubjectModal() {
         document.getElementById('subjectModal').classList.add('hidden');
     }
+
+    @if($errors->any() && (old('code') || old('name')))
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('subjectModal').classList.remove('hidden');
+    });
+    @endif
 </script>
 @endpush
 @endsection

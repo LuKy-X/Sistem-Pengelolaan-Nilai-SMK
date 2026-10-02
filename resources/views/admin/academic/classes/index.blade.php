@@ -223,61 +223,83 @@
             <button type="button" onclick="closeClassModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-bluedark/40 hover:text-bluedark hover:bg-slate-200/60 text-xl font-bold">&times;</button>
         </div>
 
-        <form id="classForm" method="POST" action="{{ route('admin.academic.classes.store') }}" class="p-6 space-y-4 overflow-y-auto">
+        <form id="classForm" method="POST" action="{{ old('_action', route('admin.academic.classes.store')) }}" class="p-6 space-y-4 overflow-y-auto">
             @csrf
-            <div id="classMethodField"></div>
+            <div id="classMethodField">
+                @if(old('_method') === 'PUT')
+                    <input type="hidden" name="_method" value="PUT">
+                @endif
+            </div>
 
             <div>
                 <label class="f-label text-xs">Nama Kelas (cth: XII RA, X RPL 1) <span class="text-rose-500">*</span></label>
-                <input type="text" name="name" id="class_name" required placeholder="XII RA" class="f-input text-xs w-full">
+                <input type="text" name="name" id="class_name" value="{{ old('name') }}" required placeholder="XII RA" class="f-input text-xs w-full @error('name') border-rose-500 @enderror">
+                @error('name')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="f-label text-xs">Kode Kelas <span class="text-rose-500">*</span></label>
-                    <input type="text" name="code" id="class_code" required placeholder="XII-RA" class="f-input text-xs w-full">
+                    <input type="text" name="code" id="class_code" value="{{ old('code') }}" data-check-unique="class_code" required placeholder="XII-RA" class="f-input text-xs w-full @error('code') border-rose-500 @enderror">
+                    @error('code')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label text-xs">Tingkat Kelas <span class="text-rose-500">*</span></label>
-                    <select name="grade_level_id" id="class_grade_level_id" required class="f-select text-xs w-full">
+                    <select name="grade_level_id" id="class_grade_level_id" required class="f-select text-xs w-full @error('grade_level_id') border-rose-500 @enderror">
                         @foreach($gradeLevels as $gl)
-                            <option value="{{ $gl->id }}">{{ $gl->name }}</option>
+                            <option value="{{ $gl->id }}" {{ old('grade_level_id') == $gl->id ? 'selected' : '' }}>{{ $gl->name }}</option>
                         @endforeach
                     </select>
+                    @error('grade_level_id')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="f-label text-xs">Jurusan <span class="text-rose-500">*</span></label>
-                    <select name="department_id" id="class_department_id" required class="f-select text-xs w-full">
+                    <select name="department_id" id="class_department_id" required class="f-select text-xs w-full @error('department_id') border-rose-500 @enderror">
                         @foreach($departments as $d)
-                            <option value="{{ $d->id }}">{{ $d->name }}</option>
+                            <option value="{{ $d->id }}" {{ old('department_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
                         @endforeach
                     </select>
+                    @error('department_id')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label text-xs">Tahun Ajaran <span class="text-rose-500">*</span></label>
-                    <select name="academic_year_id" id="class_academic_year_id" required class="f-select text-xs w-full">
+                    <select name="academic_year_id" id="class_academic_year_id" required class="f-select text-xs w-full @error('academic_year_id') border-rose-500 @enderror">
                         @foreach($academicYears as $y)
-                            <option value="{{ $y->id }}" {{ $y->is_active ? 'selected' : '' }}>{{ $y->name }}</option>
+                            <option value="{{ $y->id }}" {{ (old('academic_year_id') == $y->id || (!old('academic_year_id') && $y->is_active)) ? 'selected' : '' }}>{{ $y->name }}</option>
                         @endforeach
                     </select>
+                    @error('academic_year_id')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div>
                 <label class="f-label text-xs">Wali Kelas</label>
-                <select name="homeroom_teacher_id" id="class_homeroom_teacher_id" class="f-select text-xs w-full">
+                <select name="homeroom_teacher_id" id="class_homeroom_teacher_id" class="f-select text-xs w-full @error('homeroom_teacher_id') border-rose-500 @enderror">
                     <option value="">-- Pilih Wali Kelas (Opsional) --</option>
                     @foreach($teachers as $t)
-                        <option value="{{ $t->id }}">{{ $t->full_name }}</option>
+                        <option value="{{ $t->id }}" {{ old('homeroom_teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
                     @endforeach
                 </select>
+                @error('homeroom_teacher_id')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_active" id="class_is_active" value="1" checked class="rounded text-blueprim">
+                <input type="checkbox" name="is_active" id="class_is_active" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} class="rounded text-blueprim">
                 <label for="class_is_active" class="text-xs font-medium text-bluedark cursor-pointer">Kelas Aktif</label>
             </div>
 
@@ -359,40 +381,48 @@
                     </div>
                 </div>
 
-                <!-- KHUSUS TINGKAT XII: MODE KELULUSAN SISWA -->
-                <div id="promoteGraduationNotice" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
-                    <div class="flex items-center gap-2 font-bold text-amber-800">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        <span>Kelas Tingkat Akhir (Tingkat XII) &mdash; Proses Kelulusan Siswa</span>
-                    </div>
-                    <p class="leading-relaxed">
-                        Kelas ini berada pada tingkat akhir. Seluruh siswa yang dicentang akan <strong>dinyatakan Lulus Resmi (Status: GRADUATED)</strong>, riwayat kelas diselesaikan, dan otomatis terhubung dengan modul Tracer Study / Alumni sekolah.
-                    </p>
-                    <input type="hidden" name="action_type" id="promoteActionTypeGraduation" value="graduate" disabled>
-                </div>
-
-                <!-- TINGKAT X & XI: OPSI KELAS TUJUAN -->
+                <!-- OPSI PENENTUAN ROMBEL / KELULUSAN -->
                 <div id="promoteClassOptions" class="space-y-4">
-                    <label class="f-label text-xs mb-1">Opsi Penentuan Rombel / Kelas Tujuan</label>
+                    <label class="f-label text-xs mb-1">Pilihan Tindakan Kenaikan / Kelulusan Rombel</label>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- Opsi 1: Otomatis Buat Kelas Baru (Recommended) -->
-                        <label class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-all flex items-start gap-2.5">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Opsi 1: Otomatis Buat Kelas Baru -->
+                        <label id="labelOptCreateNew" class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-all flex items-start gap-2.5">
                             <input type="radio" name="action_type" id="optActionCreateNew" value="create_new" checked class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('create_new')">
                             <div>
-                                <span class="font-heading font-bold text-xs text-bluedark block">Otomatis Buat Kelas Baru</span>
-                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Sistem otomatis menyiapkan kelas tingkat berikutnya (misal XI RA &rarr; XII RA)</span>
+                                <span class="font-heading font-bold text-xs text-bluedark block">Buat Kelas Baru</span>
+                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Sistem otomatis menyiapkan kelas tingkat berikutnya</span>
                             </div>
                         </label>
 
                         <!-- Opsi 2: Pilih Kelas yang Sudah Ada -->
-                        <label class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition-all flex items-start gap-2.5">
+                        <label id="labelOptExisting" class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition-all flex items-start gap-2.5">
                             <input type="radio" name="action_type" id="optActionExisting" value="existing" class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('existing')">
                             <div>
-                                <span class="font-heading font-bold text-xs text-bluedark block">Pilih Kelas yang Sudah Ada</span>
-                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Pindahkan siswa ke rombel yang telah dibuat sebelumnya</span>
+                                <span class="font-heading font-bold text-xs text-bluedark block">Kelas yang Ada</span>
+                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Pindahkan siswa ke rombel yang sudah ada</span>
                             </div>
                         </label>
+
+                        <!-- Opsi 3: Kelulusan Siswa (Tingkat Akhir) -->
+                        <label id="labelOptGraduate" class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-50 cursor-pointer transition-all flex items-start gap-2.5">
+                            <input type="radio" name="action_type" id="optActionGraduate" value="graduate" class="mt-0.5 text-amber-600 focus:ring-amber-500" onchange="toggleActionType('graduate')">
+                            <div>
+                                <span class="font-heading font-bold text-xs text-amber-900 block">Luluskan Siswa</span>
+                                <span class="text-[11px] text-amber-700/80 block mt-0.5">Tingkat akhir / alumni, selesaikan riwayat rombel</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Panel Keterangan Kelulusan Siswa -->
+                    <div id="promoteGraduationNotice" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+                        <div class="flex items-center gap-2 font-bold text-amber-800">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                            <span>Proses Kelulusan Siswa Resmi (Status: GRADUATED)</span>
+                        </div>
+                        <p class="leading-relaxed">
+                            Seluruh siswa yang dicentang akan <strong>dinyatakan Lulus Resmi (Status: GRADUATED)</strong>, riwayat kelas di rombel ini diselesaikan, dan otomatis terhubung dengan modul Tracer Study / Alumni sekolah. Rombel asal akan menjadi kosong setelah siswa diluluskan.
+                        </p>
                     </div>
 
                     <!-- Panel Opsi A: Parameter Kelas Baru -->
@@ -507,14 +537,22 @@
     // ==========================================
     // CLASS MODAL (CREATE / EDIT)
     // ==========================================
+    function resetClassUnique() {
+        const m = document.getElementById('classModal');
+        m.querySelectorAll('.check-unique-feedback').forEach(el => el.innerHTML = '');
+        m.querySelectorAll('input').forEach(el => el.classList.remove('border-emerald-500', 'border-rose-500'));
+    }
+
     function openClassModal() {
         document.getElementById('classModalTitle').innerText = 'Tambah Kelas Baru';
         document.getElementById('classForm').action = "{{ route('admin.academic.classes.store') }}";
         document.getElementById('classMethodField').innerHTML = '';
         document.getElementById('class_name').value = '';
         document.getElementById('class_code').value = '';
+        document.getElementById('class_code').removeAttribute('data-ignore-id');
         document.getElementById('class_homeroom_teacher_id').value = '';
         document.getElementById('class_is_active').checked = true;
+        resetClassUnique();
         document.getElementById('classModal').classList.add('show');
     }
 
@@ -524,11 +562,13 @@
         document.getElementById('classMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('class_name').value = c.name;
         document.getElementById('class_code').value = c.code;
+        document.getElementById('class_code').setAttribute('data-ignore-id', c.id);
         document.getElementById('class_grade_level_id').value = c.grade_level_id;
         document.getElementById('class_department_id').value = c.department_id;
         document.getElementById('class_academic_year_id').value = c.academic_year_id;
         document.getElementById('class_homeroom_teacher_id').value = c.homeroom_teacher_id || '';
         document.getElementById('class_is_active').checked = !!c.is_active;
+        resetClassUnique();
         document.getElementById('classModal').classList.add('show');
     }
 
@@ -561,6 +601,7 @@
         document.getElementById('promoteLoading').classList.add('hidden');
         document.getElementById('promoteContent').classList.add('hidden');
         document.getElementById('promoteSubmitBtn').disabled = true;
+        currentPromotionData = null;
     }
 
     function onSourceClassSelect(classId) {
@@ -594,46 +635,28 @@
             document.getElementById('promoteSourceBannerName').textContent = data.source_class.name;
             document.getElementById('promoteSourceBannerMeta').textContent = `${data.source_class.grade_level_name} &middot; ${data.source_class.department_name}`;
 
-            const gradNotice = document.getElementById('promoteGraduationNotice');
-            const classOptions = document.getElementById('promoteClassOptions');
-            const gradHiddenInput = document.getElementById('promoteActionTypeGraduation');
+            // Populate suggestions
+            document.getElementById('promote_new_class_name').value = data.suggested_name || '';
+            document.getElementById('promote_new_class_code').value = data.suggested_code || '';
+
+            // Populate Existing Target Classes dropdown
+            const targetSelect = document.getElementById('promote_target_class_id');
+            targetSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>';
+            if (data.available_target_classes && data.available_target_classes.length > 0) {
+                data.available_target_classes.forEach(tc => {
+                    const opt = document.createElement('option');
+                    opt.value = tc.id;
+                    opt.textContent = `${tc.name} (${tc.code}) &mdash; ${tc.academic_year || '-'}`;
+                    targetSelect.appendChild(opt);
+                });
+            }
 
             if (data.is_graduation) {
-                // Tingkat XII -> Kelulusan
-                gradNotice.classList.remove('hidden');
-                classOptions.classList.add('hidden');
-                gradHiddenInput.disabled = false;
-
-                document.getElementById('promoteTargetBannerName').textContent = 'Kelulusan Siswa (Alumni)';
-                document.getElementById('promoteTargetBannerMeta').textContent = 'Status: GRADUATED';
-                submitBtn.querySelector('span').textContent = 'Proses Kelulusan Siswa';
+                // Tingkat XII -> Otomatis pilih Kelulusan
+                document.getElementById('optActionGraduate').checked = true;
+                toggleActionType('graduate');
             } else {
-                // Tingkat X / XI -> Kenaikan Tingkat
-                gradNotice.classList.add('hidden');
-                classOptions.classList.remove('hidden');
-                gradHiddenInput.disabled = true;
-
-                document.getElementById('promoteTargetBannerName').textContent = data.suggested_name;
-                document.getElementById('promoteTargetBannerMeta').textContent = `${data.next_level ? data.next_level.name : 'Tingkat Baru'}`;
-                submitBtn.querySelector('span').textContent = 'Proses Kenaikan Kelas';
-
-                // Setup suggestions
-                document.getElementById('promote_new_class_name').value = data.suggested_name;
-                document.getElementById('promote_new_class_code').value = data.suggested_code;
-
-                // Populate Existing Target Classes dropdown
-                const targetSelect = document.getElementById('promote_target_class_id');
-                targetSelect.innerHTML = '<option value="">-- Pilih Kelas Tujuan --</option>';
-                if (data.available_target_classes && data.available_target_classes.length > 0) {
-                    data.available_target_classes.forEach(tc => {
-                        const opt = document.createElement('option');
-                        opt.value = tc.id;
-                        opt.textContent = `${tc.name} (${tc.code}) &mdash; ${tc.academic_year || '-'}`;
-                        targetSelect.appendChild(opt);
-                    });
-                }
-
-                // Reset option radio to create_new
+                // Tingkat X / XI -> Default Buat Kelas Baru
                 document.getElementById('optActionCreateNew').checked = true;
                 toggleActionType('create_new');
             }
@@ -651,23 +674,40 @@
     function toggleActionType(type) {
         const panelCreate = document.getElementById('panelCreateNewClass');
         const panelExisting = document.getElementById('panelExistingClass');
+        const gradNotice = document.getElementById('promoteGraduationNotice');
         const nameInput = document.getElementById('promote_new_class_name');
         const codeInput = document.getElementById('promote_new_class_code');
         const targetSelect = document.getElementById('promote_target_class_id');
+        const submitBtn = document.getElementById('promoteSubmitBtn');
 
-        if (type === 'create_new') {
+        if (type === 'graduate') {
+            panelCreate.classList.add('hidden');
+            panelExisting.classList.add('hidden');
+            gradNotice.classList.remove('hidden');
+            nameInput.required = false;
+            codeInput.required = false;
+            targetSelect.required = false;
+
+            document.getElementById('promoteTargetBannerName').textContent = 'Kelulusan Siswa (Alumni)';
+            document.getElementById('promoteTargetBannerMeta').textContent = 'Status: GRADUATED & Selesai';
+            submitBtn.querySelector('span').textContent = 'Proses Kelulusan Siswa';
+        } else if (type === 'create_new') {
             panelCreate.classList.remove('hidden');
             panelExisting.classList.add('hidden');
+            gradNotice.classList.add('hidden');
             nameInput.required = true;
             codeInput.required = true;
             targetSelect.required = false;
 
-            if (currentPromotionData && !currentPromotionData.is_graduation) {
+            if (currentPromotionData) {
                 document.getElementById('promoteTargetBannerName').textContent = nameInput.value || currentPromotionData.suggested_name;
+                document.getElementById('promoteTargetBannerMeta').textContent = `${currentPromotionData.next_level ? currentPromotionData.next_level.name : 'Tingkat Baru'}`;
             }
-        } else {
+            submitBtn.querySelector('span').textContent = 'Proses Kenaikan Kelas';
+        } else { // existing
             panelCreate.classList.add('hidden');
             panelExisting.classList.remove('hidden');
+            gradNotice.classList.add('hidden');
             nameInput.required = false;
             codeInput.required = false;
             targetSelect.required = true;
@@ -676,6 +716,9 @@
                 const selectedText = targetSelect.options[targetSelect.selectedIndex]?.text || '-';
                 document.getElementById('promoteTargetBannerName').textContent = selectedText.split('(')[0] || selectedText;
             };
+            const selectedText = targetSelect.options[targetSelect.selectedIndex]?.text || '-';
+            document.getElementById('promoteTargetBannerName').textContent = selectedText.split('(')[0] || selectedText;
+            submitBtn.querySelector('span').textContent = 'Proses Kenaikan Kelas';
         }
     }
 
@@ -747,13 +790,21 @@
         submitBtn.disabled = selected === 0;
     }
 
-    // Auto-open modal if promote_id is present in URL
+    // Auto-open modal if promote_id is present in URL or upon validation error
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const promoteId = urlParams.get('promote_id');
         if (promoteId) {
             openPromoteModal(promoteId);
         }
+
+        @if($errors->any())
+            @if(old('source_class_id'))
+                openPromoteModal({{ old('source_class_id') }});
+            @elseif(old('code') || old('name'))
+                document.getElementById('classModal').classList.add('show');
+            @endif
+        @endif
     });
 </script>
 @endpush
