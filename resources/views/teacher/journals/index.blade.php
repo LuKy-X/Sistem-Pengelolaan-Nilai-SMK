@@ -108,9 +108,42 @@
     <!-- Step 1: Panel Pilih Kelas (Spacious 3-Column Grid) -->
     <div class="step-panel active" data-panel="1">
       <div class="panel p-5 md:p-6">
-        <div class="mb-5">
-          <h2 class="font-heading font-semibold text-bluedark text-base md:text-lg">Daftar Kelas</h2>
-          <p class="text-xs md:text-sm text-bluedark/50 mt-0.5">Pilih kelas untuk mengelola journal kelas</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="font-heading font-semibold text-bluedark text-base md:text-lg">Daftar Kelas</h2>
+            <p class="text-xs md:text-sm text-bluedark/50 mt-0.5">Pilih kelas untuk mengelola journal kelas sesi minggu ini</p>
+          </div>
+
+          <!-- Week Navigation Selector -->
+          <div class="flex items-center gap-1.5 sm:gap-2 bg-slate-50 border border-slate-200/90 rounded-2xl px-3 py-1.5 shadow-2xs self-start sm:self-auto">
+            <a href="{{ route('teacher.journals.index', ['date' => $prevWeekDate]) }}" 
+               class="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors" 
+               title="Minggu Sebelumnya">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </a>
+
+            <div class="text-center px-2">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {{ $isCurrentWeek ? 'Minggu Berjalan' : 'Riwayat Minggu' }}
+              </div>
+              <div class="text-xs font-bold text-slate-700 whitespace-nowrap">
+                {{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}
+              </div>
+            </div>
+
+            <a href="{{ route('teacher.journals.index', ['date' => $nextWeekDate]) }}" 
+               class="p-1 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors" 
+               title="Minggu Berikutnya">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+
+            @if(!$isCurrentWeek)
+              <a href="{{ route('teacher.journals.index') }}" 
+                 class="ml-1 text-[11px] font-semibold text-blueprim hover:underline px-2 py-0.5 rounded-lg bg-blue-50 border border-blue-200 whitespace-nowrap">
+                Minggu Ini
+              </a>
+            @endif
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5" id="absensiKelasGrid">
@@ -122,31 +155,61 @@
               $studentCount = $classModel?->students_count ?? $classModel?->enrollments?->count() ?? 36;
               $semesterName = $assignment->semester?->semester_number == 1 ? 'Gasal' : 'Genap';
               $academicYear = $assignment->semester?->academicYear?->name ?? '2025/2026';
-              $todayDayNumber = \Carbon\Carbon::parse($selectedDate ?? now())->dayOfWeekIso;
-              $todaySchedule = $assignment->schedules->firstWhere('day_of_week', $todayDayNumber);
+
+              $summary = $assignment->schedule_summary ?? [
+                'primary_date' => $selectedDate ?? now()->format('Y-m-d'),
+                'status_code' => 'no_schedule',
+                'status_label' => 'Belum Ada Jadwal',
+                'badge_class' => 'bg-slate-100 text-slate-600 border-slate-200',
+                'is_today' => false,
+                'is_overdue' => false,
+                'all_schedules' => [],
+              ];
+              $targetDate = $summary['primary_date'];
+
+              // Border accents depending on status
+              $cardBorderClass = match($summary['status_code']) {
+                'overdue' => 'border-amber-300 ring-2 ring-amber-400/20 hover:border-amber-500 bg-gradient-to-br from-amber-50/20 to-white shadow-xs',
+                'today_unfilled' => 'border-emerald-300 ring-2 ring-emerald-400/25 hover:border-emerald-500 bg-gradient-to-br from-emerald-50/20 to-white shadow-xs',
+                'today_filled' => 'border-emerald-200 hover:border-emerald-400',
+                default => 'border-bluelight/70 hover:border-blueprim hover:shadow-md',
+              };
             @endphp
-            <a href="{{ route('teacher.journals.index', ['assignment_id' => $assignment->id, 'date' => $selectedDate ?? now()->format('Y-m-d')]) }}" 
-               class="kelas-card block group p-5 md:p-6 rounded-2xl bg-white border border-bluelight/70 hover:border-blueprim hover:shadow-md transition-all text-left" 
+            <a href="{{ route('teacher.journals.index', ['assignment_id' => $assignment->id, 'date' => $targetDate]) }}" 
+               class="kelas-card block group p-5 md:p-6 rounded-2xl bg-white border {{ $cardBorderClass }} transition-all text-left relative overflow-hidden" 
                data-group="absensi" data-kode="{{ $className }}">
-              <div class="flex items-center justify-between mb-3">
-                <div class="crud-card__icon group-hover:bg-blueprim group-hover:text-white transition-colors bg-blue-50 text-blueprim">
+              
+              @if($summary['is_overdue'])
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-rose-400"></div>
+              @elseif($summary['status_code'] === 'today_unfilled')
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-teal-400"></div>
+              @endif
+
+              <div class="flex items-start justify-between gap-2 mb-3">
+                <div class="crud-card__icon group-hover:bg-blueprim group-hover:text-white transition-colors bg-blue-50 text-blueprim mt-0.5">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
                 </div>
-                @if($todaySchedule)
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Ada Jam Hari Ini (Jam {{ $todaySchedule->startPeriod?->period_number }} sd {{ $todaySchedule->endPeriod?->period_number }})
+
+                <!-- Schedule / Missed / Filled Badge -->
+                <div class="flex flex-col items-end">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border {{ $summary['badge_class'] }} shadow-2xs">
+                    @if($summary['status_code'] === 'today_unfilled')
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    @elseif($summary['status_code'] === 'overdue')
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                    @endif
+                    {{ $summary['status_label'] }}
                   </span>
-                @else
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-bluesoft group-hover:text-blueprim transition-colors"><polyline points="9 18 15 12 9 6"/></svg>
-                @endif
+                </div>
               </div>
-              <div class="font-heading font-bold text-bluedark text-base md:text-lg mb-1">
+
+              <div class="font-heading font-bold text-bluedark text-base md:text-lg mb-1 group-hover:text-blueprim transition-colors">
                 {{ $className }}
               </div>
               <div class="text-xs md:text-sm text-bluedark/60 mb-3">
                 {{ $deptName }}
               </div>
+
               <div class="kelas-card__meta mb-3">
                 <span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> 
@@ -157,9 +220,16 @@
                   {{ $assignment->weekly_hours ?? 4 }} Jam / Mgg
                 </span>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="badge badge-blue">{{ $semesterName }}</span>
-                <span class="badge badge-gray">{{ $academicYear }}</span>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <div class="flex items-center gap-1.5">
+                  <span class="badge badge-blue text-[11px]">{{ $semesterName }}</span>
+                  <span class="badge badge-gray text-[11px]">{{ $academicYear }}</span>
+                </div>
+                <span class="font-medium text-blueprim group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-0.5 text-xs">
+                  Buka Jurnal
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </span>
               </div>
             </a>
           @empty
@@ -171,6 +241,15 @@
       </div>
     </div>
   @else
+    @php
+      $isFutureDate = ($selectedDate > now()->format('Y-m-d'));
+      $isTodayDate = ($selectedDate === now()->format('Y-m-d'));
+      $isPastDate = ($selectedDate < now()->format('Y-m-d'));
+      $selectedDayOfWeek = \Carbon\Carbon::parse($selectedDate)->dayOfWeekIso;
+      $matchedSchedule = $selectedAssignment->schedules->firstWhere('day_of_week', $selectedDayOfWeek);
+      $hasFilledJournalToday = $journals->where('created_by', auth()->user()->teacherProfile?->id)->isNotEmpty();
+    @endphp
+
     <!-- Step 2: Detail Journal & Form Absensi -->
     <div class="step-panel active" data-panel="2">
       <p class="text-sm text-bluedark/60 mb-4 flex items-center gap-1.5">
@@ -181,6 +260,24 @@
         <span class="text-slate-400">/</span> 
         <span class="font-semibold text-bluedark" id="absensiBreadcrumb">{{ $selectedAssignment->schoolClass?->name }}</span>
       </p>
+
+      @if($isFutureDate)
+        <div class="mb-5 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-sm flex items-start gap-3 shadow-2xs">
+          <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          <div>
+            <span class="font-bold block">Tanggal di Masa Depan ({{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd, D MMMM Y') }})</span>
+            <span class="text-xs text-amber-800/80">Pengisian jurnal kelas hanya dapat dilakukan pada hari pelaksanaan mengajar atau untuk melengkapi jurnal yang terlewat. Form pengisian dinonaktifkan untuk tanggal di masa depan.</span>
+          </div>
+        </div>
+      @elseif($isPastDate && ! $hasFilledJournalToday)
+        <div class="mb-5 p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 text-sm flex items-start gap-3 shadow-2xs">
+          <svg class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <div>
+            <span class="font-bold block">Melengkapi Jurnal Terlewat ({{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd, D MMMM Y') }})</span>
+            <span class="text-xs text-indigo-800/80">Anda sedang membuka tanggal jadwal lampau. Silakan isi form di bawah untuk melengkapi jurnal dan absensi mengajar yang belum sempat diisi.</span>
+          </div>
+        </div>
+      @endif
 
 
       <!-- Panel Journal Table -->
@@ -194,6 +291,11 @@
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                 1 Hari ({{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd') }})
               </span>
+              @if($matchedSchedule)
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  Jadwal: Jam {{ $matchedSchedule->startPeriod?->period_number }} sd {{ $matchedSchedule->endPeriod?->period_number }}
+                </span>
+              @endif
             </div>
             <p class="text-xs md:text-sm text-bluedark/60 mt-0.5">
               {{ $selectedAssignment->schoolClass?->department?->name ?? 'Rekayasa Perangkat Lunak' }} - {{ $selectedAssignment->semester?->semester_number == 1 ? 'Gasal' : 'Genap' }} {{ $selectedAssignment->semester?->academicYear?->name ?? '2026/2027' }} &middot; 
@@ -226,6 +328,7 @@
                 <th rowspan="3" class="th-navy th-left" style="min-width: 190px;">Materi</th>
                 <th colspan="4" class="th-jumlah">Jumlah Siswa</th>
                 <th rowspan="3" class="th-navy th-left" style="min-width: 220px;">Keterangan</th>
+                <th rowspan="3" class="th-navy th-center whitespace-nowrap" style="width: 95px;">Aksi</th>
               </tr>
               <tr>
                 <th rowspan="2" class="th-hadir" style="width: 60px;">Hadir</th>
@@ -239,6 +342,36 @@
             </thead>
             <tbody id="journalTableBody" class="divide-y divide-slate-100 bg-white">
               @forelse($journals as $j)
+                @php
+                  $currentTeacherId = auth()->user()->teacherProfile?->id;
+                  $isOwner = $currentTeacherId && $j->created_by === $currentTeacherId;
+                  $editPayload = [
+                    'id' => $j->id,
+                    'start_period_id' => $j->start_period_id,
+                    'end_period_id' => $j->end_period_id,
+                    'start_period_number' => $j->startPeriod?->period_number ?? '1',
+                    'end_period_number' => $j->endPeriod?->period_number ?? '2',
+                    'material' => $j->material,
+                    'notes' => trim(preg_replace('/Hadir:\s*\d+\s*\|\s*Sakit:\s*\d+\s*\|\s*Izin:\s*\d+\s*\|\s*Alpha:\s*\d+/i', '', $j->notes ?? '')),
+                    'hadir_count' => $j->hadir_count,
+                    'sakit_count' => $j->sakit_count,
+                    'izin_count' => $j->izin_count,
+                    'alpha_count' => $j->alpha_count,
+                    'update_url' => route('teacher.journals.update', $j->id),
+                    'attendances' => $j->attendances
+                      ->filter(fn($att) => $att->status !== \App\Enums\AttendanceStatus::Present)
+                      ->map(fn($att) => [
+                        'student_id' => $att->student_id,
+                        'status' => match($att->status) {
+                          \App\Enums\AttendanceStatus::Sick => 'SAKIT',
+                          \App\Enums\AttendanceStatus::Permit => 'IZIN',
+                          \App\Enums\AttendanceStatus::Absent => 'ALPHA',
+                          default => 'HADIR',
+                        },
+                        'note' => $att->note ?? '',
+                      ])->values(),
+                  ];
+                @endphp
                 <tr class="hover:bg-blue-50/30 transition-colors">
                   <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-bluedark text-center align-middle">
                     @php
@@ -353,10 +486,36 @@
                       </div>
                     @endif
                   </td>
+                  <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                    @if($isOwner)
+                      <div class="inline-flex items-center gap-1.5">
+                        <button type="button" 
+                                class="btn-edit-journal p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors shadow-2xs"
+                                title="Edit Jurnal"
+                                data-journal='@json($editPayload)'>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <form action="{{ route('teacher.journals.destroy', $j->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data jurnal jam pelajaran ini?')" class="inline-block">
+                          @csrf
+                          @method('DELETE')
+                          <button type="submit" 
+                                  class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors shadow-2xs"
+                                  title="Hapus Jurnal">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </button>
+                        </form>
+                      </div>
+                    @else
+                      <span class="inline-flex items-center gap-1 text-[11px] text-slate-400 font-medium" title="Hanya guru pembuat yang dapat mengedit/menghapus">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        Terkunci
+                      </span>
+                    @endif
+                  </td>
                 </tr>
               @empty
                 <tr>
-                  <td colspan="10" class="text-center py-10 text-xs text-slate-400">
+                  <td colspan="11" class="text-center py-10 text-xs text-slate-400">
                     Belum ada data jurnal kelas pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd, D MMMM Y') }}. Silakan isi form absensi di bawah.
                   </td>
                 </tr>
@@ -367,15 +526,27 @@
       </div>
 
       <!-- Form Block: Manajemen Absensi (Matching Image 2) -->
-      <div class="rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+      <div class="rounded-2xl overflow-hidden shadow-sm border border-slate-200" id="cardManajemenAbsensi">
         <!-- Deep Blue Header Bar -->
-        <div class="bg-[#0D47A1] text-white p-5">
-          <h3 class="font-heading font-bold text-lg text-white">Manajemen Absensi</h3>
-          <p class="text-xs text-blue-100 mt-0.5">Isi form berikut untuk memanajemen kolom absensi pada journal kelas</p>
+        <div class="bg-[#0D47A1] text-white p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h3 class="font-heading font-bold text-lg text-white" id="formCardTitle">Manajemen Absensi</h3>
+              <span id="formEditBadge" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-amber-950 uppercase tracking-wide">
+                Mode Edit
+              </span>
+            </div>
+            <p class="text-xs text-blue-100 mt-0.5" id="formCardDesc">Isi form berikut untuk memanajemen kolom absensi pada journal kelas</p>
+          </div>
+          <button type="button" id="btnCancelEdit" class="hidden btn btn-sm px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold items-center gap-1.5 transition-colors self-start sm:self-auto">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Batal Edit
+          </button>
         </div>
 
         <form action="{{ route('teacher.journals.store') }}" method="POST" id="formManajemenAbsensi" class="bg-white p-5 md:p-6 space-y-5">
           @csrf
+          <input type="hidden" name="_method" value="POST" id="formMethodInput">
           <input type="hidden" name="teaching_assignment_id" value="{{ $selectedAssignment->id }}">
           <input type="hidden" name="journal_date" id="journalDateInput" value="{{ $selectedDate }}">
 
@@ -474,7 +645,7 @@
               <div class="flex items-center justify-between mb-2.5">
                 <div>
                   <label class="f-label font-semibold text-slate-800 text-sm mb-0">Keterangan Siswa Tidak Hadir</label>
-                  <p class="text-[11px] text-slate-500">Pilih siswa yang Sakit, Izin, atau Alpha (jika ada)</p>
+                  <p class="text-[11px] text-slate-500">Pilih siswa yang Sakit, Izin, atau Alpha beserta keterangannya (opsional)</p>
                 </div>
                 <!-- Tombol Tambah Siswa (+ TIDAK DOUBLE) -->
                 <button type="button" id="btnAddStudentRow" 
@@ -482,6 +653,14 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                   <span>Tambah Siswa</span>
                 </button>
+              </div>
+
+              <!-- Header label columns for desktop -->
+              <div id="keteranganHeaderCols" class="hidden md:grid md:grid-cols-[1.5fr_1fr_1.8fr_auto] gap-2.5 px-3 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-slate-100/70 rounded-xl mb-2">
+                <div>Siswa</div>
+                <div>Status</div>
+                <div>Keterangan / Alasan (Opsional)</div>
+                <div class="w-8 text-center">Hapus</div>
               </div>
 
               <!-- Container baris siswa tidak hadir -->
@@ -503,9 +682,11 @@
             <button type="reset" id="btnResetForm" class="btn btn-outline px-5 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 font-medium text-sm">
               Reset
             </button>
-            <button type="submit" class="btn btn-primary px-6 py-2.5 rounded-xl bg-[#0284C7] hover:bg-[#0369a1] text-white font-semibold text-sm shadow-sm inline-flex items-center gap-2">
+            <button type="submit" id="btnSubmitForm" 
+                    @if($isFutureDate) disabled @endif
+                    class="btn btn-primary px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm inline-flex items-center gap-2 {{ $isFutureDate ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-75' : 'bg-[#0284C7] hover:bg-[#0369a1] text-white' }}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Simpan Journal
+              <span id="btnSubmitText">{{ $isFutureDate ? 'Belum Dapat Diisi' : 'Simpan Journal' }}</span>
             </button>
           </div>
         </form>
@@ -539,15 +720,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
   let rowIndex = 0;
 
+  const headerCols = document.getElementById('keteranganHeaderCols');
+  const formCardTitle = document.getElementById('formCardTitle');
+  const formCardDesc = document.getElementById('formCardDesc');
+  const formEditBadge = document.getElementById('formEditBadge');
+  const btnCancelEdit = document.getElementById('btnCancelEdit');
+  const formMethodInput = document.getElementById('formMethodInput');
+  const formManajemenAbsensi = document.getElementById('formManajemenAbsensi');
+  const btnSubmitText = document.getElementById('btnSubmitText');
+  const startPeriodSelect = document.getElementById('startPeriodSelect');
+  const endPeriodSelect = document.getElementById('endPeriodSelect');
+  const defaultAction = "{{ route('teacher.journals.store') }}";
+  const isFutureDate = @json($isFutureDate ?? false);
+
+  if (isFutureDate) {
+    if (btnAdd) {
+      btnAdd.disabled = true;
+      btnAdd.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    if (btnSync) {
+      btnSync.disabled = true;
+      btnSync.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    if (btnReset) {
+      btnReset.disabled = true;
+      btnReset.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    if (formManajemenAbsensi) {
+      formManajemenAbsensi.querySelectorAll('input:not([type="hidden"]), select, textarea').forEach(el => {
+        el.disabled = true;
+      });
+      formManajemenAbsensi.addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Pengisian jurnal tidak dapat dilakukan untuk tanggal di masa depan.');
+      });
+    }
+  }
+
   function renderRow(selectedStudentId = '', selectedStatus = 'IZIN', studentNote = '') {
     if (emptyNotice) {
       emptyNotice.classList.add('hidden');
+    }
+    if (headerCols) {
+      headerCols.classList.remove('hidden');
     }
 
     const rowId = `keterangan-row-${rowIndex++}`;
     const rowDiv = document.createElement('div');
     rowDiv.id = rowId;
-    rowDiv.className = 'keterangan-row grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-3 items-center p-2.5 rounded-xl bg-slate-50 border border-slate-200 transition-all';
+    rowDiv.className = 'keterangan-row grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1.8fr_auto] gap-2.5 items-center p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs transition-all';
 
     // Student Select Options
     let studentOptions = '<option value="" disabled ' + (!selectedStudentId ? 'selected' : '') + '>-- Pilih Siswa --</option>';
@@ -560,24 +781,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const isIzin = selectedStatus.toUpperCase() === 'IZIN' ? 'selected' : '';
     const isSakit = selectedStatus.toUpperCase() === 'SAKIT' ? 'selected' : '';
     const isAlpha = selectedStatus.toUpperCase() === 'ALPHA' ? 'selected' : '';
+    const safeNote = studentNote ? String(studentNote).replace(/"/g, '&quot;') : '';
 
     rowDiv.innerHTML = `
       <div>
-        <select name="absences[${rowIndex}][student_id]" class="f-select student-select w-full bg-white text-xs" required>
+        <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Siswa</label>
+        <select name="absences[${rowIndex}][student_id]" class="f-select student-select w-full bg-slate-50 text-xs" required>
           ${studentOptions}
         </select>
       </div>
       <div>
-        <select name="absences[${rowIndex}][status]" class="f-select status-select w-full bg-white text-xs font-medium" required>
+        <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Status</label>
+        <select name="absences[${rowIndex}][status]" class="f-select status-select w-full bg-slate-50 text-xs font-medium" required>
           <option value="IZIN" ${isIzin}>Izin</option>
           <option value="SAKIT" ${isSakit}>Sakit</option>
           <option value="ALPHA" ${isAlpha}>Alpha</option>
         </select>
-        <input type="hidden" name="absences[${rowIndex}][note]" value="${studentNote || ''}">
       </div>
-      <div class="flex justify-end">
+      <div>
+        <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Keterangan / Alasan (Opsional)</label>
+        <input type="text" name="absences[${rowIndex}][note]" value="${safeNote}" placeholder="Keterangan (opsional, cth: Sakit demam, urusan keluarga)" class="f-input note-input w-full bg-slate-50 text-xs">
+      </div>
+      <div class="flex justify-end md:justify-center">
         <button type="button" class="btn-remove-row p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Siswa">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="3 6 5 6 21 6"/>
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
             <line x1="10" y1="11" x2="10" y2="17"/>
@@ -594,8 +821,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnRemove = rowDiv.querySelector('.btn-remove-row');
     btnRemove.addEventListener('click', function() {
       rowDiv.remove();
-      if (container.querySelectorAll('.keterangan-row').length === 0 && emptyNotice) {
-        emptyNotice.classList.remove('hidden');
+      if (container.querySelectorAll('.keterangan-row').length === 0) {
+        if (emptyNotice) emptyNotice.classList.remove('hidden');
+        if (headerCols) headerCols.classList.add('hidden');
       }
       recalculateCounts();
     });
@@ -646,6 +874,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Entire class was Present or no specific students recorded
         container.innerHTML = '';
         if (emptyNotice) emptyNotice.classList.remove('hidden');
+        if (headerCols) headerCols.classList.add('hidden');
 
         if (inputHadir) inputHadir.value = previousInfo.hadir_count !== undefined ? previousInfo.hadir_count : totalStudents;
         if (inputSakit) inputSakit.value = previousInfo.sakit_count !== undefined ? previousInfo.sakit_count : 0;
@@ -687,12 +916,93 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Edit Jurnal Mode Handlers
+  function switchToEdit(journalData) {
+    if (!journalData) return;
+
+    if (formMethodInput) formMethodInput.value = 'PUT';
+    if (formManajemenAbsensi) formManajemenAbsensi.action = journalData.update_url;
+    if (formCardTitle) formCardTitle.textContent = `Edit Jurnal Kelas (Jam ${journalData.start_period_number} sd ${journalData.end_period_number})`;
+    if (formCardDesc) formCardDesc.textContent = 'Perbarui data materi, catatan tambahan, dan absensi untuk jam pelajaran ini';
+    if (formEditBadge) formEditBadge.classList.remove('hidden');
+    if (btnCancelEdit) {
+      btnCancelEdit.classList.remove('hidden');
+      btnCancelEdit.classList.add('inline-flex');
+    }
+    if (btnSubmitText) btnSubmitText.textContent = 'Simpan Perubahan';
+
+    if (startPeriodSelect) startPeriodSelect.value = journalData.start_period_id;
+    if (endPeriodSelect) endPeriodSelect.value = journalData.end_period_id;
+
+    const materialInput = formManajemenAbsensi.querySelector('input[name="material"]');
+    if (materialInput) materialInput.value = journalData.material || '';
+
+    const notesInput = formManajemenAbsensi.querySelector('textarea[name="notes"]');
+    if (notesInput) notesInput.value = journalData.notes || '';
+
+    if (inputHadir) inputHadir.value = journalData.hadir_count;
+    if (inputSakit) inputSakit.value = journalData.sakit_count;
+    if (inputIzin) inputIzin.value = journalData.izin_count;
+    if (inputAlpha) inputAlpha.value = journalData.alpha_count;
+
+    container.innerHTML = '';
+    if (journalData.attendances && journalData.attendances.length > 0) {
+      journalData.attendances.forEach(att => {
+        renderRow(att.student_id, att.status, att.note);
+      });
+    } else {
+      if (emptyNotice) emptyNotice.classList.remove('hidden');
+      if (headerCols) headerCols.classList.add('hidden');
+    }
+
+    const card = document.getElementById('cardManajemenAbsensi');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  function cancelEdit() {
+    if (formMethodInput) formMethodInput.value = 'POST';
+    if (formManajemenAbsensi) {
+      formManajemenAbsensi.action = defaultAction;
+      formManajemenAbsensi.reset();
+    }
+    if (formCardTitle) formCardTitle.textContent = 'Manajemen Absensi';
+    if (formCardDesc) formCardDesc.textContent = 'Isi form berikut untuk memanajemen kolom absensi pada journal kelas';
+    if (formEditBadge) formEditBadge.classList.add('hidden');
+    if (btnCancelEdit) {
+      btnCancelEdit.classList.add('hidden');
+      btnCancelEdit.classList.remove('inline-flex');
+    }
+    if (btnSubmitText) btnSubmitText.textContent = 'Simpan Journal';
+
+    container.innerHTML = '';
+    if (emptyNotice) emptyNotice.classList.remove('hidden');
+    if (headerCols) headerCols.classList.add('hidden');
+    if (inputHadir) inputHadir.value = totalStudents;
+    if (inputSakit) inputSakit.value = 0;
+    if (inputIzin) inputIzin.value = 0;
+    if (inputAlpha) inputAlpha.value = 0;
+  }
+
+  if (btnCancelEdit) {
+    btnCancelEdit.addEventListener('click', cancelEdit);
+  }
+
+  document.querySelectorAll('.btn-edit-journal').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const payload = JSON.parse(this.dataset.journal || '{}');
+      switchToEdit(payload);
+    });
+  });
+
   // Reset Form
   if (btnReset) {
     btnReset.addEventListener('click', function() {
       setTimeout(() => {
         container.innerHTML = '';
         if (emptyNotice) emptyNotice.classList.remove('hidden');
+        if (headerCols) headerCols.classList.add('hidden');
         if (feedbackAlert) feedbackAlert.classList.add('hidden');
         if (inputHadir) inputHadir.value = totalStudents;
         if (inputSakit) inputSakit.value = 0;

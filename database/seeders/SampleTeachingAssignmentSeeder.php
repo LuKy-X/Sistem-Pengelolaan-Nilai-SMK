@@ -25,6 +25,7 @@ use App\Models\Semester;
 use App\Models\Subject;
 use App\Models\TeacherProfile;
 use App\Models\TeachingAssignment;
+use App\Models\TeachingSchedule;
 use Illuminate\Database\Seeder;
 
 class SampleTeachingAssignmentSeeder extends Seeder
@@ -404,6 +405,52 @@ class SampleTeachingAssignmentSeeder extends Seeder
                     ['status' => AttendanceStatus::Permit, 'note' => 'Izin dispensasi OSIS']
                 );
             }
+        }
+
+        // SEED TEACHING SCHEDULES FOR GURU AGUS
+        // 1. Matematika XII RPL 1: Kamis (Day 4), Jam 3 - 4
+        if ($assign1 && $period3 && $period4) {
+            TeachingSchedule::firstOrCreate(
+                [
+                    'teaching_assignment_id' => $assign1->id,
+                    'day_of_week' => 4, // Kamis
+                ],
+                [
+                    'start_period_id' => $period3->id,
+                    'end_period_id' => $period4->id,
+                    'room' => 'R. Lab RPL 1',
+                ]
+            );
+        }
+
+        // 2. Matematika XII RPL 2: Jumat (Day 5 - Hari Ini!), Jam 1 - 4
+        if ($assign2 && $period1 && $period4) {
+            TeachingSchedule::firstOrCreate(
+                [
+                    'teaching_assignment_id' => $assign2->id,
+                    'day_of_week' => 5, // Jumat
+                ],
+                [
+                    'start_period_id' => $period1->id,
+                    'end_period_id' => $period4->id,
+                    'room' => 'R. Lab RPL 2',
+                ]
+            );
+        }
+
+        // 3. Matematika XI RPL 1: Rabu (Day 3 - Terlewat/Belum Diisi), Jam 1 - 4
+        if ($assign3 && $period1 && $period4) {
+            TeachingSchedule::firstOrCreate(
+                [
+                    'teaching_assignment_id' => $assign3->id,
+                    'day_of_week' => 3, // Rabu
+                ],
+                [
+                    'start_period_id' => $period1->id,
+                    'end_period_id' => $period4->id,
+                    'room' => 'R. XI RPL 1',
+                ]
+            );
         }
     }
 }

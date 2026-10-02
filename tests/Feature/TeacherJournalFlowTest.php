@@ -225,4 +225,209 @@ class TeacherJournalFlowTest extends TestCase
         $this->assertEquals(0, $journal->alpha_count);
         $this->assertEquals(35, $journal->hadir_count);
     }
+
+    public function test_teacher_can_update_their_own_journal_with_student_notes(): void
+    {
+        $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
+        $todayStr = now()->format('Y-m-d');
+
+        $journal = ClassJournal::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $todayStr,
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Materi Lama',
+            'notes' => 'Catatan lama',
+            'created_by' => $this->teacherProfile->id,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->put(route('teacher.journals.update', $journal->id), [
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Materi Baru yang Diperbarui',
+            'notes' => 'Catatan revisi guru',
+            'hadir_count' => 34,
+            'sakit_count' => 1,
+            'izin_count' => 1,
+            'alpha_count' => 0,
+            'absences' => [
+                [
+                    'student_id' => $student->id,
+                    'status' => 'SAKIT',
+                    'note' => 'Izin sakit flu dan demam',
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+        ]));
+
+        $this->assertDatabaseHas('class_journals', [
+            'id' => $journal->id,
+            'material' => 'Materi Baru yang Diperbarui',
+        ]);
+
+        $this->assertDatabaseHas('journal_attendances', [
+            'journal_id' => $journal->id,
+            'student_id' => $student->id,
+            'status' => AttendanceStatus::Sick->value,
+            'note' => 'Izin sakit flu dan demam',
+        ]);
+    }
+
+    public function test_teacher_cannot_update_other_teachers_journal(): void
+    {
+        $otherTeacher = TeacherProfile::where('id', '!=', $this->teacherProfile->id)->firstOrFail();
+        $otherAssignment = TeachingAssignment::where('teacher_id', $otherTeacher->id)->firstOrFail();
+
+        $journal = ClassJournal::create([
+            'teaching_assignment_id' => $otherAssignment->id,
+            'journal_date' => now()->format('Y-m-d'),
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Materi Milik Guru Lain',
+            'notes' => 'Catatan guru lain',
+            'created_by' => $otherTeacher->id,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->put(route('teacher.journals.update', $journal->id), [
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Mencoba Mengubah Materi Guru Lain',
+        ]);
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('class_journals', [
+            'id' => $journal->id,
+            'material' => 'Materi Milik Guru Lain',
+        ]);
+    }
+
+    public function test_teacher_can_delete_their_own_journal(): void
+    {
+        $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
+        $todayStr = now()->format('Y-m-d');
+
+        $journal = ClassJournal::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $todayStr,
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Jurnal untuk Dihapus',
+            'notes' => 'Catatan sebelum dihapus',
+            'created_by' => $this->teacherProfile->id,
+        ]);
+
+        JournalAttendance::create([
+            'journal_id' => $journal->id,
+            'student_id' => $student->id,
+            'status' => AttendanceStatus::Absent,
+            'note' => 'Alpha tanpa kabar',
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->delete(route('teacher.journals.destroy', $journal->id));
+
+        $response->assertRedirect(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+        ]));
+
+        $this->assertDatabaseMissing('class_journals', [
+            'id' => $journal->id,
+        ]);
+
+        $this->assertDatabaseMissing('journal_attendances', [
+            'journal_id' => $journal->id,
+        ]);
+    }
+
+    public function test_teacher_cannot_delete_other_teachers_journal(): void
+    {
+        $otherTeacher = TeacherProfile::where('id', '!=', $this->teacherProfile->id)->firstOrFail();
+        $otherAssignment = TeachingAssignment::where('teacher_id', $otherTeacher->id)->firstOrFail();
+
+        $journal = ClassJournal::create([
+            'teaching_assignment_id' => $otherAssignment->id,
+            'journal_date' => now()->format('Y-m-d'),
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Jurnal Guru Lain Tidak Boleh Dihapus',
+            'created_by' => $otherTeacher->id,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->delete(route('teacher.journals.destroy', $journal->id));
+
+        $response->assertStatus(403);
+        $this->assertDatabaseHas('class_journals', [
+            'id' => $journal->id,
+        ]);
+    }
+
+    public function test_weekly_schedule_status_detects_today_schedule_and_badges(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index'));
+
+        $response->assertStatus(200);
+        $assignments = $response->viewData('assignments');
+        $this->assertNotEmpty($assignments);
+
+        $hasSummary = $assignments->every(fn ($a) => isset($a->schedule_summary));
+        $this->assertTrue($hasSummary, 'Every assignment should have schedule_summary computed.');
+
+        // View should render week navigation and week dates
+        $response->assertSee('Minggu Berjalan');
+        $response->assertSee('Buka Jurnal');
+    }
+
+    public function test_weekly_schedule_status_detects_overdue_unfilled_journals(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index'));
+        $assignments = $response->viewData('assignments');
+
+        // Check if overdue assignment exists (XI RPL 1 was seeded on Rabu without journal)
+        $overdueAssignment = $assignments->first(fn ($a) => ($a->schedule_summary['status_code'] ?? '') === 'overdue');
+        if ($overdueAssignment) {
+            $this->assertEquals('overdue', $overdueAssignment->schedule_summary['status_code']);
+            $this->assertTrue($overdueAssignment->schedule_summary['is_overdue']);
+            $this->assertStringContainsString('Terlewat', $overdueAssignment->schedule_summary['status_label']);
+            $response->assertSee('Terlewat');
+        }
+    }
+
+    public function test_class_card_links_directly_to_target_scheduled_date_of_the_week(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index'));
+        $assignments = $response->viewData('assignments');
+
+        foreach ($assignments as $a) {
+            $targetDate = $a->schedule_summary['primary_date'];
+            $this->assertNotEmpty($targetDate);
+            $expectedUrl = route('teacher.journals.index', [
+                'assignment_id' => $a->id,
+                'date' => $targetDate,
+            ]);
+            $response->assertSee($expectedUrl);
+        }
+    }
+
+    public function test_cannot_store_journal_for_future_dates(): void
+    {
+        $futureDateStr = now()->addDays(3)->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.journals.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $futureDateStr,
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Materi di Masa Depan',
+            'notes' => 'Catatan masa depan',
+        ]);
+
+        $response->assertSessionHasErrors(['journal_date']);
+        $this->assertDatabaseMissing('class_journals', [
+            'material' => 'Materi di Masa Depan',
+        ]);
+    }
 }

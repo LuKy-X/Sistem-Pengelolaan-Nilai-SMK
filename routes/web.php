@@ -357,6 +357,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/create', [JournalController::class, 'create'])->name('create');
             Route::post('/', [JournalController::class, 'store'])->name('store');
             Route::get('/{journal}', [JournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [JournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [JournalController::class, 'destroy'])->name('destroy');
         });
 
         // Profil & Pengaturan Guru
