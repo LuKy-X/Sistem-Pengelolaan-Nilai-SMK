@@ -470,7 +470,7 @@ class CmsController extends Controller
         $period = AdmissionPeriod::create($validated);
 
         return redirect()->route('admin.cms.ppdb.periods.manage', $period)
-            ->with('success', "Gelombang '{$period->title}' berhasil dibuat. Silakan atur jadwal, jalur seleksi, persyaratan, dan biaya di bawah ini.");
+            ->with('success', "Gelombang '{$period->title}' berhasil dibuat. Silakan atur jadwal, jalur seleksi, dan persyaratan berkas di bawah ini.");
     }
 
     public function manageAdmissionPeriod(AdmissionPeriod $period, Request $request): View
@@ -485,6 +485,9 @@ class CmsController extends Controller
 
         $academicYears = AcademicYear::latest('start_date')->get();
         $tab = $request->query('tab', 'period');
+        if (! in_array($tab, ['period', 'schedules', 'paths', 'requirements'])) {
+            $tab = 'period';
+        }
 
         return view('admin.cms.ppdb.manage', compact('period', 'academicYears', 'tab'));
     }
@@ -512,7 +515,7 @@ class CmsController extends Controller
         $period->delete();
 
         return redirect()->route('admin.cms.ppdb')
-            ->with('success', "Gelombang '{$title}' beserta seluruh data jadwal, jalur, persyaratan, dan biaya berhasil dihapus.");
+            ->with('success', "Gelombang '{$title}' beserta seluruh data jadwal, jalur, dan persyaratan berkas berhasil dihapus.");
     }
 
     public function togglePeriodStatus(Request $request, AdmissionPeriod $period): JsonResponse|RedirectResponse

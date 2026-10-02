@@ -24,15 +24,6 @@ use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
-use App\Http\Controllers\Student\AppealController as StudentAppealController;
-use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
-use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
-use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
-use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
-use App\Http\Controllers\Student\GradeController as StudentGradeController;
-use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
-use App\Http\Controllers\Student\ProfileController as StudentProfileController;
-use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -43,6 +34,15 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
+use App\Http\Controllers\Student\AppealController as StudentAppealController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
+use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
+use App\Http\Controllers\Student\GradeController as StudentGradeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -225,6 +225,8 @@ Route::middleware('auth')->group(function () {
         // Monitoring Buku Nilai
         Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
         Route::get('/grades/{gradebook}', [GradesController::class, 'show'])->name('grades.show');
+        Route::get('/grades/{gradebook}/export/excel', [GradesController::class, 'exportExcel'])->name('grades.export.excel');
+        Route::get('/grades/{gradebook}/export/pdf', [GradesController::class, 'exportPdf'])->name('grades.export.pdf');
 
         // Layanan BK & Kedisiplinan
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');

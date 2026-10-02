@@ -7,7 +7,7 @@
     <x-public.page-header
         eyebrow="Penerimaan Peserta Didik Baru"
         title="PPDB"
-        description="Informasi jadwal, jalur pendaftaran, persyaratan, dan biaya pendaftaran peserta didik baru."
+        description="Informasi jadwal, jalur seleksi, dan persyaratan berkas penerimaan peserta didik baru."
         :breadcrumb="['Beranda' => route('public.home'), 'PPDB' => null]" />
 
     <section class="pt-8 sm:pt-10">
@@ -133,32 +133,20 @@
                                         </div>
                                     @endif
 
-                                    @if ($period->feeItems->isNotEmpty())
-                                        <div>
-                                            <h3 class="font-heading font-semibold text-base text-bluedark">Biaya Pendaftaran</h3>
-                                            <ul class="mt-4 divide-y divide-bluelight">
-                                                @foreach ($period->feeItems as $fee)
-                                                    <li class="flex items-center justify-between gap-4 py-3">
-                                                        <div class="min-w-0">
-                                                            <p class="text-sm text-bluedark/75">{{ $fee->name }}</p>
-                                                            @if (filled($fee->description))
-                                                                <p class="text-xs text-bluedark/50 mt-0.5">{{ $fee->description }}</p>
-                                                            @endif
-                                                        </div>
-                                                        <span @class([
-                                                            'font-heading font-semibold text-sm shrink-0',
-                                                            'text-emerald-600' => $fee->is_free,
-                                                            'text-bluedark' => ! $fee->is_free,
-                                                        ])>
-                                                            {{ $fee->is_free
-                                                                ? 'Gratis'
-                                                                : 'Rp '.number_format((float) $fee->amount, 0, ',', '.') }}
-                                                        </span>
-                                                    </li>
-                                                @endforeach
-                                            </ul>
+                                    <div>
+                                        <h3 class="font-heading font-semibold text-base text-bluedark">Informasi Biaya</h3>
+                                        <div class="mt-4 p-5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 space-y-2.5">
+                                            <div class="flex items-center gap-2.5 text-emerald-800">
+                                                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                </div>
+                                                <span class="font-heading font-bold text-sm">Gratis (Bebas Biaya Pendaftaran)</span>
+                                            </div>
+                                            <p class="text-xs text-bluedark/70 leading-relaxed">
+                                                Sebagai sekolah negeri, seluruh rangkaian pelaksanaan Penerimaan Peserta Didik Baru (PPDB) di SMK Negeri 2 Karanganyar <strong>100% Bebas Biaya (Gratis)</strong> tanpa dipungut biaya pendaftaran apa pun.
+                                            </p>
                                         </div>
-                                    @endif
+                                    </div>
                                 </div>
 
                                 <div class="pt-6 border-t border-bluelight flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -185,7 +173,7 @@
 
     <x-public.cta-band
         title="Pendaftaran tahun pelajaran berikutnya segera dibuka"
-        description="Pantau jadwal, jalur pendaftaran, dan biaya terbaru langsung dari halaman PPDB sekolah."
+        description="Pantau jadwal pelaksanaan, jalur seleksi, dan persyaratan berkas terbaru langsung dari halaman PPDB sekolah."
         action-label="Lihat Semua Jurusan"
         :action-url="route('public.departments.index')"
         secondary-label="Konsultasi ke BKK"

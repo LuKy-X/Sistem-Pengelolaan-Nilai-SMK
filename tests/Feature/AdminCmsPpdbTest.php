@@ -78,7 +78,8 @@ class AdminCmsPpdbTest extends TestCase
         $response->assertSee('Jadwal Pendaftaran');
         $response->assertSee('Jalur Pendaftaran');
         $response->assertSee('Persyaratan');
-        $response->assertSee('Biaya Pendaftaran');
+        $response->assertDontSee('tab-btn-fees');
+        $response->assertDontSee('tab-content-fees');
     }
 
     public function test_admin_can_update_admission_period_info(): void

@@ -224,6 +224,77 @@ class ClassPromotionTest extends TestCase
         $this->assertEquals('COMPLETED', $enrollment->fresh()->status);
         $this->assertEquals('GRADUATED', $student->fresh()->status);
         $this->assertEquals('2026-06-30', $student->fresh()->graduation_date->format('Y-m-d'));
+        // Rombel kelas XII tetap aktif dalam kondisi kosong (0 siswa aktif)
+        $this->assertTrue((bool) $classXII->fresh()->is_active);
+        $this->assertEquals(0, $classXII->fresh()->enrollments()->where('status', 'ACTIVE')->count());
+    }
+
+    public function test_graduated_class_remains_active_and_can_be_reused_by_grade_eleven(): void
+    {
+        // 1. Kelas XII memiliki siswa yang kemudian diluluskan
+        $classXII = SchoolClass::create([
+            'academic_year_id' => $this->year1->id,
+            'department_id' => $this->deptRpl->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-RPL-1',
+            'name' => 'XII RPL 1',
+            'is_active' => true,
+        ]);
+        $studentXII = StudentProfile::factory()->create(['full_name' => 'Siswa Lulus', 'status' => 'ACTIVE']);
+        ClassEnrollment::create(['class_id' => $classXII->id, 'student_id' => $studentXII->id, 'start_date' => '2025-07-15', 'status' => 'ACTIVE']);
+
+        // Luluskan siswa kelas XII tanpa menonaktifkan rombel
+        $this->actingAs($this->adminUser)->post(route('admin.academic.classes.promote'), [
+            'source_class_id' => $classXII->id,
+            'action_type' => 'graduate',
+            'student_ids' => [$studentXII->id],
+            'promotion_date' => '2026-06-30',
+        ]);
+
+        $this->assertTrue((bool) $classXII->fresh()->is_active);
+        $this->assertEquals(0, $classXII->fresh()->enrollments()->where('status', 'ACTIVE')->count());
+
+        // 2. Sekarang cek untuk Kelas XI: fetch students-for-promotion
+        $classXI = SchoolClass::create([
+            'academic_year_id' => $this->year1->id,
+            'department_id' => $this->deptRpl->id,
+            'grade_level_id' => $this->levelXI->id,
+            'code' => 'XI-RPL-1',
+            'name' => 'XI RPL 1',
+            'is_active' => true,
+        ]);
+        $studentXI = StudentProfile::factory()->create(['full_name' => 'Adik Kelas', 'status' => 'ACTIVE']);
+        ClassEnrollment::create(['class_id' => $classXI->id, 'student_id' => $studentXI->id, 'start_date' => '2025-07-15', 'status' => 'ACTIVE']);
+
+        $response = $this->actingAs($this->adminUser)
+            ->getJson(route('admin.academic.classes.students-for-promotion', $classXI));
+
+        $response->assertOk();
+        $response->assertJsonFragment([
+            'id' => $classXII->id,
+            'name' => 'XII RPL 1',
+            'active_students_count' => 0,
+        ]);
+
+        // 3. Promosikan Kelas XI ke Kelas XII yang sudah kosong (re-use)
+        $promoteResponse = $this->actingAs($this->adminUser)->post(route('admin.academic.classes.promote'), [
+            'source_class_id' => $classXI->id,
+            'action_type' => 'existing',
+            'target_class_id' => $classXII->id,
+            'student_ids' => [$studentXI->id],
+            'promotion_date' => '2026-07-15',
+        ]);
+
+        $promoteResponse->assertRedirect(route('admin.academic.classes.index'));
+        $promoteResponse->assertSessionHas('success');
+
+        // Siswa XI sekarang aktif di kelas XII
+        $this->assertEquals('ACTIVE', ClassEnrollment::where('class_id', $classXII->id)->where('student_id', $studentXI->id)->value('status'));
+        $this->assertEquals(1, $classXII->fresh()->enrollments()->where('status', 'ACTIVE')->count());
+
+        // Siswa XI di kelas XI sudah COMPLETED (kelas XI kini kosong)
+        $this->assertEquals('COMPLETED', ClassEnrollment::where('class_id', $classXI->id)->where('student_id', $studentXI->id)->value('status'));
+        $this->assertEquals(0, $classXI->fresh()->enrollments()->where('status', 'ACTIVE')->count());
     }
 
     public function test_guest_cannot_promote_class(): void

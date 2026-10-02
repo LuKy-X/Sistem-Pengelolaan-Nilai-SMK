@@ -145,6 +145,7 @@ class ClassController extends Controller
         $availableTargetClasses = [];
         if ($nextLevel) {
             $availableTargetClasses = SchoolClass::with('academicYear')
+                ->withCount(['enrollments' => fn ($q) => $q->where('status', 'ACTIVE')])
                 ->where('grade_level_id', $nextLevel->id)
                 ->where('id', '!=', $class->id)
                 ->where('is_active', true)
@@ -156,6 +157,7 @@ class ClassController extends Controller
                     'code' => $tc->code,
                     'academic_year' => $tc->academicYear?->name,
                     'department_id' => $tc->department_id,
+                    'active_students_count' => $tc->enrollments_count,
                 ]);
         }
 
@@ -312,8 +314,12 @@ class ClassController extends Controller
         });
 
         if ($validated['action_type'] === 'graduate') {
+            $msg = ! empty($validated['deactivate_source_class'])
+                ? "Proses kelulusan berhasil! {$promotedCount} siswa dari {$sourceClass->name} telah dinyatakan lulus dan rombel dinonaktifkan."
+                : "Proses kelulusan berhasil! {$promotedCount} siswa dari {$sourceClass->name} telah dinyatakan lulus dan rombel kini dalam keadaan kosong (siap digunakan kembali).";
+
             return redirect()->route('admin.academic.classes.index')
-                ->with('success', "Proses kelulusan berhasil! {$promotedCount} siswa dari {$sourceClass->name} telah dinyatakan lulus.");
+                ->with('success', $msg);
         }
 
         $targetName = $targetClass?->name ?? 'kelas tujuan';

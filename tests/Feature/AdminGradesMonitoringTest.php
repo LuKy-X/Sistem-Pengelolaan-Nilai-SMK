@@ -172,12 +172,72 @@ class AdminGradesMonitoringTest extends TestCase
         $response->assertSee('90');
         $response->assertSee('85'); // Dynamically computed average: (80 + 90) / 2
         $response->assertSee('Rata-rata Kelas:');
-        $response->assertSee('Cetak Rekap');
+        $response->assertSee('Export Nilai');
+        $response->assertSee('Export ke PDF');
+        $response->assertSee('Export ke Excel');
 
         // Verify that teacher editing buttons are NOT present in read-only admin view
         $response->assertDontSee('Atur Kolom');
         $response->assertDontSee('Buka Penilaian');
         $response->assertDontSee('Manajemen Tugas');
+    }
+
+    public function test_admin_can_export_gradebook_to_excel(): void
+    {
+        $teacher = TeacherProfile::factory()->create(['user_id' => $this->teacherUser->id]);
+        $class = SchoolClass::factory()->create(['name' => 'X RPL 1']);
+        $subject = Subject::factory()->create(['name' => 'Dasar Pemrograman']);
+        $semester = Semester::factory()->create(['name' => 'Semester Gasal']);
+
+        $assignment = TeachingAssignment::create([
+            'teacher_id' => $teacher->id,
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'semester_id' => $semester->id,
+            'weekly_hours' => 4,
+        ]);
+
+        $gradebook = Gradebook::create([
+            'teaching_assignment_id' => $assignment->id,
+            'name' => 'Buku Nilai Dasar Pemrograman',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->get(route('admin.grades.export.excel', $gradebook));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/vnd.ms-excel', (string) $response->headers->get('content-type'));
+        $response->assertSee('REKAPITULASI BUKU NILAI PESERTA DIDIK');
+        $response->assertSee('Dasar Pemrograman');
+    }
+
+    public function test_admin_can_export_gradebook_to_pdf_preview(): void
+    {
+        $teacher = TeacherProfile::factory()->create(['user_id' => $this->teacherUser->id]);
+        $class = SchoolClass::factory()->create(['name' => 'X RPL 2']);
+        $subject = Subject::factory()->create(['name' => 'Basis Data']);
+        $semester = Semester::factory()->create(['name' => 'Semester Gasal']);
+
+        $assignment = TeachingAssignment::create([
+            'teacher_id' => $teacher->id,
+            'class_id' => $class->id,
+            'subject_id' => $subject->id,
+            'semester_id' => $semester->id,
+            'weekly_hours' => 4,
+        ]);
+
+        $gradebook = Gradebook::create([
+            'teaching_assignment_id' => $assignment->id,
+            'name' => 'Buku Nilai Basis Data',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->get(route('admin.grades.export.pdf', $gradebook));
+
+        $response->assertOk();
+        $response->assertSee('REKAPITULASI BUKU NILAI SISWA');
+        $response->assertSee('X RPL 2');
+        $response->assertSee('Basis Data');
     }
 
     public function test_guest_cannot_access_admin_grades(): void
