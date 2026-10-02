@@ -57,9 +57,9 @@
                             <ul class="mt-4 space-y-2">
                                 @foreach ($companies as $company)
                                     <li class="flex items-center gap-3 p-3 bg-white border border-bluelight rounded-xl">
-                                        <span class="w-9 h-9 rounded-lg bg-bluelight/70 grid place-items-center shrink-0 overflow-hidden">
+                                        <div class="w-9 h-9 rounded-lg bg-bluelight/70 grid place-items-center shrink-0 overflow-hidden">
                                             <x-public.media :model="$company" column="logo" :alt="$company->name" icon="briefcase" />
-                                        </span>
+                                        </div>
                                         <div class="min-w-0">
                                             <p class="text-sm font-heading font-medium text-bluedark truncate">{{ $company->name }}</p>
                                             @if (filled($company->industry))
@@ -117,29 +117,40 @@
                             @foreach ($opportunities as $opportunity)
                                 <article class="p-5 sm:p-6 bg-white rounded-3xl border border-bluelight shadow-xs card-hover">
                                     <div class="flex items-start justify-between gap-4">
-                                        <div class="min-w-0">
-                                            <div class="flex flex-wrap items-center gap-2">
-                                                <span class="text-xs font-heading font-semibold text-blueprim bg-bluelight px-2.5 py-1 rounded-full">
-                                                    {{ $opportunity->type->label() }}
-                                                </span>
-                                                @if (filled($opportunity->company?->industry))
-                                                    <span class="text-xs text-bluedark/50">{{ $opportunity->company->industry }}</span>
+                                        <div class="flex min-w-0 items-start gap-3">
+                                            @if ($opportunity->company && filled($opportunity->company->logo))
+                                                <x-public.media
+                                                    :model="$opportunity->company"
+                                                    column="logo"
+                                                    :alt="$opportunity->company->name"
+                                                    fit="contain"
+                                                    class="w-12 h-12 shrink-0 rounded-xl border border-bluelight bg-white" />
+                                            @endif
+
+                                            <div class="min-w-0">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="text-xs font-heading font-semibold text-blueprim bg-bluelight px-2.5 py-1 rounded-full">
+                                                        {{ $opportunity->type->label() }}
+                                                    </span>
+                                                    @if (filled($opportunity->company?->industry))
+                                                        <span class="text-xs text-bluedark/50">{{ $opportunity->company->industry }}</span>
+                                                    @endif
+                                                </div>
+
+                                                <h3 class="font-heading font-semibold text-bluedark mt-2.5 leading-snug">
+                                                    {{ $opportunity->title }}
+                                                </h3>
+
+                                                <p class="text-xs text-bluedark/50 mt-1.5">
+                                                    {{ collect([$opportunity->company?->name, $opportunity->location])->filter()->implode(' · ') }}
+                                                </p>
+
+                                                @if (filled($opportunity->description))
+                                                    <p class="text-sm text-bluedark/65 mt-3 leading-relaxed line-clamp-2">
+                                                        {{ $opportunity->description }}
+                                                    </p>
                                                 @endif
                                             </div>
-
-                                            <h3 class="font-heading font-semibold text-bluedark mt-2.5 leading-snug">
-                                                {{ $opportunity->title }}
-                                            </h3>
-
-                                            <p class="text-xs text-bluedark/50 mt-1.5">
-                                                {{ collect([$opportunity->company?->name, $opportunity->location])->filter()->implode(' · ') }}
-                                            </p>
-
-                                            @if (filled($opportunity->description))
-                                                <p class="text-sm text-bluedark/65 mt-3 leading-relaxed line-clamp-2">
-                                                    {{ $opportunity->description }}
-                                                </p>
-                                            @endif
                                         </div>
 
                                         <div class="shrink-0 text-right">

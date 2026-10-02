@@ -17,7 +17,7 @@ class AchievementController extends Controller
         $selectedCategory = $request->string('kategori')->trim()->toString();
 
         $achievements = Achievement::query()
-            ->with('category')
+            ->with(['category', 'media'])
             ->when(
                 $selectedCategory !== '',
                 fn ($query) => $query->whereHas(

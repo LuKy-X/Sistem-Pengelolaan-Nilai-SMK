@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Ai\Agents\SchoolAssistant;
 use App\Enums\CareerOpportunityStatus;
 use App\Enums\CareerOpportunityType;
 use App\Enums\ContentStatus;
@@ -25,6 +26,8 @@ use Database\Seeders\SchoolProfileSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Laravel\Ai\Ai;
+use Laravel\Ai\Contracts\ConversationStore;
 use Tests\TestCase;
 
 class PublicChatbotTest extends TestCase
@@ -304,12 +307,106 @@ class PublicChatbotTest extends TestCase
         $this->assertSame('thanks', $this->ask('Terima kasih banyak ya')['intent']);
     }
 
-    public function test_unmatched_question_falls_back_to_what_the_bot_can_answer(): void
+    public function test_known_local_question_does_not_prompt_the_ai_agent(): void
     {
-        $reply = $this->ask('Zzzqqq apa itu bahasa pemrograman silly?');
+        SchoolAssistant::fake()->preventStrayPrompts();
 
-        $this->assertSame('fallback', $reply['intent']);
-        $this->assertNotEmpty($reply['suggestions']);
+        $reply = $this->ask('Halo, apa kabar?');
+
+        $this->assertSame('greeting', $reply['intent']);
+    }
+
+    public function test_general_knowledge_question_uses_the_ai_agent(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Gravitasi adalah gaya tarik-menarik antara benda yang memiliki massa.'])
+            ->preventStrayPrompts();
+
+        $question = 'Apa hubungan antara gravitasi dan ruang-waktu?';
+
+        $response = $this->postJson(self::ENDPOINT, [
+            'message' => $question,
+        ])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Gravitasi adalah gaya tarik-menarik antara benda yang memiliki massa.');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_unintelligible_message_is_sent_to_ai_for_clarification(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Maaf, saya belum memahami pesan itu. Bisa kirim ulang pertanyaanmu?'])
+            ->preventStrayPrompts();
+
+        $question = 'ajsdjhahdhqiwi0qra';
+
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Maaf, saya belum memahami pesan itu. Bisa kirim ulang pertanyaanmu?');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_personal_home_address_question_is_refused_without_calling_ai(): void
+    {
+        SchoolAssistant::fake()->preventStrayPrompts();
+
+        $reply = $this->ask('Kepala sekolah rumahnya mana?');
+
+        $this->assertSame('privacy', $reply['intent']);
+        $this->assertStringContainsString('informasi pribadi', $reply['reply']);
+        $this->assertStringNotContainsString('Telepon:', $reply['reply']);
+    }
+
+    public function test_question_about_unsupported_extracurricular_data_uses_ai(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Data ekstrakurikuler belum tersedia di sistem sekolah.'])
+            ->preventStrayPrompts();
+
+        $response = $this->postJson(self::ENDPOINT, [
+            'message' => 'Ada ekstrakulikuler apa saja di sekolah ini?',
+        ])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Data ekstrakurikuler belum tersedia di sistem sekolah.')
+            ->assertJsonPath('suggestions', [
+                'Jurusan apa saja?',
+                'Berapa jumlah siswa per jurusan?',
+                'Siapa guru pengampu di tiap kelas?',
+            ]);
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, 'Ada ekstrakulikuler apa saja di sekolah ini?');
+    }
+
+    public function test_question_spanning_student_statistics_and_teaching_assignments_uses_ai(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Jawaban gabungan berdasarkan data sekolah.'])
+            ->preventStrayPrompts();
+
+        $question = 'jumlah semua siswa dan per jurusan serta guru pengampu per kelas';
+
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Jawaban gabungan berdasarkan data sekolah.');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_class_filtered_student_count_uses_ai_instead_of_site_statistics(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Jumlah siswa kelas XII RPL A berdasarkan data sistem adalah 28.'])
+            ->preventStrayPrompts();
+
+        $question = 'Berapa jumlah siswa di kelas XII RPL A?';
+
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Jumlah siswa kelas XII RPL A berdasarkan data sistem adalah 28.');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
     }
 
     public function test_reply_payload_never_exceeds_the_widget_capacity(): void
@@ -366,5 +463,13 @@ class PublicChatbotTest extends TestCase
     private function linkUrls(array $payload): string
     {
         return implode(' ', array_column($payload['links'], 'url'));
+    }
+
+    private function mockConversationPersistence(): void
+    {
+        $store = $this->mock(ConversationStore::class);
+        $store->shouldReceive('storeConversation')->once()->andReturn('01920000-0000-7000-8000-000000000001');
+        $store->shouldReceive('storeUserMessage')->once()->andReturn('01920000-0000-7000-8000-000000000002');
+        $store->shouldReceive('storeAssistantMessage')->once()->andReturn('01920000-0000-7000-8000-000000000003');
     }
 }

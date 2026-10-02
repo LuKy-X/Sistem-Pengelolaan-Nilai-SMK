@@ -6,7 +6,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validates a single visitor message sent to the public chatbot endpoint.
+ * Validates a single visitor message sent to the public AI chatbot endpoint.
  */
 class ChatbotMessageRequest extends FormRequest
 {
@@ -22,6 +22,7 @@ class ChatbotMessageRequest extends FormRequest
     {
         return [
             'message' => ['required', 'string', 'min:2', 'max:500'],
+            'conversation_id' => ['nullable', 'string', 'max:36'],
         ];
     }
 
@@ -38,10 +39,20 @@ class ChatbotMessageRequest extends FormRequest
     }
 
     /**
-     * Normalised visitor message, ready for intent matching.
+     * Normalised visitor message, ready for the AI agent.
      */
     public function question(): string
     {
         return trim((string) $this->input('message'));
+    }
+
+    /**
+     * Optional conversation ID to continue an existing conversation.
+     */
+    public function conversationId(): ?string
+    {
+        $value = $this->input('conversation_id');
+
+        return filled($value) ? (string) $value : null;
     }
 }

@@ -500,13 +500,27 @@ body.is-landing .link-card:focus-within::before {
   flex-direction: column;
   overflow: hidden;
   transform-origin: bottom right;
-  transition: opacity .25s cubic-bezier(0.22, 1, 0.36, 1), transform .25s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.96) translateY(12px);
+  pointer-events: none;
+  transition:
+    opacity .28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform .28s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear .28s;
 }
 .ai-chat-panel[hidden] {
   display: flex;
-  opacity: 0;
-  transform: scale(0.94) translateY(10px);
-  pointer-events: none;
+}
+.ai-chat-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+  transition:
+    opacity .28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform .28s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s;
 }
 @media (min-width: 768px) {
   .ai-chat-panel { right: 2rem; bottom: 6rem; }

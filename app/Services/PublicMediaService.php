@@ -4,7 +4,7 @@ namespace App\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
+use Illuminate\Support\Str;
 
 /**
  * Resolves stored media paths into publicly reachable URLs for the public site.
@@ -29,19 +29,45 @@ class PublicMediaService
             return null;
         }
 
-        if (str_starts_with($path, ['http://', 'https://', '//', '/', 'data:'])) {
+        $path = str_replace('\\', '/', trim($path));
+
+        if (Str::startsWith($path, ['http://', 'https://', '//', '/', 'data:'])) {
             return $path;
         }
 
-        if ($disk === null || $disk === 'public') {
-            return asset('storage/'.$path);
+        if (preg_match('#(?:^|/)(?:storage/app/public|public/storage)/(.+)$#i', $path, $matches) === 1) {
+            $path = $matches[1];
         }
 
-        try {
-            $url = Storage::disk($disk)->url($path);
-        } catch (Throwable) {
+        $path = preg_replace('#^(?:(?:storage/app/public|public/storage|storage|public)/)+#i', '', $path) ?? $path;
+        $disk ??= 'public';
+
+        if (! array_key_exists($disk, config('filesystems.disks', []))) {
             return null;
         }
+
+        if ($disk === 'local') {
+            if (! Storage::disk('public')->exists($path)) {
+                return null;
+            }
+
+            $disk = 'public';
+        }
+
+        $diskConfig = config("filesystems.disks.{$disk}");
+
+        if (
+            $disk === 'public'
+            && ($diskConfig['driver'] ?? null) === 'local'
+            && (
+                blank($diskConfig['url'] ?? null)
+                || rtrim($diskConfig['url'], '/') === rtrim(config('app.url'), '/').'/storage'
+            )
+        ) {
+            return url('/storage/'.ltrim($path, '/'));
+        }
+
+        $url = Storage::disk($disk)->url($path);
 
         return filled($url) ? $url : null;
     }
@@ -62,16 +88,26 @@ class PublicMediaService
             return null;
         }
 
-        $query = $model->media();
+        if ($model->relationLoaded('media')) {
+            $media = $model->getRelation('media')
+                ->sortByDesc('id')
+                ->first(fn ($item): bool => $collection === null || $item->collection === $collection);
 
-        if ($collection !== null) {
-            $query->where('collection', $collection);
-        }
+            if ($media === null && $collection !== null) {
+                $media = $model->getRelation('media')->sortByDesc('id')->first();
+            }
+        } else {
+            $query = $model->media();
 
-        $media = $query->orderByDesc('id')->first();
+            if ($collection !== null) {
+                $query->where('collection', $collection);
+            }
 
-        if ($media === null && $collection !== null) {
-            $media = $model->media()->orderByDesc('id')->first();
+            $media = $query->orderByDesc('id')->first();
+
+            if ($media === null && $collection !== null) {
+                $media = $model->media()->orderByDesc('id')->first();
+            }
         }
 
         return $media === null ? null : $this->url($media->path, $media->disk);
