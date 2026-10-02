@@ -58,7 +58,7 @@
             @endif
           </span>
           @if(! empty($data['body']))
-            <span class="block text-xs text-bluedark/60 mt-0.5">{{ $data['body'] }}</span>
+            <span class="block text-xs text-bluedark/60 mt-0.5 break-words">{{ $data['body'] }}</span>
           @endif
           <span class="block text-[10px] text-bluedark/40 mt-1">{{ $notification->created_at->diffForHumans() }}</span>
         </span>

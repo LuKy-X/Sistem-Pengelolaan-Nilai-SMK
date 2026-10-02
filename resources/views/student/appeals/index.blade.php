@@ -23,7 +23,7 @@
         <div class="flex items-center justify-between gap-2 mb-2">
           <div class="min-w-0">
             <div class="font-heading font-semibold text-bluedark text-sm truncate">{{ $appeal->exitPermit?->reason?->name ?? 'Izin Keluar' }}</div>
-            <div class="text-[10px] text-bluedark/45">Diajukan {{ $appeal->submitted_at?->format('d M Y, H:i') }}</div>
+            <div class="text-[10px] text-bluedark/45 break-words">Diajukan {{ $appeal->submitted_at?->format('d M Y, H:i') }}</div>
           </div>
           <span class="badge {{ ['PENDING' => 'badge-yellow', 'ACCEPTED' => 'badge-green', 'REJECTED' => 'badge-red'][$appeal->decision->value] ?? 'badge-gray' }} shrink-0">
             {{ ['PENDING' => 'Diproses', 'ACCEPTED' => 'Diterima', 'REJECTED' => 'Ditolak'][$appeal->decision->value] }}
@@ -32,7 +32,7 @@
 
         <div class="p-2.5 rounded-lg bg-bluelight/40 border border-bluelight mb-2">
           <div class="text-[10px] font-semibold text-bluedark/50 uppercase tracking-wide mb-0.5">Alasan Anda</div>
-          <p class="text-xs text-bluedark/80">{{ $appeal->reason }}</p>
+          <p class="text-xs text-bluedark/80 break-words">{{ $appeal->reason }}</p>
         </div>
 
         @if($appeal->decision->value !== 'PENDING')

@@ -12,7 +12,7 @@
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
       <a href="{{ route('student.grades.index') }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Semua nilai</a>
-      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark mt-1">{{ $assignment?->subject?->name ?? 'Mata Pelajaran' }}</h1>
+      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark mt-1 min-w-0 break-words">{{ $assignment?->subject?->name ?? 'Mata Pelajaran' }}</h1>
       <p class="text-sm text-bluedark/60 mt-1">
         {{ $gradebook->name }} &middot; {{ $assignment?->schoolClass?->name }} &middot; {{ $assignment?->semester?->academicYear?->name }} {{ $assignment?->semester?->name }}
       </p>
@@ -24,8 +24,48 @@
     </div>
   </div>
 
-  <div class="panel p-4 lg:p-5 overflow-x-auto">
+  <div class="panel p-4 lg:p-5">
     <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-3">Rincian Nilai</h2>
+
+    {{-- Kartu untuk layar kecil. --}}
+    <div class="space-y-2.5 md:hidden">
+      @forelse($gradebook->columns as $column)
+        @php
+          $score = $scores->get($column->id);
+          $value = $values[$column->id] ?? null;
+          $linkedAssessments = $assessmentsByColumn->get($column->id, collect());
+          $feedback = $score?->feedback ?? $linkedAssessments->map(fn ($a) => $a->submissions->first()?->teacher_feedback)->filter()->first();
+        @endphp
+        <div class="rounded-xl border border-bluelight/80 px-3 py-2.5">
+          <div class="flex items-start justify-between gap-2 mb-1">
+            <div class="text-xs font-semibold text-bluedark min-w-0 break-words">{{ $column->name }}</div>
+            <span class="font-heading font-bold shrink-0 {{ $value !== null ? ($value >= 75 ? 'text-emerald-600' : 'text-amber-600') : 'text-bluedark/30' }}">
+              {{ $fmt($value) }}
+            </span>
+          </div>
+          <div class="text-[10px] text-bluedark/45 mb-1">
+            {{ $column->category?->name ?? 'Tanpa kategori' }} &middot; Maks {{ $fmt($column->max_score) }}
+            @if($column->column_type->value === 'SUMMARY')
+              &middot; <span class="text-blueprim font-semibold">Ringkasan otomatis</span>
+            @endif
+          </div>
+          @if($score && (float) $score->late_deduction > 0)
+            <div class="text-[10px] text-red-500 mb-1">Potongan telat -{{ $fmt($score->late_deduction) }}</div>
+          @endif
+          @if($feedback)
+            <p class="text-xs text-bluedark/70 break-words mt-1">{{ $feedback }}</p>
+          @endif
+          @if($score && $score->rubricScores->isNotEmpty())
+            <button type="button" class="block text-[10px] font-semibold text-blueprim hover:underline mt-1" data-modal-open="rubricModal{{ $score->id }}">Lihat rincian rubrik</button>
+          @endif
+        </div>
+      @empty
+        <p class="text-sm text-bluedark/60 text-center py-4">Belum ada komponen nilai yang dapat ditampilkan.</p>
+      @endforelse
+    </div>
+
+    {{-- Tabel untuk layar lebar. --}}
+    <div class="hidden md:block overflow-x-auto">
     <table class="w-full text-xs min-w-[560px]">
       <thead>
         <tr class="text-left text-bluedark/50 border-b border-bluelight">
@@ -47,7 +87,7 @@
           <tr class="border-b border-bluelight/60 align-top">
             <td class="py-2.5 pr-3">
               <div class="font-semibold text-bluedark">{{ $column->name }}</div>
-              <div class="text-[10px] text-bluedark/45">
+              <div class="text-[10px] text-bluedark/45 break-words">
                 {{ $column->code }}
                 @if($column->column_type->value === 'SUMMARY')
                   &middot; <span class="text-blueprim font-semibold">Ringkasan otomatis</span>
@@ -65,7 +105,7 @@
               @endif
             </td>
             <td class="py-2.5 pr-3 text-center text-bluedark/60">{{ $fmt($column->max_score) }}</td>
-            <td class="py-2.5 text-bluedark/70 max-w-[220px]">
+            <td class="py-2.5 text-bluedark/70 max-w-[220px] break-words">
               {{ $feedback ?? '-' }}
               @if($score && $score->rubricScores->isNotEmpty())
                 <button type="button" class="block text-[10px] font-semibold text-blueprim hover:underline mt-0.5" data-modal-open="rubricModal{{ $score->id }}">Lihat rincian rubrik</button>
@@ -79,6 +119,7 @@
         @endforelse
       </tbody>
     </table>
+    </div>
   </div>
 
   @if($notes->isNotEmpty())
@@ -89,9 +130,9 @@
           <div class="p-3 rounded-xl bg-bluelight/40 border border-bluelight">
             <div class="flex items-center gap-2 mb-1">
               <span class="badge {{ strtoupper($note->category ?? '') === 'REMEDIAL' ? 'badge-yellow' : 'badge-blue' }}">{{ $note->category ?? 'Catatan' }}</span>
-              <span class="text-[10px] text-bluedark/45">{{ $note->teacher?->full_name ?? 'Guru' }} &middot; {{ $note->created_at?->format('d M Y') }}</span>
+              <span class="text-[10px] text-bluedark/45 break-words">{{ $note->teacher?->full_name ?? 'Guru' }} &middot; {{ $note->created_at?->format('d M Y') }}</span>
             </div>
-            <p class="text-xs text-bluedark/80">{{ $note->note }}</p>
+            <p class="text-xs text-bluedark/80 break-words">{{ $note->note }}</p>
           </div>
         @endforeach
       </div>
@@ -121,7 +162,7 @@
               <tr class="border-b border-bluelight/60">
                 <td class="py-1.5 pr-2">
                   <div class="font-semibold text-bluedark">{{ $rubricScore->criterion?->criterion ?? '-' }}</div>
-                  @if($rubricScore->note)<div class="text-[10px] text-bluedark/45">{{ $rubricScore->note }}</div>@endif
+                  @if($rubricScore->note)<div class="text-[10px] text-bluedark/45 break-words">{{ $rubricScore->note }}</div>@endif
                 </td>
                 <td class="py-1.5 text-right font-semibold text-bluedark">{{ $fmt($rubricScore->points_awarded) }} / {{ $fmt($rubricScore->criterion?->max_points) }}</td>
               </tr>

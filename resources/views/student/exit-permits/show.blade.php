@@ -14,11 +14,17 @@
   <div>
     <a href="{{ route('student.exit-permits.index') }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Riwayat izin</a>
     <div class="flex flex-wrap items-center gap-2 mt-1">
-      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Izin Keluar — {{ $permit->reason?->name ?? 'Keperluan' }}</h1>
+      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark min-w-0 break-words">Izin Keluar — {{ $permit->reason?->name ?? 'Keperluan' }}</h1>
       <x-bk.permit-status :status="$permit->status" />
     </div>
   </div>
-  </div>
+
+  @if($periodSummary)
+    <div class="panel p-4 border-l-4 border-blueprim">
+      <div class="text-[11px] font-semibold uppercase tracking-wide text-bluedark/50">Jam Pelajaran</div>
+      <div class="font-heading font-semibold text-bluedark text-sm mt-1 break-words">{{ $periodSummary }}</div>
+    </div>
+  @endif
 
   @if($isActive)
     <div class="panel p-5 text-center">
@@ -44,6 +50,18 @@
           <dt>Diajukan</dt>
           <dd>: {{ $permit->requested_at?->format('d M Y, H:i') }}</dd>
         </div>
+        @if($permit->exitPeriod)
+          <div class="info-list__row">
+            <dt>Jam Keluar</dt>
+            <dd>: {{ $permit->exitPeriod->displayLabel() }}</dd>
+          </div>
+        @endif
+        @if($permit->returnPeriod)
+          <div class="info-list__row">
+            <dt>Jam Kembali</dt>
+            <dd>: {{ $permit->returnPeriod->displayLabel() }}</dd>
+          </div>
+        @endif
         <div class="info-list__row">
           <dt>Rencana Keluar</dt>
           <dd>: {{ $permit->planned_exit_at?->format('d M Y, H:i') }}</dd>
@@ -102,7 +120,7 @@
       </div>
       <div class="p-3 rounded-xl bg-bluelight/40 border border-bluelight mb-3">
         <div class="text-[10px] font-semibold text-bluedark/50 uppercase tracking-wide mb-1">Alasan Anda &middot; {{ $appeal->submitted_at?->format('d M Y, H:i') }}</div>
-        <p class="text-xs text-bluedark/80">{{ $appeal->reason }}</p>
+        <p class="text-xs text-bluedark/80 break-words">{{ $appeal->reason }}</p>
       </div>
       @if($appeal->decision->value !== 'PENDING')
         <div class="p-3 rounded-xl {{ $appeal->decision->value === 'ACCEPTED' ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200' }}">

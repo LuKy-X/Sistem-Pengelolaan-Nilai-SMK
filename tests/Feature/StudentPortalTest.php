@@ -12,6 +12,7 @@ use App\Models\ExitPermit;
 use App\Models\ExitPermitAppeal;
 use App\Models\ExitPermitReason;
 use App\Models\Gradebook;
+use App\Models\LessonPeriod;
 use App\Models\SchoolClass;
 use App\Models\StudentProfile;
 use App\Models\TeachingAssignment;
@@ -304,8 +305,8 @@ class StudentPortalTest extends TestCase
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => ExitPermitReason::where('is_active', true)->firstOrFail()->id,
                 'reason_detail' => 'Keperluan yang perlu tercatat pada jejak audit.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(4)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $this->periodPair()[0],
+                'return_period_id' => $this->periodPair()[1],
             ])
             ->assertSessionHas('success');
 
@@ -464,29 +465,43 @@ class StudentPortalTest extends TestCase
     public function test_student_can_request_exit_permit_and_cannot_have_two_open(): void
     {
         $reason = ExitPermitReason::where('is_active', true)->firstOrFail();
+        [$exitPeriodId, $returnPeriodId] = $this->periodPair();
 
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => $reason->id,
                 'reason_detail' => 'Keperluan keluarga mendadak bersama orang tua.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(3)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('exit_permits', [
-            'student_id' => $this->student->id,
-            'status' => ExitPermitStatus::Pending->value,
-        ]);
+        // Jam keluar dan jam kembali harus ikut tersimpan sebagai rujukan.
+        $permit = ExitPermit::where('student_id', $this->student->id)
+            ->where('status', ExitPermitStatus::Pending->value)
+            ->firstOrFail();
+
+        $this->assertSame($exitPeriodId, $permit->exit_period_id);
+        $this->assertSame($returnPeriodId, $permit->return_period_id);
+
+        // Waktu rencana harus diturunkan dari jam mulai jam pelajaran pilihan.
+        $this->assertTrue(
+            $permit->planned_exit_at->equalTo(now()->setTimeFromTimeString(LessonPeriod::find($exitPeriodId)->start_time)),
+            'planned_exit_at harus sama dengan jam mulai jam pelajaran keluar.'
+        );
+        $this->assertTrue(
+            $permit->planned_return_at->equalTo(now()->setTimeFromTimeString(LessonPeriod::find($returnPeriodId)->start_time)),
+            'planned_return_at harus sama dengan jam mulai jam pelajaran kembali.'
+        );
 
         // Pengajuan kedua saat masih PENDING harus ditolak.
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => $reason->id,
                 'reason_detail' => 'Pengajuan kedua yang harus ditolak.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(2)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
             ->assertSessionHas('error');
 
@@ -499,14 +514,16 @@ class StudentPortalTest extends TestCase
 
     public function test_exit_permit_requires_valid_reason_and_schedule(): void
     {
+        [$exitPeriodId, $returnPeriodId] = $this->reversedPeriodPair();
+
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => 99999,
                 'reason_detail' => 'singkat',
-                'planned_exit_at' => now()->addHours(3)->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHour()->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
-            ->assertSessionHasErrors(['reason_id', 'reason_detail', 'planned_return_at']);
+            ->assertSessionHasErrors(['reason_id', 'reason_detail', 'return_period_id']);
     }
 
     public function test_student_cannot_view_other_students_permit(): void
@@ -807,5 +824,40 @@ class StudentPortalTest extends TestCase
         }
 
         return $assessment;
+    }
+
+    /**
+     * Dua id jam pelajaran untuk pengajuan izin: jam keluar dan jam kembali.
+     * Dipilih dari jam pelajaran yang belum lewat hari ini supaya tetap valid
+     * kapan pun test dijalankan.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function periodPair(): array
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        $exit = $periods->first(
+            fn (LessonPeriod $period) => now()->setTimeFromTimeString($period->start_time)->isFuture()
+        ) ?? $periods->first();
+
+        $return = $periods->first(
+            fn (LessonPeriod $period) => $period->start_time > $exit->start_time
+                && now()->setTimeFromTimeString($period->start_time)->isFuture()
+        ) ?? $periods->last();
+
+        return [$exit->getKey(), $return->getKey()];
+    }
+
+    /**
+     * Sepasang jam pelajaran terbalik untuk menguji validasi gagal.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function reversedPeriodPair(): array
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        return [$periods->last()->getKey(), $periods->first()->getKey()];
     }
 }

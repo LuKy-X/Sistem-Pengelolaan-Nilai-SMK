@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +47,47 @@ class LessonPeriod extends Model
     public function schedulesAsEnd(): HasMany
     {
         return $this->hasMany(TeachingSchedule::class, 'end_period_id');
+    }
+
+    /**
+     * Jam pelajaran reguler saja, tanpa jam istirahat, urut dari jam pertama.
+     * Dipakai di mana pun siswa memilih jam, misalnya pengajuan izin keluar.
+     */
+    public function scopeRegular(Builder $query): Builder
+    {
+        return $query->where('is_break', false)
+            ->whereNotNull('period_number')
+            ->orderBy('sort_order')
+            ->orderBy('period_number');
+    }
+
+    /**
+     * Label yang tampil ke pengguna, selalu memuat jam mulai dan jam akhir
+     * supaya tidak ambigu saat siswa memilih jam keluar maupun jam kembali.
+     *
+     * Label yang tersimpan di database sengaja tidak dipakai apa adanya karena
+     * resequence() dapat menimpanya menjadi "Jam Ke-N" tanpa jam.
+     */
+    public function displayLabel(): string
+    {
+        if ($this->is_break || $this->period_number === null) {
+            return $this->label;
+        }
+
+        $start = $this->startTimeForDisplay();
+        $end = $this->endTimeForDisplay();
+
+        return 'Jam Ke-'.$this->period_number." ($start - $end)";
+    }
+
+    public function startTimeForDisplay(): string
+    {
+        return substr((string) $this->start_time, 0, 5);
+    }
+
+    public function endTimeForDisplay(): string
+    {
+        return substr((string) $this->end_time, 0, 5);
     }
 
     /**

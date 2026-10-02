@@ -12,9 +12,10 @@
     </div>
 
     @if($subjects->isNotEmpty())
-      <form method="GET" action="{{ route('student.assignments.index') }}" class="flex items-center gap-2">
+      <form method="GET" action="{{ route('student.assignments.index') }}" class="flex items-center gap-2 w-full sm:w-auto min-w-0">
         <input type="hidden" name="tab" value="{{ $tab }}">
-        <select name="subject" class="f-select text-xs" onchange="this.form.submit()">
+        <label for="filter_mapel" class="sr-only">Filter mata pelajaran</label>
+        <select id="filter_mapel" name="subject" class="f-select text-xs w-full sm:w-auto sm:max-w-[220px] min-w-0" onchange="this.form.submit()">
           <option value="">Semua Mata Pelajaran</option>
           @foreach($subjects as $subject)
             <option value="{{ $subject->id }}" @selected((string) $subjectFilter === (string) $subject->id)>{{ $subject->name }}</option>

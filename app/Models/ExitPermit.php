@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
     'student_id',
     'reason_id',
     'reason_detail',
+    'exit_period_id',
+    'return_period_id',
     'requested_at',
     'planned_exit_at',
     'planned_return_at',
@@ -52,6 +54,23 @@ class ExitPermit extends Model
         return $this->belongsTo(ExitPermitReason::class, 'reason_id');
     }
 
+    /**
+     * Jam pelajaran saat siswa keluar. Nullable karena izin lama belum punya
+     * rujukan jam pelajaran.
+     */
+    public function exitPeriod(): BelongsTo
+    {
+        return $this->belongsTo(LessonPeriod::class, 'exit_period_id');
+    }
+
+    /**
+     * Jam pelajaran paling akhir siswa harus sudah kembali.
+     */
+    public function returnPeriod(): BelongsTo
+    {
+        return $this->belongsTo(LessonPeriod::class, 'return_period_id');
+    }
+
     public function approver(): BelongsTo
     {
         return $this->belongsTo(StaffProfile::class, 'approved_by');
@@ -83,5 +102,22 @@ class ExitPermit extends Model
         }
 
         return now()->isAfter($this->planned_return_at);
+    }
+
+    /**
+     * Ringkasan jam pelajaran untuk ditampilkan, misal "Jam Ke-7 (12.30 - 13.15)".
+     * Bernull untuk izin lama yang tidak menyimpan rujukan jam pelajaran.
+     */
+    public function periodSummary(): ?string
+    {
+        if ($this->exitPeriod === null || $this->returnPeriod === null) {
+            return null;
+        }
+
+        return sprintf(
+            '%s keluar, harus sudah kembali di %s',
+            $this->exitPeriod->displayLabel(),
+            $this->returnPeriod->displayLabel(),
+        );
     }
 }
