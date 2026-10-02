@@ -360,8 +360,12 @@ Route::middleware('auth')->group(function () {
         Route::prefix('journals')->name('journals.')->group(function () {
             Route::get('/', [JournalController::class, 'index'])->name('index');
             Route::get('/create', [JournalController::class, 'create'])->name('create');
+            Route::get('/export/pdf', [JournalController::class, 'exportPdf'])->name('export.pdf');
+            Route::get('/export/excel', [JournalController::class, 'exportExcel'])->name('export.excel');
             Route::post('/', [JournalController::class, 'store'])->name('store');
             Route::get('/{journal}', [JournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [JournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [JournalController::class, 'destroy'])->name('destroy');
         });
 
         // Profil & Pengaturan Guru
