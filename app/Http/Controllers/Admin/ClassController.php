@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSchoolClassRequest;
 use App\Http\Requests\Admin\UpdateSchoolClassRequest;
 use App\Models\AcademicYear;
+use App\Models\AlumniProfile;
 use App\Models\ClassEnrollment;
 use App\Models\Department;
 use App\Models\GradeLevel;
@@ -28,7 +29,10 @@ class ClassController extends Controller
             'gradeLevel',
             'homeroomTeacher',
         ])
-            ->withCount(['enrollments', 'teachingAssignments'])
+            ->withCount([
+                'enrollments' => fn ($q) => $q->where('status', 'ACTIVE'),
+                'teachingAssignments',
+            ])
             ->latest()
             ->paginate(12)
             ->withQueryString();
@@ -65,7 +69,7 @@ class ClassController extends Controller
             'department',
             'gradeLevel',
             'homeroomTeacher',
-            'enrollments.student',
+            'enrollments' => fn ($q) => $q->where('status', 'ACTIVE')->with('student'),
             'teachingAssignments.subject',
             'teachingAssignments.teacher',
         ]);
@@ -237,6 +241,13 @@ class ClassController extends Controller
                         'status' => 'GRADUATED',
                         'graduation_date' => $promotionDate,
                     ]);
+
+                    AlumniProfile::firstOrCreate(
+                        ['student_id' => $studentId],
+                        [
+                            'graduation_year' => (int) date('Y', strtotime($promotionDate)),
+                        ]
+                    );
                 }
             } else {
                 // Proses Kenaikan Kelas (ke kelas existing atau otomatis buat kelas baru)

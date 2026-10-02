@@ -147,43 +147,62 @@
             <button type="button" onclick="closeUserModal()" class="text-bluedark/40 hover:text-bluedark text-xl font-bold">&times;</button>
         </div>
 
-        <form id="userForm" method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
+        <form id="userForm" method="POST" action="{{ old('_action', route('admin.users.store')) }}" class="space-y-4">
             @csrf
-            <div id="userMethodField"></div>
+            <div id="userMethodField">
+                @if(old('_method') === 'PUT')
+                    <input type="hidden" name="_method" value="PUT">
+                @endif
+            </div>
 
             <div>
-                <label class="f-label">Nama Lengkap</label>
-                <input type="text" name="name" id="user_name" required placeholder="Nama Pengguna" class="f-input">
+                <label class="f-label">Nama Lengkap <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="user_name" value="{{ old('name') }}" required placeholder="Nama Pengguna" class="f-input @error('name') border-rose-500 @enderror">
+                @error('name')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="f-label">Username</label>
-                    <input type="text" name="username" id="user_username" required placeholder="username" class="f-input">
+                    <label class="f-label">Username <span class="text-rose-500">*</span></label>
+                    <input type="text" name="username" id="user_username" value="{{ old('username') }}" data-check-unique="username" required placeholder="username" class="f-input @error('username') border-rose-500 @enderror">
+                    @error('username')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
-                    <label class="f-label">Role Akses</label>
-                    <select name="role_id" id="user_role_id" required class="f-select">
+                    <label class="f-label">Role Akses <span class="text-rose-500">*</span></label>
+                    <select name="role_id" id="user_role_id" required class="f-select @error('role_id') border-rose-500 @enderror">
                         @foreach($roles as $r)
-                            <option value="{{ $r->id }}">{{ ucfirst($r->name) }}</option>
+                            <option value="{{ $r->id }}" {{ old('role_id') == $r->id ? 'selected' : '' }}>{{ ucfirst($r->name) }}</option>
                         @endforeach
                     </select>
+                    @error('role_id')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div>
-                <label class="f-label">Email</label>
-                <input type="email" name="email" id="user_email" required placeholder="user@smkn2kra.sch.id" class="f-input">
+                <label class="f-label">Email <span class="text-rose-500">*</span></label>
+                <input type="email" name="email" id="user_email" value="{{ old('email') }}" data-check-unique="email" required placeholder="user@smkn2kra.sch.id" class="f-input @error('email') border-rose-500 @enderror">
+                @error('email')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
                 <label class="f-label" id="userPasswordLabel">Password</label>
-                <input type="password" name="password" id="user_password" placeholder="Minimal 6 karakter" class="f-input">
+                <input type="password" name="password" id="user_password" placeholder="Minimal 6 karakter" class="f-input @error('password') border-rose-500 @enderror">
                 <span id="userPasswordHelp" class="text-[10px] text-bluedark/50 hidden">Kosongkan jika tidak ingin mengubah password.</span>
+                @error('password')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_active" id="user_is_active" value="1" checked class="rounded text-blueprim">
+                <input type="checkbox" name="is_active" id="user_is_active" value="1" {{ old('is_active', '1') == '1' ? 'checked' : '' }} class="rounded text-blueprim">
                 <label for="user_is_active" class="text-xs font-medium text-bluedark">Akun Aktif</label>
             </div>
 
@@ -197,16 +216,25 @@
 
 @push('scripts')
 <script>
+    function resetUniqueFeedbacks(modalEl) {
+        modalEl.querySelectorAll('.check-unique-feedback').forEach(el => el.innerHTML = '');
+        modalEl.querySelectorAll('input').forEach(el => el.classList.remove('border-emerald-500', 'border-rose-500'));
+    }
+
     function openUserModal() {
         document.getElementById('userModalTitle').innerText = 'Tambah Akun Pengguna';
         document.getElementById('userForm').action = "{{ route('admin.users.store') }}";
         document.getElementById('userMethodField').innerHTML = '';
         document.getElementById('user_name').value = '';
         document.getElementById('user_username').value = '';
+        document.getElementById('user_username').removeAttribute('data-ignore-id');
         document.getElementById('user_email').value = '';
+        document.getElementById('user_email').removeAttribute('data-ignore-id');
+        document.getElementById('user_password').value = '';
         document.getElementById('user_password').required = true;
         document.getElementById('userPasswordHelp').classList.add('hidden');
         document.getElementById('user_is_active').checked = true;
+        resetUniqueFeedbacks(document.getElementById('userModal'));
         document.getElementById('userModal').classList.remove('hidden');
     }
 
@@ -216,19 +244,29 @@
         document.getElementById('userMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('user_name').value = u.name;
         document.getElementById('user_username').value = u.username || '';
+        document.getElementById('user_username').setAttribute('data-ignore-id', u.id);
         document.getElementById('user_email').value = u.email;
+        document.getElementById('user_email').setAttribute('data-ignore-id', u.id);
         if (roleId) {
             document.getElementById('user_role_id').value = roleId;
         }
+        document.getElementById('user_password').value = '';
         document.getElementById('user_password').required = false;
         document.getElementById('userPasswordHelp').classList.remove('hidden');
         document.getElementById('user_is_active').checked = !!u.is_active;
+        resetUniqueFeedbacks(document.getElementById('userModal'));
         document.getElementById('userModal').classList.remove('hidden');
     }
 
     function closeUserModal() {
         document.getElementById('userModal').classList.add('hidden');
     }
+
+    @if($errors->any() && (old('username') || old('email') || old('name')))
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('userModal').classList.remove('hidden');
+    });
+    @endif
 </script>
 @endpush
 @endsection

@@ -262,6 +262,7 @@
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 <script src="{{ asset('assets/js/admin-dropdowns.js') }}"></script>
+<script src="{{ asset('assets/js/check-unique.js') }}"></script>
 @stack('scripts')
 </body>
 </html>
