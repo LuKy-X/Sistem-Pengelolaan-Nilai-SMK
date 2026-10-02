@@ -77,7 +77,7 @@ class SampleClassSeeder extends Seeder
                             $student = StudentProfile::firstOrNew(['nis' => $nis]);
                             $gender = $student->exists
                                 ? $student->gender
-                                : fake()->randomElement(['MALE', 'FEMALE']);
+                                : ($index % 2 === 0 ? 'MALE' : 'FEMALE');
 
                             $student->fill([
                                 'nisn' => $nisn,
