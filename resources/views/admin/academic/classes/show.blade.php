@@ -96,7 +96,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-6 text-xs text-bluedark/40">Belum ada siswa yang dimasukkan ke rombel ini.</td>
+                                <td colspan="5" class="text-center py-6 text-xs text-bluedark/40">Belum ada siswa aktif yang terdaftar di rombel ini.</td>
                             </tr>
                         @endforelse
                     </tbody>

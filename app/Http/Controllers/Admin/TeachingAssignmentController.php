@@ -65,6 +65,7 @@ class TeachingAssignmentController extends Controller
 
         if ($exists) {
             return redirect()->back()
+                ->withInput()
                 ->with('error', 'Penugasan mengajar untuk guru, mapel, kelas, dan semester tersebut sudah ada.');
         }
 

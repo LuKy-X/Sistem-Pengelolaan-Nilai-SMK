@@ -127,7 +127,7 @@ class StudentsController extends Controller
 
     public function destroy(StudentProfile $student): RedirectResponse
     {
-        if ($student->gradebookScores()->exists() || $student->journalAttendances()->exists()) {
+        if ($student->scores()->exists() || $student->journalAttendances()->exists()) {
             return redirect()->route('admin.academic.students.index')
                 ->with('error', 'Tidak dapat menghapus data siswa yang telah memiliki histori penilaian atau presensi.');
         }
