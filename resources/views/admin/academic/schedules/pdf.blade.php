@@ -91,9 +91,10 @@
         }
 
         .kop-logo {
-            width: 65px;
-            height: 65px;
+            width: 70px;
+            height: 70px;
             object-fit: contain;
+            flex-shrink: 0;
         }
 
         .kop-text h2 {
@@ -290,13 +291,10 @@
     <div class="paper">
         <!-- Kop Surat -->
         <div class="kop-container">
-            @if(!empty($schoolProfile?->logo))
-                <img src="{{ asset('storage/'.$schoolProfile->logo) }}" alt="Logo" class="kop-logo">
-            @else
-                <div class="kop-logo" style="display:flex; align-items:center; justify-content:center; background:#0d47a1; color:#fff; font-weight:800; border-radius:10px; font-size:16px;">
-                    SMK
-                </div>
-            @endif
+            @php
+                $logoUrl = $schoolProfile?->logo_url ?? asset('assets/images/logo/logo.png');
+            @endphp
+            <img src="{{ $logoUrl }}" alt="Logo SMK Negeri 2 Karanganyar" class="kop-logo" onerror="this.src='{{ asset('assets/images/logo/logo.png') }}'">
             <div class="kop-text">
                 <h2>PEMERINTAH PROVINSI JAWA TENGAH &bull; DINAS PENDIDIKAN DAN KEBUDAYAAN</h2>
                 <h1>{{ $schoolProfile?->school_name ?? 'SMK NEGERI 2 KARANGANYAR' }}</h1>
