@@ -23,7 +23,7 @@
 
 ---
 
-## 2. Kamus Data & Spesifikasi 58 Tabel
+## 2. Kamus Data & Spesifikasi 64 Tabel
 
 ### A. Autentikasi, Role, & Profil Pengguna
 
@@ -744,3 +744,34 @@
 - `created_at`: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - INDEX (`auditable_type`, `auditable_id`)
 - INDEX (`user_id`, `action`)
+
+---
+
+### P. Notifikasi
+
+#### 64. `notifications`
+Tabel standar Laravel untuk channel notifikasi database. Tidak memerlukan
+dependency tambahan. Hanya modul siswa yang mengirim notifikasi saat ini,
+tetapi kolom `notifiable` berupa morphs sehingga tabel ini dapat dipakai role
+apa pun tanpa perubahan skema.
+
+- `id`: UUID PRIMARY KEY
+- `type`: VARCHAR(255) NOT NULL (nama kelas notifikasi, e.g. `App\Notifications\AssessmentPublished`)
+- `notifiable_type`: VARCHAR(255) NOT NULL
+- `notifiable_id`: BIGINT UNSIGNED NOT NULL
+- `data`: TEXT NOT NULL (JSON berisi `title`, `body`, `url`, `icon`)
+- `read_at`: TIMESTAMP NULLABLE (NULL berarti belum dibaca)
+- `created_at`, `updated_at`: TIMESTAMP
+- INDEX (`notifiable_type`, `notifiable_id`)
+
+**Tiga event yang memicu notifikasi (dipicu dari model, bukan dari controller
+Guru atau Guru BK, agar kedua modul tersebut tidak perlu diubah):**
+
+| Notifikasi | Dipicu saat |
+|---|---|
+| `AssessmentPublished` | `assessments.status` berubah menjadi `PUBLISHED` → dikirim ke semua siswa aktif di kelas tersebut |
+| `SubmissionGraded` | `gradebook_scores` dibuat atau `final_score` berubah → dikirim ke siswa pemilik nilai |
+| `ExitPermitDecided` | `exit_permits.status` berubah menjadi `APPROVED` / `REJECTED` / `COMPLETED` / `LATE` → dikirim ke siswa pemilik izin |
+
+Notifikasi hanya dikirim ke `User` yang terhubung dengan `student_profiles`.
+Siswa tanpa akun login tidak menerima notifikasi.

@@ -11,7 +11,10 @@ class GradeLevelFactory extends Factory
 
     public function definition(): array
     {
-        $code = fake()->unique()->randomElement(['X', 'XI', 'XII', 'XIII']);
+        // Kode sengaja di luar rentang X / XI / XII / XIII karena GradeLevelSeeder
+        // sudah memakai ketiganya. Kalau factory memakai kode yang sama, panggilan
+        // kedua akan bentrok UNIQUE (grade_levels.code).
+        $code = 'X'.fake()->unique()->numberBetween(10, 9999);
 
         return [
             'code' => $code,
