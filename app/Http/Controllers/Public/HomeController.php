@@ -85,7 +85,6 @@ class HomeController extends Controller
             ->orderByDesc('is_featured')
             ->orderByDesc('achievement_date')
             ->orderByDesc('id')
-            ->limit(config('public_site.landing_limits.achievements'))
             ->get();
     }
 

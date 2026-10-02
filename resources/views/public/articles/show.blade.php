@@ -87,7 +87,11 @@
             @endif
 
             <div class="prose-article">
-                {!! nl2br(e($article->content)) !!}
+                @if(strip_tags($article->content) !== $article->content)
+                    {!! $article->content !!}
+                @else
+                    {!! nl2br(e($article->content)) !!}
+                @endif
             </div>
 
             <div class="mt-10 pt-8 border-t border-bluelight flex flex-wrap items-center justify-between gap-4">

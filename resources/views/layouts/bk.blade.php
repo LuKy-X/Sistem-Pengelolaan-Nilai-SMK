@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="teacher-portal-html">
+<html lang="id" class="bk-portal-html">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -167,6 +167,7 @@
 
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
+@stack('modals')
 <script>
   // Delegasi global untuk buka/tutup modal via data-modal-open / data-modal-close.
   document.addEventListener('click', function (event) {

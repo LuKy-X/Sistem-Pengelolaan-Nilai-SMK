@@ -1,0 +1,636 @@
+/* ==========================================================================
+   SMK NEGERI 2 KARANGANYAR — ADMIN UNIFIED FORMS & DROPDOWNS
+   Khusus Panel Role Admin: Standarisasi seluruh Dropdown, Input, & Textarea
+   100% Selaras (Background, Border, Radius, Font, Focus, Shadow, Height)
+   Bebas Emoji (100% SVG), Tanpa Scrollbar, Sangat User-Friendly
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. STANDARISASI SELURUH INPUT, SELECT, & TEXTAREA DI PANEL ADMIN
+   -------------------------------------------------------------------------- */
+.teacher-portal .f-input,
+.teacher-portal .f-select,
+.teacher-portal .f-textarea,
+.teacher-portal select,
+.teacher-portal textarea,
+.teacher-portal input[type="text"],
+.teacher-portal input[type="email"],
+.teacher-portal input[type="password"],
+.teacher-portal input[type="number"],
+.teacher-portal input[type="date"],
+.teacher-portal input[type="time"],
+.teacher-portal input[type="url"],
+.teacher-portal input[type="search"] {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    color: #0D2A4A !important;
+    line-height: 1.4 !important;
+    background-color: #FAFDFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 1px 2px rgba(13, 71, 161, 0.03);
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    box-sizing: border-box;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+/* Sizing default untuk single-line controls */
+.teacher-portal .f-input,
+.teacher-portal .f-select,
+.teacher-portal select,
+.teacher-portal input[type="text"],
+.teacher-portal input[type="email"],
+.teacher-portal input[type="password"],
+.teacher-portal input[type="number"],
+.teacher-portal input[type="date"],
+.teacher-portal input[type="time"],
+.teacher-portal input[type="url"],
+.teacher-portal input[type="search"] {
+    min-height: 38px;
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    padding-left: 0.8rem;
+    padding-right: 0.8rem;
+}
+
+/* Biarkan class utilitas padding-left khusus (misal input pencarian dengan icon kiri pl-9) */
+.teacher-portal input[class*="pl-9"],
+.teacher-portal .f-input[class*="pl-9"] {
+    padding-left: 2.25rem !important;
+}
+.teacher-portal input[class*="pl-8"],
+.teacher-portal .f-input[class*="pl-8"] {
+    padding-left: 2rem !important;
+}
+.teacher-portal input[class*="pl-10"],
+.teacher-portal .f-input[class*="pl-10"] {
+    padding-left: 2.5rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   2. KHUSUS DROPDOWN (SELECT NATIVE) — CUSTOM SVG CHEVRON
+   -------------------------------------------------------------------------- */
+.teacher-portal select,
+.teacher-portal .f-select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230D47A1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 0.95rem 0.95rem !important;
+    padding-right: 2.25rem !important;
+    cursor: pointer;
+}
+
+.teacher-portal select option {
+    background-color: #FFFFFF;
+    color: #0D2A4A;
+    padding: 8px 12px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   3. KHUSUS TEXTAREA & DATE/TIME CONTROLS
+   -------------------------------------------------------------------------- */
+.teacher-portal textarea,
+.teacher-portal .f-textarea {
+    min-height: 84px;
+    padding: 0.6rem 0.8rem;
+    line-height: 1.5 !important;
+    resize: vertical;
+}
+
+.teacher-portal input[type="date"]::-webkit-calendar-picker-indicator,
+.teacher-portal input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.7;
+    filter: invert(18%) sepia(85%) saturate(2222%) hue-rotate(205deg) brightness(92%) contrast(98%);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.teacher-portal input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.teacher-portal input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* --------------------------------------------------------------------------
+   4. STATE HOVER, FOCUS, DISABLED, & INVALID UNTUK SEMUA INPUT & SELECT
+   -------------------------------------------------------------------------- */
+.teacher-portal .f-input:hover,
+.teacher-portal .f-select:hover,
+.teacher-portal .f-textarea:hover,
+.teacher-portal select:hover,
+.teacher-portal textarea:hover,
+.teacher-portal input[type="text"]:hover,
+.teacher-portal input[type="email"]:hover,
+.teacher-portal input[type="password"]:hover,
+.teacher-portal input[type="number"]:hover,
+.teacher-portal input[type="date"]:hover,
+.teacher-portal input[type="time"]:hover,
+.teacher-portal input[type="url"]:hover,
+.teacher-portal input[type="search"]:hover {
+    border-color: #90CAF9;
+    background-color: #FFFFFF;
+}
+
+.teacher-portal .f-input:focus,
+.teacher-portal .f-select:focus,
+.teacher-portal .f-textarea:focus,
+.teacher-portal select:focus,
+.teacher-portal textarea:focus,
+.teacher-portal input[type="text"]:focus,
+.teacher-portal input[type="email"]:focus,
+.teacher-portal input[type="password"]:focus,
+.teacher-portal input[type="number"]:focus,
+.teacher-portal input[type="date"]:focus,
+.teacher-portal input[type="time"]:focus,
+.teacher-portal input[type="url"]:focus,
+.teacher-portal input[type="search"]:focus {
+    border-color: #2196F3 !important;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.16) !important;
+    background-color: #FFFFFF !important;
+    outline: none !important;
+}
+
+.teacher-portal .f-input:disabled,
+.teacher-portal .f-select:disabled,
+.teacher-portal .f-textarea:disabled,
+.teacher-portal select:disabled,
+.teacher-portal textarea:disabled,
+.teacher-portal input:disabled {
+    background-color: #F1F5F9 !important;
+    border-color: #E2E8F0 !important;
+    color: #94A3B8 !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.teacher-portal .f-input:invalid:not(:placeholder-shown),
+.teacher-portal input:invalid:not(:placeholder-shown),
+.teacher-portal .is-invalid {
+    border-color: #E11D48 !important;
+    background-color: #FFF1F2 !important;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.16) !important;
+}
+
+.teacher-portal ::placeholder {
+    color: #94A3B8 !important;
+    font-weight: 400 !important;
+    opacity: 1 !important;
+}
+
+/* --------------------------------------------------------------------------
+   5. LABEL FORM & CHECKBOX / RADIO
+   -------------------------------------------------------------------------- */
+.teacher-portal .f-label,
+.teacher-portal label.f-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0D2A4A;
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+}
+
+.teacher-portal input[type="checkbox"],
+.teacher-portal input[type="radio"] {
+    accent-color: #2196F3;
+    cursor: pointer;
+    border-radius: 0.35rem;
+    width: 1rem;
+    height: 1rem;
+    transition: all 0.15s ease;
+    vertical-align: middle;
+}
+
+/* --------------------------------------------------------------------------
+   6. HAPUS SEMUA SCROLLBAR DI SELURUH ELEMEN FORM & MODAL ADMIN
+   -------------------------------------------------------------------------- */
+.teacher-portal select::-webkit-scrollbar,
+.teacher-portal .f-select::-webkit-scrollbar,
+.teacher-portal textarea::-webkit-scrollbar,
+.teacher-portal .f-textarea::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. SEARCHABLE SELECT (COMBOBOX) WRAPPER & TRIGGER — SINKRON 100%
+   -------------------------------------------------------------------------- */
+.admin-searchable-wrap {
+    position: relative;
+    display: inline-block;
+    vertical-align: middle;
+    width: 100%;
+}
+
+.admin-searchable-hidden {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    z-index: -1 !important;
+}
+
+.admin-searchable-trigger {
+    width: 100%;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.45rem 0.8rem;
+    background-color: #FAFDFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 0.75rem;
+    color: #0D2A4A;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.4;
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 2px rgba(13, 71, 161, 0.03);
+    outline: none;
+    box-sizing: border-box;
+}
+
+.admin-searchable-trigger:hover {
+    border-color: #90CAF9;
+    background-color: #FFFFFF;
+}
+
+.admin-searchable-trigger:focus,
+.admin-searchable-trigger.is-open {
+    border-color: #2196F3;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.16);
+}
+
+.admin-searchable-trigger.is-invalid {
+    border-color: #E11D48 !important;
+    background-color: #FFF1F2 !important;
+    box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.16) !important;
+}
+
+.admin-searchable-trigger:disabled {
+    background-color: #F1F5F9;
+    border-color: #E2E8F0;
+    color: #94A3B8;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.admin-searchable-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.admin-searchable-icon {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    color: #0D47A1;
+    opacity: 0.8;
+}
+
+.admin-searchable-value {
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #0D2A4A;
+    font-size: 0.8125rem;
+    font-weight: 500;
+}
+
+.admin-searchable-placeholder {
+    color: #94A3B8;
+    font-weight: 400;
+}
+
+.admin-searchable-right {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.admin-searchable-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border-radius: 9999px;
+    color: #94A3B8;
+    background-color: #F1F5F9;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.admin-searchable-clear:hover {
+    color: #E11D48;
+    background-color: #FFE4E6;
+}
+
+.admin-searchable-chevron {
+    width: 1rem;
+    height: 1rem;
+    color: #0D47A1;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.admin-searchable-trigger.is-open .admin-searchable-chevron {
+    transform: rotate(180deg);
+    color: #2196F3;
+}
+
+/* --------------------------------------------------------------------------
+   8. FLOATING POPOVER CONTAINER (ATTACHED TO BODY)
+   -------------------------------------------------------------------------- */
+.admin-searchable-popover {
+    position: fixed;
+    z-index: 999999;
+    background: #FFFFFF;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 0.875rem;
+    box-shadow: 0 20px 25px -5px rgba(13, 71, 161, 0.12), 0 10px 10px -5px rgba(13, 71, 161, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: adminSelectDropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: top center;
+}
+
+.admin-searchable-popover.open-upwards {
+    transform-origin: bottom center;
+    animation-name: adminSelectDropUp;
+}
+
+/* Khusus Popover Tanpa Search (Status, Tingkat, Gender, dsb) */
+.admin-searchable-popover.no-search {
+    border-radius: 0.875rem;
+    box-shadow: 0 14px 28px -4px rgba(13, 71, 161, 0.14), 0 6px 12px -2px rgba(13, 71, 161, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.7);
+}
+
+.admin-searchable-popover.no-search .admin-searchable-options {
+    padding: 0.35rem;
+    max-height: 240px;
+}
+
+/* Sizing responsif selaras untuk filter bar (py-1.5, text-xs, dsb) */
+.teacher-portal .admin-searchable-wrap[class*="text-xs"] .admin-searchable-trigger,
+.teacher-portal .admin-searchable-wrap[class*="py-1"] .admin-searchable-trigger {
+    min-height: 34px !important;
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    font-size: 0.75rem !important;
+}
+
+.teacher-portal .admin-searchable-wrap[class*="w-"] {
+    display: inline-block;
+}
+
+@keyframes adminSelectDropIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes adminSelectDropUp {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   9. SEARCH BOX HEADER DI DALAM POPOVER
+   -------------------------------------------------------------------------- */
+.admin-searchable-header {
+    padding: 0.55rem;
+    background-color: #FAFDFF;
+    border-bottom: 1px solid #E2E8F0;
+    position: relative;
+}
+
+.admin-searchable-searchbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.admin-searchable-search-icon {
+    position: absolute;
+    left: 0.65rem;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: #0D47A1;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.admin-searchable-input {
+    width: 100%;
+    min-height: 34px !important;
+    padding: 0.4rem 1.75rem 0.4rem 2rem !important;
+    background-color: #FFFFFF !important;
+    border: 1.5px solid #E2E8F0 !important;
+    border-radius: 0.55rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    color: #0D2A4A !important;
+    outline: none !important;
+    transition: all 0.15s ease;
+}
+
+.admin-searchable-input:focus {
+    border-color: #2196F3 !important;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15) !important;
+}
+
+.admin-searchable-input::placeholder {
+    color: #94A3B8 !important;
+    font-weight: 400 !important;
+}
+
+.admin-searchable-input-clear {
+    position: absolute;
+    right: 0.5rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    color: #94A3B8;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.admin-searchable-input-clear:hover {
+    color: #E11D48;
+    background-color: #FFE4E6;
+}
+
+/* --------------------------------------------------------------------------
+   10. OPTIONS LIST (HAPUS SCROLLBAR TOTAL)
+   -------------------------------------------------------------------------- */
+.admin-searchable-options {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 0.35rem;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}
+
+.admin-searchable-options::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.admin-searchable-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: #0D2A4A;
+    transition: background-color 0.12s ease, color 0.12s ease;
+    user-select: none;
+}
+
+.admin-searchable-option:hover,
+.admin-searchable-option.is-highlighted {
+    background-color: #F0F7FF;
+    color: #0D47A1;
+}
+
+.admin-searchable-option.is-selected {
+    background-color: #E3F2FD;
+    color: #0D47A1;
+    font-weight: 600;
+}
+
+.admin-searchable-option-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.admin-searchable-option-subtext {
+    font-size: 0.7rem;
+    color: #64748B;
+    display: block;
+    margin-top: 1px;
+}
+
+.admin-searchable-option mark {
+    background-color: #BAE6FD;
+    color: #0369A1;
+    font-weight: 700;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.admin-searchable-check {
+    width: 1rem;
+    height: 1rem;
+    color: #2196F3;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   11. EMPTY STATE (TIDAK ADA DATA)
+   -------------------------------------------------------------------------- */
+.admin-searchable-empty {
+    padding: 1.5rem 1rem;
+    text-align: center;
+    color: #64748B;
+}
+
+.admin-searchable-empty-icon {
+    width: 2rem;
+    height: 2rem;
+    margin: 0 auto 0.5rem;
+    color: #94A3B8;
+    opacity: 0.7;
+}
+
+.admin-searchable-empty-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #0D2A4A;
+    margin-bottom: 0.2rem;
+}
+
+.admin-searchable-empty-desc {
+    font-size: 0.7rem;
+    color: #94A3B8;
+}
+
+/* --------------------------------------------------------------------------
+   12. STATUS BAR FOOTER
+   -------------------------------------------------------------------------- */
+.admin-searchable-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.65rem;
+    background-color: #FAFDFF;
+    border-top: 1px solid #E2E8F0;
+    font-size: 0.68rem;
+    color: #94A3B8;
+}
+
+.admin-searchable-footer strong {
+    color: #0D47A1;
+    font-weight: 600;
+}
+
+.admin-searchable-footer kbd {
+    display: inline-block;
+    padding: 0.1rem 0.35rem;
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #475569;
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+}
