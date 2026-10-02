@@ -418,7 +418,7 @@
                         @foreach ($companies as $company)
                             <div class="industri-logo-card">
                                 @if (filled($company->logo))
-                                    <img src="{{ asset('storage/' . $company->logo) }}"
+                                    <img src="{{ app(\App\Services\PublicMediaService::class)->url($company->logo, 'public') }}"
                                         alt="{{ $company->name }}"
                                         width="80" height="40"
                                         class="h-9 md:h-10 w-auto object-contain">
@@ -433,7 +433,7 @@
                         @foreach ($companies as $company)
                             <div class="industri-logo-card">
                                 @if (filled($company->logo))
-                                    <img src="{{ asset('storage/' . $company->logo) }}"
+                                    <img src="{{ app(\App\Services\PublicMediaService::class)->url($company->logo, 'public') }}"
                                         alt=""
                                         width="80" height="40"
                                         class="h-9 md:h-10 w-auto object-contain">
@@ -652,7 +652,7 @@
                         class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
                         aria-label="Baca artikel: {{ $article->title }}"></a>
                     <div class="berita-card__thumb h-44 sm:h-48">
-                        <x-public.media :model="$article" alt="{{ $article->title }}"
+                        <x-public.media :model="$article" column="thumbnail" alt="{{ $article->title }}"
                             class="w-full h-full object-cover" icon="news" />
                     </div>
                     <div class="p-5 flex flex-col flex-1">

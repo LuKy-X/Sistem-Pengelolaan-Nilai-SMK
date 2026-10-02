@@ -19,7 +19,7 @@ class StudentProductController extends Controller
         $selectedCategory = $request->integer('kategori') ?: null;
 
         $products = StudentProduct::query()
-            ->with(['category', 'department'])
+            ->with(['category', 'department', 'media'])
             ->where('status', 'AVAILABLE')
             ->when($selectedCategory, fn ($query) => $query->where('category_id', $selectedCategory))
             ->orderByDesc('id')
@@ -43,7 +43,7 @@ class StudentProductController extends Controller
         $studentProduct->load(['category', 'department', 'media']);
 
         $relatedProducts = StudentProduct::query()
-            ->with(['category', 'department'])
+            ->with(['category', 'department', 'media'])
             ->where('status', 'AVAILABLE')
             ->whereKeyNot($studentProduct->getKey())
             ->when(
@@ -57,7 +57,7 @@ class StudentProductController extends Controller
         if ($relatedProducts->count() < self::RELATED_LIMIT) {
             $relatedProducts = $relatedProducts->concat(
                 StudentProduct::query()
-                    ->with(['category', 'department'])
+                    ->with(['category', 'department', 'media'])
                     ->where('status', 'AVAILABLE')
                     ->whereNotIn('id', $relatedProducts->pluck('id')->push($studentProduct->getKey()))
                     ->orderByDesc('id')

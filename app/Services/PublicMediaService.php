@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -29,13 +30,14 @@ class PublicMediaService
             return null;
         }
 
-        if (str_starts_with($path, ['http://', 'https://', '//', '/', 'data:'])) {
+        $path = str_replace('\\', '/', trim($path));
+
+        if (Str::startsWith($path, ['http://', 'https://', '//', '/', 'data:'])) {
             return $path;
         }
 
-        if ($disk === null || $disk === 'public') {
-            return asset('storage/'.$path);
-        }
+        $path = preg_replace('#^(?:storage/app/public|storage|public)/+#i', '', $path) ?? $path;
+        $disk ??= 'public';
 
         try {
             $url = Storage::disk($disk)->url($path);
@@ -62,16 +64,26 @@ class PublicMediaService
             return null;
         }
 
-        $query = $model->media();
+        if ($model->relationLoaded('media')) {
+            $media = $model->getRelation('media')
+                ->sortByDesc('id')
+                ->first(fn ($item): bool => $collection === null || $item->collection === $collection);
 
-        if ($collection !== null) {
-            $query->where('collection', $collection);
-        }
+            if ($media === null && $collection !== null) {
+                $media = $model->getRelation('media')->sortByDesc('id')->first();
+            }
+        } else {
+            $query = $model->media();
 
-        $media = $query->orderByDesc('id')->first();
+            if ($collection !== null) {
+                $query->where('collection', $collection);
+            }
 
-        if ($media === null && $collection !== null) {
-            $media = $model->media()->orderByDesc('id')->first();
+            $media = $query->orderByDesc('id')->first();
+
+            if ($media === null && $collection !== null) {
+                $media = $model->media()->orderByDesc('id')->first();
+            }
         }
 
         return $media === null ? null : $this->url($media->path, $media->disk);

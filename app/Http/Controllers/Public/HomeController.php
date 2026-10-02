@@ -71,7 +71,7 @@ class HomeController extends Controller
     {
         return Article::query()
             ->where('status', ContentStatus::Published)
-            ->with('category')
+            ->with(['category', 'media'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->limit(config('public_site.landing_limits.articles'))
@@ -81,7 +81,7 @@ class HomeController extends Controller
     private function latestAchievements(): mixed
     {
         return Achievement::query()
-            ->with('category')
+            ->with(['category', 'media'])
             ->orderByDesc('is_featured')
             ->orderByDesc('achievement_date')
             ->orderByDesc('id')
@@ -92,7 +92,7 @@ class HomeController extends Controller
     private function featuredProducts(): mixed
     {
         return StudentProduct::query()
-            ->with(['category', 'department'])
+            ->with(['category', 'department', 'media'])
             ->where('status', 'AVAILABLE')
             ->orderByDesc('id')
             ->limit(config('public_site.landing_limits.products'))

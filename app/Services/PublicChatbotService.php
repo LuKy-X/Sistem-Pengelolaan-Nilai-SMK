@@ -13,7 +13,6 @@ use App\Models\Department;
 use App\Models\SiteStatistic;
 use App\Models\StudentProduct;
 use DateTimeInterface;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Throwable;
@@ -27,9 +26,9 @@ use Throwable;
  * whatever an administrator edits shows up on the very next question.
  *
  * Matching is intentionally simple and dependency-free. The visitor question is
- * normalised, then scored against a small keyword table; the highest scoring
- * intent wins and renders its own answer from the database. When nothing scores
- * the visitor still gets a useful fallback listing what the bot can talk about.
+ * normalized and matched against a small keyword table. Questions spanning
+ * multiple topics or requiring teaching-assignment data are routed to the AI
+ * agent so it can combine the relevant database tools.
  *
  * All database access goes through `guard()`, which turns a failing query into
  * `null`: the chatbot keeps answering from the remaining sources instead of
@@ -40,9 +39,8 @@ class PublicChatbotService
     /**
      * Keyword to intent table.
      *
-     * Keywords are matched as *word roots*: `jurusan` also matches "jurusannya",
-     * `daftar` matches "mendaftar", `kerja` matches "pekerjaan". That is what
-     * makes the everyday Indonesian phrasing visitors type resolve correctly.
+     * Keywords are matched as word prefixes: `jurusan` also matches
+     * "jurusannya" without matching a keyword inside an unrelated word.
      *
      * @var list<array{intent: string, keywords: list<string>}>
      */
@@ -54,11 +52,11 @@ class PublicChatbotService
         ['intent' => 'achievement', 'keywords' => ['prestasi', 'juara', 'lomba', 'olimpiade', 'medali', 'podium', 'penghargaan']],
         ['intent' => 'alumni', 'keywords' => ['alumni', 'lulusan', 'kuliah', 'perguruan tinggi', 'beasiswa']],
         ['intent' => 'statistics', 'keywords' => ['jumlah siswa', 'siswa aktif', 'jumlah guru', 'guru aktif', 'jumlah jurusan', 'statistik', 'berapa siswa', 'berapa guru']],
-        ['intent' => 'news', 'keywords' => ['berita', 'artikel', 'pengumuman', 'info terbaru', 'kegiatan', 'acara', 'agenda']],
+        ['intent' => 'news', 'keywords' => ['berita', 'artikel', 'pengumuman', 'info terbaru', 'kabar terbaru', 'kegiatan', 'acara', 'agenda']],
         ['intent' => 'career', 'keywords' => ['pkl', 'magang', 'karier', 'lowongan', 'kerja', 'bkk', 'konseling', 'mitra', 'perusahaan', 'job', 'karir']],
         ['intent' => 'product', 'keywords' => ['produk', 'jasa', 'harga', 'katalog', 'makanan', 'ketos', 'baju', 'sepatu']],
-        ['intent' => 'admission', 'keywords' => ['ppdb', 'pendaftaran', 'daftar', 'admisi', 'jalur', 'syarat', 'biaya', 'uang pangkal', 'gelombang', 'pendaftar', 'kuota']],
-        ['intent' => 'department', 'keywords' => ['jurusan', 'kompetensi', 'prodi', 'program keahlian', 'mata pelajaran', 'sertifikasi', 'praktikum', 'kelas', 'sekolah']],
+        ['intent' => 'admission', 'keywords' => ['ppdb', 'pendaftaran', 'admisi', 'jalur', 'syarat', 'biaya', 'uang pangkal', 'gelombang', 'pendaftar', 'kuota']],
+        ['intent' => 'department', 'keywords' => ['jurusan', 'kompetensi', 'prodi', 'program keahlian', 'sertifikasi', 'praktikum']],
     ];
 
     /**
@@ -81,8 +79,8 @@ class PublicChatbotService
     private const FALLBACK_SUGGESTIONS = [
         'Jurusan apa saja?',
         'Kapan PPDB dibuka?',
-        'Ada lowongan PKL?',
-        'Produk siswa apa saja?',
+        'Berapa jumlah siswa per jurusan?',
+        'Siapa guru pengampu di tiap kelas?',
         'Kontak sekolah?',
     ];
 
@@ -104,7 +102,7 @@ class PublicChatbotService
 
         return [
             'reply' => "Halo! Saya asisten virtual {$name}.\n"
-                .'Saya terhubung langsung ke data sekolah, jadi saya bisa bantu soal jurusan, PPDB, PKL, produk karya siswa, prestasi, sampai kontak sekolah.',
+                .'Saya menjawab berdasarkan data sekolah, seperti jurusan, PPDB, jumlah siswa, kelas dan guru pengampu, prestasi, serta kontak resmi. Jika datanya belum tersedia, saya akan menyampaikannya apa adanya.',
             'suggestions' => self::FALLBACK_SUGGESTIONS,
         ];
     }
@@ -125,6 +123,18 @@ class PublicChatbotService
 
         if ($question === '') {
             return $this->reply('empty', 'Silakan tulis pertanyaanmu dulu, ya.', self::FALLBACK_SUGGESTIONS);
+        }
+
+        if ($this->isPersonalInformationQuestion($question)) {
+            return $this->reply(
+                'privacy',
+                'Maaf, saya tidak dapat membantu membagikan alamat rumah atau informasi pribadi kepala sekolah, guru, maupun siswa. Saya hanya dapat membantu dengan informasi resmi sekolah.',
+                ['Alamat resmi sekolah?', 'Kontak sekolah?'],
+            );
+        }
+
+        if ($this->requiresAiAnswer($question)) {
+            return $this->fallbackAnswer();
         }
 
         $detail = $this->wantsDetail($question);
@@ -151,64 +161,109 @@ class PublicChatbotService
        ========================================================= */
 
     /**
-     * Pick the intent that best explains the question.
+     * Return a local intent only when exactly one topic matches.
      *
-     * Scoring is dominated by keyword specificity, because a longer root is a
-     * stronger signal than a short generic one: in "daftar produk" `produk`
-     * (7 chars) must outrank `daftar` (5 chars). Position breaks the remaining
-     * ties, and the head noun of an Indonesian question usually comes last, so
-     * "daftar produk" resolves to products rather than to admission.
-     *
-     * Department *names* are deliberately not part of that table. They only act
-     * as a fallback when no topic keyword matched at all, so "pkl untuk jurusan
-     * RPL" still routes to PKL while "Tentang RPL" reaches the department page.
+     * Department names are deliberately not part of that table. They act as a
+     * fallback only when no topic keyword matched; questions that mention
+     * multiple topics go to the AI agent instead of receiving a partial answer.
      */
     private function detectIntent(string $question): string
     {
         $haystack = $this->normalize($question);
-        $best = '';
-        $bestScore = 0;
-        $bestPosition = -1;
+        $matchedIntents = [];
 
         foreach (self::INTENTS as $group) {
-            $score = 0;
-            $position = -1;
-
             foreach ($group['keywords'] as $keyword) {
-                $offset = $this->rootPosition($haystack, $keyword);
-
-                if ($offset === null) {
-                    continue;
+                if ($this->rootPosition($haystack, $keyword) !== null) {
+                    $matchedIntents[$group['intent']] = true;
+                    break;
                 }
-
-                $score += mb_strlen($keyword);
-                $position = max($position, $offset);
-            }
-
-            if ($score === 0) {
-                continue;
-            }
-
-            if ($score > $bestScore || ($score === $bestScore && $position > $bestPosition)) {
-                $bestScore = $score;
-                $bestPosition = $position;
-                $best = $group['intent'];
             }
         }
 
-        if ($best !== '') {
-            return $best;
+        $allMatchedIntents = array_keys($matchedIntents);
+        $matchedIntents = array_values(array_diff($allMatchedIntents, ['greeting', 'thanks']));
+
+        if (count($matchedIntents) > 1) {
+            return '';
+        }
+
+        if (count($matchedIntents) === 1) {
+            return reset($matchedIntents);
+        }
+
+        if ($matchedIntents === []) {
+            if (in_array('thanks', $allMatchedIntents, true)) {
+                return 'thanks';
+            }
+
+            if (in_array('greeting', $allMatchedIntents, true)) {
+                return 'greeting';
+            }
         }
 
         return $this->matchDepartment($question) !== null ? 'department' : '';
     }
 
     /**
+     * Keep personal-data and teaching-assignment questions out of broad local
+     * answers; the former are refused locally and the latter need database tools.
+     */
+    private function requiresAiAnswer(string $question): bool
+    {
+        $haystack = $this->normalize($question);
+
+        foreach (['pengampu', 'mengajar', 'mapel', 'mata pelajaran', 'wali kelas'] as $marker) {
+            if ($this->rootPosition($haystack, $marker) !== null) {
+                return true;
+            }
+        }
+
+        $asksForCounts = $this->rootPosition($haystack, 'jumlah') !== null
+            || $this->rootPosition($haystack, 'berapa') !== null
+            || $this->rootPosition($haystack, 'total') !== null;
+        $mentionsStudents = $this->rootPosition($haystack, 'siswa') !== null
+            || $this->rootPosition($haystack, 'murid') !== null;
+        $mentionsTeachers = $this->rootPosition($haystack, 'guru') !== null
+            || $this->rootPosition($haystack, 'pengajar') !== null;
+        $mentionsClass = $this->rootPosition($haystack, 'kelas') !== null
+            || $this->rootPosition($haystack, 'rombel') !== null
+            || $this->rootPosition($haystack, 'tingkat') !== null;
+
+        return ($asksForCounts && $mentionsStudents && $mentionsTeachers)
+            || ($mentionsClass && ($mentionsStudents || $mentionsTeachers));
+    }
+
+    /**
+     * Refuse requests for private contact or residential information.
+     */
+    private function isPersonalInformationQuestion(string $question): bool
+    {
+        $haystack = $this->normalize($question);
+        $mentionsPerson = false;
+        foreach (['kepala sekolah', 'kepsek', 'guru', 'pengajar', 'wali kelas', 'siswa', 'murid', 'pegawai', 'staf'] as $marker) {
+            if ($this->rootPosition($haystack, $marker) !== null) {
+                $mentionsPerson = true;
+                break;
+            }
+        }
+
+        $requestsPrivateInformation = false;
+        foreach (['rumah', 'alamat pribadi', 'tempat tinggal', 'tinggal di mana', 'nomor pribadi', 'nomor hp pribadi', 'no hp pribadi'] as $marker) {
+            if ($this->rootPosition($haystack, $marker) !== null) {
+                $requestsPrivateInformation = true;
+                break;
+            }
+        }
+
+        return $mentionsPerson && $requestsPrivateInformation;
+    }
+
+    /**
      * Character offset where `keyword` appears as the root of a word, or null.
      *
      * Root matching is anchored at a word start, so `hi` never fires inside
-     * "histori", while the trailing `\w*` is what lets `jurusan` match
-     * "jurusannya" and `daftar` match "mendaftar".
+     * "histori", while the trailing `\w*` lets `jurusan` match "jurusannya".
      */
     private function rootPosition(string $haystack, string $keyword): ?int
     {
@@ -772,28 +827,9 @@ class PublicChatbotService
      */
     private function fallbackAnswer(): array
     {
-        $known = ['berita, prestasi, dan cerita alumni terbaru', 'alamat, telepon, dan email sekolah'];
-
-        if ($this->departments()->isNotEmpty()) {
-            array_unshift($known, 'daftar jurusan dan kompetensi tiap jurusan');
-        }
-
-        if ($this->countWhere(AdmissionPeriod::query()->where('status', 'OPEN')) > 0) {
-            array_unshift($known, 'jadwal, jalur, syarat, dan biaya PPDB');
-        }
-
-        if ($this->countWhere(CareerOpportunity::query()->where('status', CareerOpportunityStatus::Open)) > 0) {
-            array_unshift($known, 'lowongan kerja dan magang dari mitra industri');
-        }
-
-        if ($this->countWhere(StudentProduct::query()->where('status', 'AVAILABLE')) > 0) {
-            array_unshift($known, 'produk dan jasa karya siswa lengkap dengan harganya');
-        }
-
         return $this->reply(
             'fallback',
-            "Maaf, aku belum menemukan jawaban yang pas untuk pertanyaan itu.\n"
-            .'Tapi aku baca langsung data sekolah, jadi aku bisa bantu soal: '.implode(', ', $known).'.',
+            'Saya akan mencari jawaban berdasarkan data sekolah yang tersedia.',
             self::FALLBACK_SUGGESTIONS,
         );
     }
@@ -948,14 +984,6 @@ class PublicChatbotService
         } catch (Throwable) {
             return null;
         }
-    }
-
-    /**
-     * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $query
-     */
-    private function countWhere(Builder $query): int
-    {
-        return (int) ($this->guard(fn (): int => $query->count()) ?? 0);
     }
 
     private function schoolName(): string
