@@ -32,16 +32,16 @@
 
   <div class="db-sidebar-backdrop" id="dbBackdrop"></div>
 
-  <aside class="db-sidebar w-48 sm:w-52 lg:w-56 flex-shrink-0 flex flex-col p-2.5 lg:p-3" id="dbSidebar">
-    <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2 px-1 mb-4">
-      <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-7 h-7 object-contain">
+  <aside class="db-sidebar w-56 lg:w-60 flex-shrink-0 flex flex-col p-3.5 lg:p-4" id="dbSidebar">
+    <a href="{{ route('teacher.dashboard') }}" class="flex items-center gap-2.5 px-1 mb-5">
+      <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-8 h-8 object-contain">
       <div class="leading-tight">
-        <div class="font-heading font-bold text-bluedark text-xs">SMK Negeri 2</div>
-        <div class="text-[9.5px] text-bluedark/60 font-medium">Karanganyar</div>
+        <div class="font-heading font-bold text-bluedark text-sm">SMK Negeri 2</div>
+        <div class="text-[10.5px] text-bluedark/60 font-medium">Karanganyar</div>
       </div>
     </a>
 
-    <nav class="flex flex-col gap-1 flex-1 db-scroll overflow-y-auto">
+    <nav class="flex flex-col gap-1.5 flex-1 db-scroll overflow-y-auto">
       <a href="{{ route('teacher.dashboard') }}" class="db-nav-item {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
         <span>Dashboard</span>
@@ -75,17 +75,17 @@
 
   <div class="flex-1 min-w-0 flex flex-col">
 
-    <header class="db-topbar sticky top-0 z-30 flex items-center gap-2 px-3 sm:px-4 md:px-5 h-11 min-h-[44px]">
+    <header class="db-topbar sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 h-13 min-h-[50px]">
       <button id="sidebarToggle" class="lg:hidden text-bluedark p-1.5 -ml-1.5" aria-label="Buka Menu">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       <div class="relative flex-1 max-w-xs hidden sm:block">
-        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-bluesoft" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search here ..." class="w-full bg-bluelight/60 border border-bluelight rounded-md pl-8 pr-2.5 py-1 text-xs outline-none focus:border-blueprim">
+        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-bluesoft" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search here ..." class="w-full bg-bluelight/60 border border-bluelight rounded-lg pl-8.5 pr-3 py-1.5 text-xs sm:text-sm outline-none focus:border-blueprim">
       </div>
-      <div class="ml-auto flex items-center gap-2">
-        <button class="relative w-7 h-7 rounded-lg bg-bluelight/70 flex items-center justify-center text-bluedark" title="Notifikasi">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="ml-auto flex items-center gap-2.5">
+        <button class="relative w-8 h-8 rounded-lg bg-bluelight/70 flex items-center justify-center text-bluedark" title="Notifikasi">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-red-500 border border-white"></span>
         </button>
         <div class="relative" id="profileMenuWrap">
@@ -116,7 +116,7 @@
       </div>
     </header>
 
-    <main class="flex-1 p-2.5 sm:p-4 lg:p-5 space-y-3.5 lg:space-y-4">
+    <main class="flex-1 p-3.5 sm:p-5 lg:p-6 space-y-4 lg:space-y-5">
 
       @if(session('success'))
         <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-xs">
@@ -162,6 +162,7 @@
 
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
+
 @stack('scripts')
 </body>
 </html>

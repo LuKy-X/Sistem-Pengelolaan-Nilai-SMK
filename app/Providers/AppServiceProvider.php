@@ -10,6 +10,7 @@ use App\Observers\ExitPermitObserver;
 use App\Observers\GradebookScoreObserver;
 use App\View\Composers\PublicSiteComposer;
 use App\View\Composers\StudentNotificationCount;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Paginator::useTailwind();
         $this->composePublicViews();
         $this->composeStudentViews();
         $this->registerNotificationObservers();

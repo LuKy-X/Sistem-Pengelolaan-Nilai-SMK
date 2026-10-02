@@ -216,6 +216,15 @@ body.is-landing .link-card:focus-within::before {
   top: -183px;
 }
 
+.jurusan-card__title {
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.jurusan-card__text {
+  font-size: 0.875rem;
+}
+
 .jurusan-card__art-wrap {
   position: absolute;
   top: 20px;
@@ -251,10 +260,20 @@ body.is-landing .link-card:focus-within::before {
 }
 
 @media (min-width: 1024px) {
-  .jurusan-item { padding-top: 191px; }
-  .jurusan-card { padding: 97px 24px 26px; }
-  .jurusan-card__link { top: -191px; }
-  .jurusan-card__art-wrap { width: 310px; height: 270px; top: 20px; }
+  .jurusan-item { padding-top: 162px; }
+  .jurusan-card { padding: 74px 22px 24px; }
+  .jurusan-card__link { top: -162px; }
+  .jurusan-card__art-wrap { width: 252px; height: 218px; top: 18px; }
+  .jurusan-card__title { font-size: 1rem; line-height: 1.35; }
+  .jurusan-card__text { font-size: 0.8125rem; }
+}
+
+@media (min-width: 1280px) {
+  .jurusan-item { padding-top: 176px; }
+  .jurusan-card { padding: 86px 24px 26px; }
+  .jurusan-card__link { top: -176px; }
+  .jurusan-card__art-wrap { width: 272px; height: 236px; top: 18px; }
+  .jurusan-card__title { font-size: 1.0625rem; }
 }
 
 
@@ -361,45 +380,65 @@ body.is-landing .link-card:focus-within::before {
 }
 
 
-/* AI chat widget */
+/* =========================================================
+   AI chat widget
+   Lightweight by design: only `transform` and `opacity` are
+   animated, no layout-thrashing properties, no images.
+   ========================================================= */
 .ai-chat-launcher {
   position: fixed;
-  right: 1.25rem;
-  bottom: 1.25rem;
+  right: 1rem;
+  bottom: max(1rem, env(safe-area-inset-bottom));
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
 }
 @media (min-width: 768px) {
-  .ai-chat-launcher { right: 2rem; bottom: 2rem; gap: 0.75rem; }
+  .ai-chat-launcher { right: 2rem; bottom: 2rem; gap: 0.65rem; }
 }
 
 .ai-chat-fab {
-  width: 3.5rem;
-  height: 3.5rem;
+  width: 3.25rem;
+  height: 3.25rem;
   border-radius: 9999px;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform .35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .35s cubic-bezier(0.22, 1, 0.36, 1), background-color .35s ease;
+  transition: transform .3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .3s cubic-bezier(0.22, 1, 0.36, 1), background-color .3s ease;
 }
 @media (min-width: 768px) {
-  .ai-chat-fab { width: 3.75rem; height: 3.75rem; }
+  .ai-chat-fab { width: 3.5rem; height: 3.5rem; }
 }
 
 .ai-chat-fab--main {
   position: relative;
   flex-shrink: 0;
-  background: #0D47A1;
-  box-shadow: 0 14px 34px -10px rgba(13, 71, 161, 0.55);
-}
-body.is-landing .ai-chat-fab--main {
   background: linear-gradient(135deg, #2196F3, #0D47A1);
+  box-shadow: 0 12px 28px -10px rgba(13, 71, 161, 0.6);
 }
-.ai-chat-fab--main:hover { transform: translateY(-3px) scale(1.05); }
+.ai-chat-fab--main:hover { transform: translateY(-2px) scale(1.04); }
+.ai-chat-fab--main:active { transform: scale(0.96); }
+
+/* Attention pulse: a single ring that fades and scales away, GPU friendly. */
+.ai-chat-fab__pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid rgba(33, 150, 243, 0.6);
+  opacity: 0;
+  pointer-events: none;
+}
+.ai-chat-fab--main[aria-expanded="false"] .ai-chat-fab__pulse {
+  animation: ai-chat-pulse 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+@keyframes ai-chat-pulse {
+  0%   { opacity: 0.55; transform: scale(1); }
+  70%  { opacity: 0;    transform: scale(1.45); }
+  100% { opacity: 0;    transform: scale(1.45); }
+}
 
 .ai-chat-fab__icon {
   position: absolute;
@@ -407,7 +446,7 @@ body.is-landing .ai-chat-fab--main {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity .3s cubic-bezier(0.22, 1, 0.36, 1), transform .35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity .25s cubic-bezier(0.22, 1, 0.36, 1), transform .3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ai-chat-fab__icon--close {
   opacity: 0;
@@ -421,91 +460,343 @@ body.is-landing .ai-chat-fab--main {
   opacity: 1;
   transform: rotate(0deg) scale(1);
 }
+.ai-chat-fab--main[aria-expanded="true"] .ai-chat-fab__pulse { display: none; }
 
 .ai-chat-fab--reset {
-  width: 2.85rem;
-  height: 2.85rem;
+  width: 2.6rem;
+  height: 2.6rem;
   background: #FFFFFF;
   border: 1px solid #E3F2FD;
-  box-shadow: 0 10px 26px -10px rgba(13, 71, 161, 0.3);
+  color: #0D47A1;
+  box-shadow: 0 8px 22px -10px rgba(13, 71, 161, 0.35);
   opacity: 0;
   transform: scale(0.5) translateX(10px);
   pointer-events: none;
 }
 @media (min-width: 768px) {
-  .ai-chat-fab--reset { width: 3.1rem; height: 3.1rem; }
+  .ai-chat-fab--reset { width: 2.85rem; height: 2.85rem; }
 }
 .ai-chat-fab--reset.is-visible {
   opacity: 1;
   transform: scale(1) translateX(0);
   pointer-events: auto;
 }
-.ai-chat-fab--reset:hover { background: #E3F2FD; transform: scale(1.08) translateX(0); }
-.ai-chat-fab--reset.is-visible:active { transform: scale(0.92) translateX(0); }
+.ai-chat-fab--reset:hover { background: #E3F2FD; transform: scale(1.06) translateX(0); }
+.ai-chat-fab--reset.is-visible:active { transform: scale(0.94) translateX(0); }
 
+/* Panel */
 .ai-chat-panel {
   position: fixed;
-  right: 1.25rem;
-  bottom: 5.25rem;
+  right: 1rem;
+  bottom: max(4.6rem, calc(env(safe-area-inset-bottom) + 4.6rem));
   z-index: 60;
-  width: min(22rem, calc(100vw - 2.5rem));
-  height: min(30rem, calc(100vh - 8rem));
+  width: min(23.5rem, calc(100vw - 2rem));
+  height: min(32rem, calc(100vh - 7.5rem));
   background: #FFFFFF;
-  border-radius: 1.5rem;
-  box-shadow: 0 24px 60px -15px rgba(13, 71, 161, 0.35);
+  border-radius: 1.25rem;
+  box-shadow: 0 26px 60px -18px rgba(13, 71, 161, 0.38);
   border: 1px solid #E3F2FD;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   transform-origin: bottom right;
-  transition: opacity .3s cubic-bezier(0.22, 1, 0.36, 1), transform .3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity .25s cubic-bezier(0.22, 1, 0.36, 1), transform .25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .ai-chat-panel[hidden] {
-  opacity: 0;
-  transform: scale(0.92) translateY(12px);
-  pointer-events: none;
   display: flex;
+  opacity: 0;
+  transform: scale(0.94) translateY(10px);
+  pointer-events: none;
 }
 @media (min-width: 768px) {
-  .ai-chat-panel { right: 2rem; bottom: 6.5rem; }
+  .ai-chat-panel { right: 2rem; bottom: 6rem; }
+}
+@media (max-width: 420px) {
+  .ai-chat-panel {
+    right: 0.6rem;
+    left: 0.6rem;
+    width: auto;
+    height: min(30rem, calc(100vh - 6rem));
+  }
 }
 
-.ai-chat-msg {
-  max-width: 82%;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  padding: 0.6rem 0.9rem;
-  border-radius: 1rem;
-}
-.ai-chat-msg--bot {
-  background: #E3F2FD;
-  color: #0D2A4A;
-  border-bottom-left-radius: 0.3rem;
-  align-self: flex-start;
-}
-.ai-chat-msg--user {
-  background: #0D47A1;
+/* Header */
+.ai-chat-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 0.75rem 0.7rem 0.85rem;
+  background: linear-gradient(120deg, #2196F3 0%, #1565C0 55%, #0D47A1 100%);
   color: #FFFFFF;
-  border-bottom-right-radius: 0.3rem;
-  align-self: flex-end;
+  flex-shrink: 0;
 }
-
-#aiChatMessages {
-  scrollbar-width: thin;
-  scrollbar-color: #BBDEFB transparent;
+.ai-chat-head::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.28), transparent 55%);
+  pointer-events: none;
 }
-#aiChatMessages::-webkit-scrollbar {
-  width: 5px;
+.ai-chat-avatar {
+  position: relative;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-#aiChatMessages::-webkit-scrollbar-track {
+.ai-chat-head__text { min-width: 0; flex: 1; }
+.ai-chat-head__title {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ai-chat-head__actions { display: flex; align-items: center; gap: 0.15rem; flex-shrink: 0; }
+.ai-chat-icon-btn {
+  width: 1.9rem;
+  height: 1.9rem;
+  border: none;
+  border-radius: 9999px;
   background: transparent;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color .2s ease, transform .2s ease;
 }
-#aiChatMessages::-webkit-scrollbar-thumb {
+.ai-chat-icon-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.ai-chat-icon-btn:active { transform: scale(0.9); }
+.ai-chat-icon-btn:focus-visible { outline: 2px solid #FFFFFF; outline-offset: 1px; }
+
+/* Body */
+.ai-chat-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.9rem 0.85rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(144, 202, 249, 0.16), transparent 60%),
+    #F7FBFF;
+}
+.ai-chat-body::-webkit-scrollbar { width: 5px; }
+.ai-chat-body::-webkit-scrollbar-track { background: transparent; }
+.ai-chat-body::-webkit-scrollbar-thumb {
   background-color: #BBDEFB;
   border-radius: 9999px;
 }
-#aiChatMessages::-webkit-scrollbar-thumb:hover {
-  background-color: #90CAF9;
+.ai-chat-body::-webkit-scrollbar-thumb:hover { background-color: #90CAF9; }
+.ai-chat-body { scrollbar-width: thin; scrollbar-color: #BBDEFB transparent; }
+
+.ai-chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  max-width: 100%;
+  animation: ai-msg-in .28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.ai-chat-row--user { flex-direction: row-reverse; }
+@keyframes ai-msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ai-chat-row__avatar {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #2196F3, #0D47A1);
+  color: #FFFFFF;
+  margin-bottom: 0.15rem;
+}
+
+.ai-chat-bubble {
+  max-width: 84%;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  padding: 0.6rem 0.8rem;
+  border-radius: 1rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.ai-chat-bubble--bot {
+  background: #FFFFFF;
+  color: #0D2A4A;
+  border: 1px solid #E3F2FD;
+  border-bottom-left-radius: 0.3rem;
+  box-shadow: 0 4px 14px -8px rgba(13, 71, 161, 0.35);
+}
+.ai-chat-bubble--user {
+  background: linear-gradient(135deg, #2196F3, #1565C0);
+  color: #FFFFFF;
+  border-bottom-right-radius: 0.3rem;
+  box-shadow: 0 6px 16px -8px rgba(13, 71, 161, 0.6);
+}
+.ai-chat-bubble p + p { margin-top: 0.3rem; }
+.ai-chat-bubble strong { font-weight: 600; }
+.ai-chat-bubble--bot strong { color: #0D47A1; }
+.ai-chat-bubble--user strong { color: #FFFFFF; }
+
+/* Quick links returned by the backend */
+.ai-chat-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+}
+.ai-chat-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  background: #E3F2FD;
+  color: #0D47A1;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color .2s ease, transform .2s ease;
+}
+.ai-chat-links a:hover { background: #BBDEFB; transform: translateY(-1px); }
+.ai-chat-links a:focus-visible { outline: 2px solid #0D47A1; outline-offset: 2px; }
+
+/* Typing indicator */
+.ai-chat-typing {
+  display: flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.7rem 0.85rem;
+}
+.ai-chat-typing span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: #90CAF9;
+  animation: ai-dot 1.15s ease-in-out infinite;
+}
+.ai-chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.ai-chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ai-dot {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30%           { opacity: 1;    transform: translateY(-3px); }
+}
+
+/* Suggestion chips */
+.ai-chat-suggestions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.25rem 0.85rem 0.6rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: #F7FBFF;
+}
+.ai-chat-suggestions::-webkit-scrollbar { display: none; }
+.ai-chat-suggestions[hidden] { display: none; }
+.ai-chat-suggestion {
+  flex: 0 0 auto;
+  border: 1px solid #BBDEFB;
+  background: #FFFFFF;
+  color: #0D47A1;
+  border-radius: 9999px;
+  padding: 0.35rem 0.7rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.ai-chat-suggestion:hover {
+  background: #E3F2FD;
+  border-color: #90CAF9;
+  transform: translateY(-1px);
+}
+.ai-chat-suggestion:focus-visible { outline: 2px solid #0D47A1; outline-offset: 2px; }
+
+/* Composer */
+.ai-chat-composer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.7rem;
+  padding-bottom: max(0.6rem, env(safe-area-inset-bottom));
+  background: #FFFFFF;
+  border-top: 1px solid #E3F2FD;
+}
+.ai-chat-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid transparent;
+  background: #F1F7FE;
+  color: #0D2A4A;
+  border-radius: 9999px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+.ai-chat-input::placeholder { color: rgba(13, 42, 74, 0.4); }
+.ai-chat-input:focus {
+  background: #FFFFFF;
+  border-color: #90CAF9;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+}
+.ai-chat-send {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #2196F3, #0D47A1);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .2s ease, opacity .2s ease, box-shadow .2s ease;
+  box-shadow: 0 6px 16px -8px rgba(13, 71, 161, 0.7);
+}
+.ai-chat-send:hover { transform: translateY(-1px); }
+.ai-chat-send:active { transform: scale(0.92); }
+.ai-chat-send:focus-visible { outline: 2px solid #0D47A1; outline-offset: 2px; }
+.ai-chat-send:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-chat-fab, .ai-chat-fab__pulse, .ai-chat-panel,
+  .ai-chat-icon-btn, .ai-chat-links a, .ai-chat-suggestion, .ai-chat-send {
+    transition: none;
+  }
+  .ai-chat-fab--main[aria-expanded="false"] .ai-chat-fab__pulse,
+  .ai-chat-typing span {
+    animation: none;
+  }
+  .ai-chat-row { animation: none; }
 }
 
 
@@ -942,6 +1233,19 @@ body {
 .pagination button:hover:not(:disabled) { background: #E3F2FD; }
 .pagination button.active { background: #2196F3; color: #fff; }
 .pagination button:disabled { opacity: .35; cursor: not-allowed; }
+
+/* Pagination link-based (modul BK, <a> hasil Laravel paginate()->links()) */
+.bk-pagination { display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+.bk-pagination a, .bk-pagination span {
+  min-width: 30px; height: 30px; padding: 0 .5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid #E3F2FD; border-radius: .6rem; background: #fff;
+  color: #0D47A1; font-size: .78rem; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.bk-pagination a:hover { background: #E3F2FD; }
+.bk-pagination a.is-active, .bk-pagination span.is-active { background: #2196F3; border-color: #2196F3; color: #fff; }
+.bk-pagination span.is-disabled, .bk-pagination span.pg-ellipsis { opacity: .4; border-color: transparent; background: transparent; }
 
 /* Toggle switch */
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
@@ -1492,25 +1796,25 @@ body {
 }
 
 /* =========================================================
-   Teacher Portal Compact & Fluid Responsive Scaling System
-   Optimized for standard 100% browser zoom
+   Teacher Portal Balanced Responsive Scaling System
+   Optimized for standard 100% browser zoom - slightly larger, clean & legible
    ========================================================= */
 
-/* Fluid base scale across viewports: rem units scale down proportionally */
+/* Fluid base scale across viewports: rem units scale nicely */
 html.teacher-portal-html {
-  font-size: clamp(12px, 0.18vw + 11.2px, 13.25px);
+  font-size: clamp(14px, 0.22vw + 13.4px, 15.5px);
 }
 
 @media (max-width: 640px) {
   html.teacher-portal-html {
-    font-size: 13px;
+    font-size: 14px;
   }
 }
 
 /* Base typography & colors for teacher portal */
 body.teacher-portal {
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  font-size: 0.875rem;
+  line-height: 1.5;
   background-color: #F8FAFD;
   color: #0D2A4A;
 }
@@ -1519,46 +1823,46 @@ body.teacher-portal {
 .teacher-portal h1,
 .teacher-portal h1.font-heading,
 .teacher-portal .text-2xl {
-  font-size: clamp(1.05rem, 1.15vw, 1.25rem) !important;
-  line-height: 1.25 !important;
+  font-size: clamp(1.2rem, 1.35vw, 1.45rem) !important;
+  line-height: 1.3 !important;
 }
 
 .teacher-portal h2,
 .teacher-portal h2.font-heading,
 .teacher-portal .text-xl {
-  font-size: clamp(0.9rem, 0.95vw, 1rem) !important;
-  line-height: 1.25 !important;
+  font-size: clamp(1.02rem, 1.12vw, 1.18rem) !important;
+  line-height: 1.3 !important;
 }
 
 .teacher-portal h3,
 .teacher-portal h3.font-heading,
 .teacher-portal .text-lg {
-  font-size: 0.85rem !important;
-  line-height: 1.25 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.3 !important;
 }
 
 .teacher-portal p.text-sm {
-  font-size: 0.76rem !important;
+  font-size: 0.82rem !important;
 }
 
 /* Sidebar navigation */
 .teacher-portal .db-sidebar {
-  padding: 0.75rem 0.65rem !important;
+  padding: 1rem 0.85rem !important;
 }
 .teacher-portal .db-sidebar nav {
-  gap: 0.2rem !important;
+  gap: 0.35rem !important;
 }
 .teacher-portal .db-nav-item {
-  gap: 0.55rem;
-  padding: 0.38rem 0.7rem;
-  min-height: 34px;
-  border-radius: 8px;
-  font-size: 0.75rem;
+  gap: 0.7rem;
+  padding: 0.52rem 0.88rem;
+  min-height: 40px;
+  border-radius: 10px;
+  font-size: 0.825rem;
   font-weight: 500;
 }
 .teacher-portal .db-nav-item svg {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
 }
 .teacher-portal .db-nav-item.active {
   box-shadow: 0 2px 8px rgba(24, 144, 246, 0.28);
@@ -1567,100 +1871,100 @@ body.teacher-portal {
 
 /* Topbar */
 .teacher-portal .db-topbar {
-  height: 2.85rem !important;
-  min-height: 44px !important;
+  height: 3.5rem !important;
+  min-height: 52px !important;
 }
 .teacher-portal .avatar-circle {
-  width: 28px;
-  height: 28px;
-  font-size: 0.7rem;
+  width: 32px;
+  height: 32px;
+  font-size: 0.78rem;
 }
 .teacher-portal .avatar-circle--lg {
-  width: 34px;
-  height: 34px;
-  font-size: 0.78rem;
+  width: 40px;
+  height: 40px;
+  font-size: 0.88rem;
 }
 
 /* Vertical spacing rhythm */
 .teacher-portal .space-y-6 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.85rem !important;
+  margin-top: 1.15rem !important;
 }
 .teacher-portal .space-y-5 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.75rem !important;
+  margin-top: 1rem !important;
 }
 .teacher-portal .space-y-4 > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0.65rem !important;
+  margin-top: 0.85rem !important;
 }
 
 /* Panels, Cards & KPI */
 .teacher-portal .panel {
-  border-radius: 0.75rem !important;
-  padding: 0.85rem 1rem !important;
-  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+  border-radius: 0.95rem !important;
+  padding: 1.15rem 1.35rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.08) !important;
 }
 .teacher-portal .kpi-card {
-  border-radius: 0.75rem !important;
-  padding: 0.6rem 0.8rem !important;
-  gap: 0.6rem !important;
-  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+  border-radius: 0.95rem !important;
+  padding: 0.85rem 1.05rem !important;
+  gap: 0.8rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.08) !important;
 }
 .teacher-portal .kpi-icon {
-  width: 30px !important;
-  height: 30px !important;
-  border-radius: 0.5rem !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 0.65rem !important;
 }
 .teacher-portal .kpi-icon svg {
-  width: 15px !important;
-  height: 15px !important;
+  width: 19px !important;
+  height: 19px !important;
 }
 .teacher-portal .kpi-card .font-heading.text-xl,
 .teacher-portal .kpi-card .font-heading.text-2xl,
 .teacher-portal .kpi-card .text-xl,
 .teacher-portal .kpi-card .text-2xl {
-  font-size: 1.05rem !important;
+  font-size: 1.25rem !important;
 }
 
 /* Form blocks */
 .teacher-portal .form-block {
-  border-radius: 0.75rem !important;
-  box-shadow: 0 3px 14px -3px rgba(13, 71, 161, 0.07) !important;
+  border-radius: 0.95rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.08) !important;
 }
 .teacher-portal .form-block__header {
-  padding: 0.55rem 0.95rem !important;
+  padding: 0.75rem 1.2rem !important;
 }
 .teacher-portal .form-block__header h3 {
-  font-size: 0.82rem !important;
+  font-size: 0.92rem !important;
 }
 .teacher-portal .form-block__header p {
-  font-size: 0.68rem !important;
-  margin-top: 0.1rem !important;
+  font-size: 0.78rem !important;
+  margin-top: 0.15rem !important;
 }
 .teacher-portal .form-block__body {
-  padding: 0.85rem 0.95rem !important;
+  padding: 1.1rem 1.2rem !important;
 }
 
 /* Tables */
 .teacher-portal .tbl,
 .teacher-portal table {
-  font-size: 0.73rem !important;
+  font-size: 0.82rem !important;
 }
 .teacher-portal .tbl thead th,
 .teacher-portal table thead th {
-  font-size: 0.65rem !important;
-  padding: 0.38rem 0.55rem !important;
+  font-size: 0.72rem !important;
+  padding: 0.55rem 0.75rem !important;
   letter-spacing: 0.025em !important;
 }
 .teacher-portal .tbl tbody td,
 .teacher-portal table tbody td {
-  padding: 0.4rem 0.55rem !important;
-  font-size: 0.73rem !important;
+  padding: 0.55rem 0.75rem !important;
+  font-size: 0.82rem !important;
 }
 
 /* Form Controls & Labels */
 .teacher-portal .f-label,
 .teacher-portal label {
-  font-size: 0.7rem;
-  margin-bottom: 0.18rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.28rem;
 }
 .teacher-portal .f-input,
 .teacher-portal .f-select,
@@ -1671,85 +1975,88 @@ body.teacher-portal {
 .teacher-portal input[type="date"],
 .teacher-portal select,
 .teacher-portal textarea {
-  padding: 0.35rem 0.55rem;
-  font-size: 0.75rem;
-  border-radius: 0.45rem;
+  padding: 0.48rem 0.75rem;
+  font-size: 0.84rem;
+  border-radius: 0.55rem;
 }
 
 /* Buttons & Badges */
 .teacher-portal .btn {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.72rem;
-  border-radius: 0.45rem;
-  gap: 0.3rem;
-  min-height: 28px;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.8rem;
+  border-radius: 0.55rem;
+  gap: 0.35rem;
+  min-height: 34px;
 }
 .teacher-portal .btn-sm {
-  padding: 0.2rem 0.45rem;
-  font-size: 0.66rem;
-  border-radius: 0.38rem;
-  min-height: 24px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.74rem;
+  border-radius: 0.45rem;
+  min-height: 28px;
 }
 .teacher-portal .badge {
-  padding: 0.14rem 0.4rem;
-  font-size: 0.64rem;
-  gap: 0.22rem;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  gap: 0.25rem;
 }
 
 /* Tabs & Step navigation */
 .teacher-portal .arrow-tabs {
-  border-radius: 0.55rem;
+  border-radius: 0.65rem;
 }
 .teacher-portal .arrow-tabs a,
 .teacher-portal .arrow-tabs button {
-  padding: 0.42rem 0.7rem 0.42rem 1.1rem;
-  font-size: 0.72rem;
+  padding: 0.55rem 0.95rem 0.55rem 1.35rem;
+  font-size: 0.8rem;
 }
 .teacher-portal .arrow-tabs a span.step-num,
 .teacher-portal .arrow-tabs button span.step-num {
-  width: 15px;
-  height: 15px;
-  font-size: 0.6rem;
+  width: 18px;
+  height: 18px;
+  font-size: 0.68rem;
 }
 .teacher-portal .tab-pill-group button {
-  padding: 0.38rem 0.7rem;
-  font-size: 0.74rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
 }
 
 /* Crud cards & Kelas cards */
 .teacher-portal .crud-card {
-  padding: 0.65rem 0.75rem;
-  border-radius: 0.75rem;
-  gap: 0.4rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.85rem;
+  gap: 0.5rem;
 }
 .teacher-portal .crud-card__icon {
-  width: 25px;
-  height: 25px;
-  border-radius: 0.45rem;
+  width: 30px;
+  height: 30px;
+  border-radius: 0.5rem;
 }
 .teacher-portal .crud-card__icon svg {
-  width: 13px;
-  height: 13px;
+  width: 16px;
+  height: 16px;
 }
 .teacher-portal .crud-card__title {
-  font-size: 0.78rem;
+  font-size: 0.86rem;
 }
 .teacher-portal .crud-card__sub {
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 .teacher-portal .crud-card__meta {
-  font-size: 0.68rem;
-  gap: 0.6rem;
+  font-size: 0.76rem;
+  gap: 0.75rem;
 }
 
 .teacher-portal .kelas-card {
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
   width: 100% !important;
   text-align: left !important;
   background-color: #FFFFFF !important;
   border: 1.5px solid #E3F2FD !important;
-  border-radius: 0.8rem !important;
-  padding: 0.75rem 0.9rem !important;
+  border-radius: 1rem !important;
+  padding: 1.25rem 1.4rem !important;
+  min-height: 175px;
   cursor: pointer !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
   position: relative !important;
@@ -1759,16 +2066,16 @@ body.teacher-portal {
 .teacher-portal .kelas-card:hover {
   transform: translateY(-2px) !important;
   border-color: #90CAF9 !important;
-  box-shadow: 0 8px 20px -8px rgba(13, 71, 161, 0.16) !important;
+  box-shadow: 0 8px 24px -6px rgba(13, 71, 161, 0.14) !important;
 }
 .teacher-portal .kelas-card.active {
   border-color: #2196F3 !important;
   background-color: #FAFDFF !important;
-  box-shadow: 0 5px 16px -4px rgba(33, 150, 243, 0.22) !important;
+  box-shadow: 0 6px 18px -4px rgba(33, 150, 243, 0.22) !important;
 }
 .teacher-portal .kelas-card .font-heading {
   text-align: left !important;
-  font-size: 0.82rem !important;
+  font-size: 0.98rem !important;
 }
 .teacher-portal .kelas-card div {
   text-align: left !important;
@@ -1778,22 +2085,22 @@ body.teacher-portal {
   flex-direction: row !important;
   align-items: center !important;
   flex-wrap: wrap !important;
-  gap: 0.65rem !important;
-  margin: 0.35rem 0 0.45rem !important;
-  font-size: 0.7rem !important;
+  gap: 0.85rem !important;
+  margin: 0.55rem 0 0.65rem !important;
+  font-size: 0.8rem !important;
   color: #5C7C9E !important;
   text-align: left !important;
 }
 .teacher-portal .kelas-card__meta span {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 0.3rem !important;
+  gap: 0.35rem !important;
   text-align: left !important;
   white-space: nowrap !important;
 }
 .teacher-portal .kelas-card__meta svg {
-  width: 13px !important;
-  height: 13px !important;
+  width: 15px !important;
+  height: 15px !important;
   flex-shrink: 0 !important;
   color: #90CAF9 !important;
   stroke: #2196F3 !important;
@@ -1801,22 +2108,22 @@ body.teacher-portal {
 
 /* Highlight rows & chart box */
 .teacher-portal .hl-row {
-  padding: 0.38rem 0.6rem;
-  border-radius: 0.55rem;
-  font-size: 0.72rem;
+  padding: 0.48rem 0.75rem;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
 }
 .teacher-portal .hl-row .hl-sub {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
 }
 .teacher-portal .chart-box {
-  height: 11rem;
+  height: 12.5rem;
 }
 
 /* Modals */
 .teacher-portal .modal-box {
-  padding: 1.15rem 1.25rem !important;
-  border-radius: 1rem !important;
-  max-width: 28rem !important;
+  padding: 1.35rem 1.5rem !important;
+  border-radius: 1.15rem !important;
+  max-width: 30rem !important;
 }
 
 /* Teacher Gradebook Column Selection & Highlights */
@@ -1861,3 +2168,207 @@ body.teacher-portal {
   color: #BFDBFE !important;
 }
 
+
+
+/* =========================================================
+   BK Portal Responsive Scaling System
+   Sedikit lebih besar dari Teacher Portal — sidebar w-64, spacing longgar
+   ========================================================= */
+
+html.bk-portal-html {
+  font-size: clamp(14px, 0.22vw + 13.4px, 15.5px);
+}
+
+@media (max-width: 640px) {
+  html.bk-portal-html {
+    font-size: 14px;
+  }
+}
+
+body.bk-portal {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  background-color: #F7FBFF;
+  color: #0D2A4A;
+}
+
+/* Headings */
+.bk-portal h1,
+.bk-portal h1.font-heading,
+.bk-portal .text-2xl {
+  font-size: clamp(1.25rem, 1.4vw, 1.5rem) !important;
+  line-height: 1.3 !important;
+}
+
+.bk-portal h2,
+.bk-portal h2.font-heading,
+.bk-portal .text-xl {
+  font-size: clamp(1.05rem, 1.15vw, 1.2rem) !important;
+  line-height: 1.3 !important;
+}
+
+.bk-portal h3,
+.bk-portal h3.font-heading,
+.bk-portal .text-lg {
+  font-size: 0.97rem !important;
+  line-height: 1.3 !important;
+}
+
+.bk-portal p.text-sm {
+  font-size: 0.84rem !important;
+}
+
+/* Sidebar — sedikit lebih besar dari teacher (w-64, padding lebih longgar) */
+.bk-portal .db-sidebar {
+  padding: 1.1rem 1rem !important;
+}
+.bk-portal .db-sidebar nav {
+  gap: 0.4rem !important;
+}
+.bk-portal .db-nav-item {
+  gap: 0.75rem;
+  padding: 0.6rem 0.95rem;
+  min-height: 42px;
+  border-radius: 11px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.bk-portal .db-nav-item svg {
+  width: 19px;
+  height: 19px;
+}
+.bk-portal .db-nav-item.active {
+  box-shadow: 0 2px 10px rgba(24, 144, 246, 0.3);
+  font-weight: 600;
+}
+
+/* Topbar */
+.bk-portal .db-topbar {
+  height: 4rem !important;
+  min-height: 56px !important;
+}
+.bk-portal .avatar-circle {
+  width: 36px;
+  height: 36px;
+  font-size: 0.82rem;
+}
+.bk-portal .avatar-circle--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 0.92rem;
+}
+
+/* Panels, Cards & KPI */
+.bk-portal .panel {
+  border-radius: 1rem !important;
+  padding: 1.2rem 1.4rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.09) !important;
+}
+.bk-portal .kpi-card {
+  border-radius: 1rem !important;
+  padding: 0.95rem 1.1rem !important;
+  gap: 0.85rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.09) !important;
+}
+.bk-portal .kpi-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 0.7rem !important;
+}
+.bk-portal .kpi-icon svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Tables */
+.bk-portal .tbl,
+.bk-portal table {
+  font-size: 0.84rem !important;
+}
+.bk-portal .tbl thead th,
+.bk-portal table thead th {
+  font-size: 0.73rem !important;
+  padding: 0.6rem 0.85rem !important;
+  letter-spacing: 0.03em !important;
+}
+.bk-portal .tbl tbody td,
+.bk-portal table tbody td {
+  padding: 0.65rem 0.85rem !important;
+  font-size: 0.84rem !important;
+}
+
+/* Form Controls & Labels */
+.bk-portal .f-label,
+.bk-portal label {
+  font-size: 0.82rem;
+  margin-bottom: 0.3rem;
+}
+.bk-portal .f-input,
+.bk-portal .f-select,
+.bk-portal .f-textarea,
+.bk-portal input[type="text"],
+.bk-portal input[type="search"],
+.bk-portal input[type="number"],
+.bk-portal input[type="date"],
+.bk-portal select,
+.bk-portal textarea {
+  padding: 0.52rem 0.8rem;
+  font-size: 0.86rem;
+  border-radius: 0.6rem;
+}
+
+/* Buttons & Badges */
+.bk-portal .btn {
+  padding: 0.48rem 0.95rem;
+  font-size: 0.82rem;
+  border-radius: 0.6rem;
+  gap: 0.4rem;
+  min-height: 36px;
+}
+.bk-portal .btn-sm {
+  padding: 0.32rem 0.65rem;
+  font-size: 0.76rem;
+  border-radius: 0.5rem;
+  min-height: 30px;
+}
+.bk-portal .badge {
+  padding: 0.22rem 0.55rem;
+  font-size: 0.72rem;
+  gap: 0.28rem;
+}
+
+/* Modals */
+.bk-portal .modal-overlay {
+  z-index: 9000 !important;
+}
+.bk-portal .modal-box {
+  padding: 1.5rem 1.6rem !important;
+  border-radius: 1.25rem !important;
+  max-width: 32rem !important;
+}
+
+/* Form blocks */
+.bk-portal .form-block {
+  border-radius: 1rem !important;
+  box-shadow: 0 4px 18px -4px rgba(13, 71, 161, 0.09) !important;
+}
+.bk-portal .form-block__header {
+  padding: 0.85rem 1.3rem !important;
+}
+.bk-portal .form-block__header h3 {
+  font-size: 0.95rem !important;
+}
+.bk-portal .form-block__body {
+  padding: 1.2rem 1.3rem !important;
+}
+
+/* Vertical spacing rhythm */
+.bk-portal .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.25rem !important;
+}
+.bk-portal .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 1.1rem !important;
+}
+.bk-portal .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.9rem !important;
+}

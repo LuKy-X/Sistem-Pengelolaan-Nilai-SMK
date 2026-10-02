@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BK;
 use App\Enums\DisciplinaryLetterType;
 use App\Http\Controllers\BK\Concerns\HandlesDisciplinePoints;
 use App\Http\Controllers\BK\Concerns\RecordsAuditTrail;
+use App\Http\Controllers\BK\Concerns\ResolvesCounselorClasses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BK\StoreDisciplinaryLetterRequest;
 use App\Models\DisciplinaryLetter;
@@ -18,7 +19,7 @@ use Illuminate\View\View;
 
 class DisciplinaryLetterController extends Controller
 {
-    use HandlesDisciplinePoints, RecordsAuditTrail;
+    use HandlesDisciplinePoints, RecordsAuditTrail, ResolvesCounselorClasses;
 
     public const STATUSES = ['ACTIVE', 'RESOLVED', 'REVOKED'];
 
@@ -33,8 +34,12 @@ class DisciplinaryLetterController extends Controller
         $studentIdFilter = $request->integer('student_id') ?: null;
         $search = trim((string) $request->query('q', ''));
 
+        $students = $this->counselorStudentOptions();
+        $counselorStudentIds = $students->pluck('id')->all();
+
         $baseQuery = DisciplinaryLetter::query()
-            ->with(['student.currentEnrollment.schoolClass', 'issuer', 'academicYear']);
+            ->with(['student.currentEnrollment.schoolClass', 'issuer', 'academicYear'])
+            ->whereIn('student_id', $counselorStudentIds === [] ? [0] : $counselorStudentIds);
 
         $typeCounts = (clone $baseQuery)
             ->when($academicYearId !== null, fn (Builder $query) => $query->where('academic_year_id', $academicYearId))
@@ -59,13 +64,7 @@ class DisciplinaryLetterController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        $students = StudentProfile::query()
-            ->with('currentEnrollment.schoolClass')
-            ->where('status', 'ACTIVE')
-            ->orderBy('full_name')
-            ->get();
-
-        $balances = $this->pointBalanceMap($students->pluck('id')->all(), $setting, $academicYearId);
+        $balances = $this->pointBalanceMap($counselorStudentIds, $setting, $academicYearId);
 
         $pointHints = $students->mapWithKeys(fn (StudentProfile $student) => [
             $student->id => [
@@ -77,6 +76,7 @@ class DisciplinaryLetterController extends Controller
         return view('bk.letters.index', [
             'letters' => $letters,
             'students' => $students,
+            'counselorClasses' => $this->counselorClasses(),
             'pointHints' => $pointHints,
             'setting' => $setting,
             'academicYear' => $academicYear,
