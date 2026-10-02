@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\GradebookScore;
 use App\Models\TeachingSchedule;
+use App\Services\StudentAcademicSummaryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -17,6 +18,10 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     use HandlesDisciplinePoints;
+
+    public function __construct(
+        private readonly StudentAcademicSummaryService $academic,
+    ) {}
 
     public function index(): View
     {
@@ -112,6 +117,11 @@ class DashboardController extends Controller
         $balance = $this->pointBalance($student->id, $setting, $academicYear?->id);
         $standing = $this->disciplineStanding($balance, $setting);
 
+        // Status akademik: rata-rata lintas mata pelajaran, predikat, dan progres
+        // tugas. Angkanya diambil dari service yang sama dengan halaman Rekap Nilai
+        // sehingga dashboard dan rekap tidak pernah berbeda.
+        $academicSummary = $this->academic->forStudent($student);
+
         return view('student.dashboard', compact(
             'student',
             'todaySchedules',
@@ -123,6 +133,7 @@ class DashboardController extends Controller
             'recentGrades',
             'balance',
             'standing',
+            'academicSummary',
         ));
     }
 }

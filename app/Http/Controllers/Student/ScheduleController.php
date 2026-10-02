@@ -58,4 +58,51 @@ class ScheduleController extends Controller
 
         return view('student.schedules.index', compact('student', 'enrollment', 'schedules', 'dayNames'));
     }
+
+    /**
+     * Detail satu slot jadwal. Siswa hanya boleh melihat slot yang teachernya
+     * mengajar di kelas yang sedang ia ikuti.
+     */
+    public function show(TeachingSchedule $schedule): View
+    {
+        $student = Auth::user()->studentProfile;
+
+        abort_if($student === null, 403, 'Profil siswa tidak ditemukan. Hubungi admin sekolah.');
+
+        $classIds = $student->classEnrollments()
+            ->where('status', 'ACTIVE')
+            ->pluck('class_id');
+
+        abort_if($classIds->isEmpty(), 403, 'Anda belum terdaftar pada kelas manapun.');
+
+        // Endpoint ini menerima id slot dari URL, jadi kepemilikan wajib diperiksa
+        // ulang: tanpa ini siswa bisa membuka jadwal kelas orang lain hanya dengan
+        // menebak id.
+        $belongs = TeachingSchedule::query()
+            ->whereKey($schedule->getKey())
+            ->whereHas('teachingAssignment', function ($query) use ($classIds) {
+                $query->whereIn('class_id', $classIds)->where('is_active', true);
+            })
+            ->exists();
+
+        abort_unless($belongs, 403, 'Jadwal ini bukan dari kelas Anda.');
+
+        $schedule->load([
+            'startPeriod',
+            'endPeriod',
+            'teachingAssignment.subject',
+            'teachingAssignment.teacher.user',
+            'teachingAssignment.schoolClass',
+            'teachingAssignment.semester.academicYear',
+        ]);
+
+        $journal = $schedule->journals()->latest('journal_date')->first();
+
+        return view('student.schedules.show', [
+            'student' => $student,
+            'schedule' => $schedule,
+            'journal' => $journal,
+            'dayName' => self::DAY_NAMES[$schedule->day_of_week] ?? 'Hari tidak ditentukan',
+        ]);
+    }
 }

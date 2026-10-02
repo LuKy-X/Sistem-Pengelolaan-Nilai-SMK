@@ -15,7 +15,9 @@ use App\Models\Gradebook;
 use App\Models\SchoolClass;
 use App\Models\StudentProfile;
 use App\Models\TeachingAssignment;
+use App\Models\TeachingSchedule;
 use App\Models\User;
+use App\Services\StudentAcademicSummaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -101,6 +103,138 @@ class StudentPortalTest extends TestCase
                 ->get($url)
                 ->assertOk();
         }
+    }
+
+    public function test_student_can_open_grade_recap_page(): void
+    {
+        $this->actingAs($this->studentUser)
+            ->get(route('student.grades.recap'))
+            ->assertOk()
+            ->assertSee('Rekap Nilai', escape: false)
+            ->assertSee('Rata-rata lintas mata pelajaran', escape: false)
+            ->assertSee('Rincian per Mata Pelajaran', escape: false);
+    }
+
+    public function test_grade_recap_average_matches_the_average_of_subject_averages(): void
+    {
+        $service = app(StudentAcademicSummaryService::class);
+        $summary = $service->forStudent($this->student);
+
+        $averages = $summary['subjects']
+            ->map(fn (array $row) => $row['average'])
+            ->filter(fn ($value) => $value !== null)
+            ->map(fn ($value) => (float) $value);
+
+        if ($averages->isEmpty()) {
+            $this->assertNull($summary['overall']['average']);
+
+            return;
+        }
+
+        $this->assertSame(
+            round($averages->avg(), 2),
+            $summary['overall']['average']
+        );
+    }
+
+    public function test_predicate_follows_declared_thresholds(): void
+    {
+        $service = app(StudentAcademicSummaryService::class);
+
+        $this->assertSame('A', $service->predicate(95.0));
+        $this->assertSame('A', $service->predicate(90.0));
+        $this->assertSame('B', $service->predicate(85.0));
+        $this->assertSame('C', $service->predicate(75.0));
+        $this->assertSame('D', $service->predicate(70.0));
+        $this->assertSame('E', $service->predicate(69.99));
+        $this->assertNull($service->predicate(null));
+    }
+
+    public function test_dashboard_shows_academic_status_panel(): void
+    {
+        $this->actingAs($this->studentUser)
+            ->get(route('student.dashboard'))
+            ->assertOk()
+            ->assertSee('Status Akademis', escape: false)
+            ->assertSee('Rata-rata Nilai', escape: false)
+            ->assertSee(route('student.grades.recap'), escape: false);
+    }
+
+    public function test_student_can_open_own_schedule_detail(): void
+    {
+        $enrollment = $this->student->classEnrollments()->where('status', 'ACTIVE')->firstOrFail();
+
+        $schedule = TeachingSchedule::query()
+            ->whereHas('teachingAssignment', fn ($query) => $query->where('class_id', $enrollment->class_id))
+            ->first() ?? TeachingSchedule::factory()->create([
+                'teaching_assignment_id' => TeachingAssignment::where('class_id', $enrollment->class_id)->firstOrFail()->id,
+            ]);
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.show', $schedule))
+            ->assertOk()
+            ->assertSee('Detail Jadwal', escape: false)
+            ->assertSee($schedule->teachingAssignment->subject->name, escape: false);
+    }
+
+    public function test_student_cannot_open_schedule_of_another_class(): void
+    {
+        $foreign = TeachingSchedule::factory()->create([
+            'teaching_assignment_id' => TeachingAssignment::query()
+                ->where('class_id', SchoolClass::where('code', 'XII-RPL-2')->firstOrFail()->id)
+                ->firstOrFail()->id,
+        ]);
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.show', $foreign))
+            ->assertForbidden();
+    }
+
+    public function test_student_can_open_own_appeal_detail(): void
+    {
+        $appeal = ExitPermitAppeal::query()
+            ->whereHas('exitPermit', fn ($query) => $query->where('student_id', $this->student->id))
+            ->firstOrFail();
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.appeals.show', $appeal))
+            ->assertOk()
+            ->assertSee('Detail Banding', escape: false)
+            ->assertSee($appeal->reason, escape: false);
+    }
+
+    public function test_student_cannot_open_appeal_of_another_student(): void
+    {
+        $otherStudent = StudentProfile::query()
+            ->where('id', '!=', $this->student->id)
+            ->whereHas('exitPermits.appeal')
+            ->firstOrFail();
+
+        $foreign = ExitPermitAppeal::query()
+            ->whereHas('exitPermit', fn ($query) => $query->where('student_id', $otherStudent->id))
+            ->firstOrFail();
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.appeals.show', $foreign))
+            ->assertForbidden();
+    }
+
+    public function test_assignment_history_tab_lists_every_status(): void
+    {
+        $response = $this->actingAs($this->studentUser)
+            ->get(route('student.assignments.index', ['tab' => 'semua']))
+            ->assertOk();
+
+        $response->assertSee('Riwayat Tugas', escape: false);
+
+        // Tab riwayat harus memuat lebih banyak baris daripada tab aktif saja.
+        $activeCount = count($this->actingAs($this->studentUser)
+            ->get(route('student.assignments.index', ['tab' => 'aktif']))
+            ->viewData('filtered'));
+
+        $historyCount = count($response->viewData('filtered'));
+
+        $this->assertGreaterThanOrEqual($activeCount, $historyCount);
     }
 
     public function test_student_can_open_own_gradebook_but_not_others(): void

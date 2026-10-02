@@ -24,14 +24,20 @@
     @endif
   </div>
 
-  <div class="flex gap-2 flex-wrap">
+  <nav class="flex gap-2 flex-wrap" aria-label="Saring tugas berdasarkan status">
     <a href="{{ route('student.assignments.index', ['tab' => 'aktif', 'subject' => $subjectFilter]) }}"
+       @if($tab === 'aktif') aria-current="page" @endif
        class="badge {{ $tab === 'aktif' ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Aktif ({{ $counts['aktif'] }})</a>
     <a href="{{ route('student.assignments.index', ['tab' => 'terlewat', 'subject' => $subjectFilter]) }}"
+       @if($tab === 'terlewat') aria-current="page" @endif
        class="badge {{ $tab === 'terlewat' ? 'badge-red' : 'badge-gray' }} !px-3 !py-1.5">Terlewat ({{ $counts['terlewat'] }})</a>
     <a href="{{ route('student.assignments.index', ['tab' => 'selesai', 'subject' => $subjectFilter]) }}"
+       @if($tab === 'selesai') aria-current="page" @endif
        class="badge {{ $tab === 'selesai' ? 'badge-green' : 'badge-gray' }} !px-3 !py-1.5">Terkumpul ({{ $counts['selesai'] }})</a>
-  </div>
+    <a href="{{ route('student.assignments.index', ['tab' => 'semua', 'subject' => $subjectFilter]) }}"
+       @if($tab === 'semua') aria-current="page" @endif
+       class="badge {{ $tab === 'semua' ? 'badge-blue' : 'badge-gray' }} !px-3 !py-1.5">Riwayat Tugas ({{ $filtered->count() }})</a>
+  </nav>
 
   <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
     @forelse($filtered as $assessment)

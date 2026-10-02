@@ -5,9 +5,14 @@
 @section('content')
 <div class="space-y-4 lg:space-y-5">
 
-  <div>
-    <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Nilai Saya</h1>
-    <p class="text-sm text-bluedark/60 mt-1">Rekap nilai dari buku nilai digital yang dikelola guru Anda.</p>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Nilai Saya</h1>
+      <p class="text-sm text-bluedark/60 mt-1">Rekap nilai dari buku nilai digital yang dikelola guru Anda.</p>
+    </div>
+    @if($memberships->isNotEmpty())
+      <a href="{{ route('student.grades.recap') }}" class="btn btn-outline btn-sm shrink-0">Rekap Nilai</a>
+    @endif
   </div>
 
   @if($memberships->isEmpty())

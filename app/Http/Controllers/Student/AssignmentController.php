@@ -79,9 +79,12 @@ class AssignmentController extends Controller
             'selesai' => $categorized->where('student_state', 'selesai')->count(),
         ];
 
-        $filtered = in_array($tab, ['terlewat', 'selesai'], true)
-            ? $categorized->where('student_state', $tab)->values()
-            : $categorized->where('student_state', 'aktif')->values();
+        // "semua" menampilkan seluruh riwayat tugas, bukan hanya satu status.
+        $filtered = match ($tab) {
+            'terlewat', 'selesai' => $categorized->where('student_state', $tab)->values(),
+            'semua' => $categorized->values(),
+            default => $categorized->where('student_state', 'aktif')->values(),
+        };
 
         return view('student.assignments.index', compact(
             'student',

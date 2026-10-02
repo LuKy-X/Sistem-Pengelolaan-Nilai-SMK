@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Enums\DisciplineCategoryType;
 use App\Http\Controllers\BK\Concerns\HandlesDisciplinePoints;
 use App\Http\Controllers\Controller;
 use App\Models\DisciplineCategory;

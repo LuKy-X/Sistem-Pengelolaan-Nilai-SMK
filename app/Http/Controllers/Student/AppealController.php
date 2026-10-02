@@ -41,4 +41,26 @@ class AppealController extends Controller
 
         return view('student.appeals.index', compact('student', 'appeals', 'decisionCounts', 'decisionFilter'));
     }
+
+    /**
+     * Detail satu banding. Banding milik siswa lain harus ditolak meskipun
+     * statusnya masih pending.
+     */
+    public function show(ExitPermitAppeal $appeal): View
+    {
+        $student = Auth::user()->studentProfile;
+
+        abort_if($student === null, 403, 'Profil siswa tidak ditemukan. Hubungi admin sekolah.');
+
+        $owns = ExitPermitAppeal::query()
+            ->whereKey($appeal->getKey())
+            ->whereHas('exitPermit', fn (Builder $query) => $query->where('student_id', $student->id))
+            ->exists();
+
+        abort_unless($owns, 403, 'Banding ini bukan milik Anda.');
+
+        $appeal->load(['exitPermit.reason', 'decider.user']);
+
+        return view('student.appeals.show', compact('student', 'appeal'));
+    }
 }

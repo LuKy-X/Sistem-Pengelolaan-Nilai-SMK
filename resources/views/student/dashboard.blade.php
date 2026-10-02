@@ -1,4 +1,4 @@
-@extends('layouts.student')
+﻿@extends('layouts.student')
 
 @section('title', 'Dashboard Siswa')
 
@@ -66,8 +66,10 @@
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
       </div>
       <div>
-        <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ $recentGrades->count() }}</div>
-        <div class="text-[11px] text-bluedark/55 mt-1">Nilai Terbaru Masuk</div>
+        <div class="font-heading text-xl font-bold {{ $academicSummary['overall']['average'] !== null ? ($academicSummary['overall']['passing'] ? 'text-emerald-600' : 'text-amber-600') : 'text-bluedark/40' }} leading-none">
+          {{ $academicSummary['overall']['average'] !== null ? rtrim(rtrim(number_format($academicSummary['overall']['average'], 2), '0'), '.') : '-' }}
+        </div>
+        <div class="text-[11px] text-bluedark/55 mt-1">Rata-rata Nilai</div>
       </div>
     </div>
 
@@ -80,6 +82,60 @@
         <div class="text-[11px] text-bluedark/55 mt-1">Poin Kedisiplinan</div>
       </div>
     </div>
+  </div>
+
+  <div class="panel p-4 lg:p-5">
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <h2 class="font-heading font-semibold text-bluedark text-[15px]">Status Akademis</h2>
+      <a href="{{ route('student.grades.recap') }}" class="text-[11px] font-semibold text-blueprim hover:underline">Rekap nilai &rarr;</a>
+    </div>
+
+    @if($academicSummary['subjects']->isEmpty())
+      <p class="text-xs text-bluedark/55">
+        Belum ada nilai untuk ditampilkan. Nilai muncul setelah guru menambahkan Anda ke buku nilai kelas.
+      </p>
+    @else
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="rounded-xl bg-bluelight/40 px-3 py-2.5">
+          <div class="font-heading text-lg font-bold text-bluedark">{{ $academicSummary['overall']['subjectCount'] }}</div>
+          <div class="text-[10px] text-bluedark/50">Mata pelajaran</div>
+        </div>
+        <div class="rounded-xl bg-bluelight/40 px-3 py-2.5">
+          <div class="font-heading text-lg font-bold text-bluedark">{{ $academicSummary['overall']['predicate'] ?? '-' }}</div>
+          <div class="text-[10px] text-bluedark/50">Predikat</div>
+        </div>
+        <div class="rounded-xl bg-bluelight/40 px-3 py-2.5">
+          <div class="font-heading text-lg font-bold {{ $academicSummary['tasks']['pending'] > 0 ? 'text-amber-600' : 'text-emerald-600' }}">{{ $academicSummary['tasks']['pending'] }}</div>
+          <div class="text-[10px] text-bluedark/50">Tugas belum dikumpulkan</div>
+        </div>
+        <div class="rounded-xl bg-bluelight/40 px-3 py-2.5">
+          <div class="font-heading text-lg font-bold {{ $academicSummary['tasks']['overdue'] > 0 ? 'text-red-500' : 'text-bluedark' }}">{{ $academicSummary['tasks']['overdue'] }}</div>
+          <div class="text-[10px] text-bluedark/50">Terlewat tenggat</div>
+        </div>
+      </div>
+
+      @php
+        $weakest = $academicSummary['subjects']
+            ->filter(fn ($row) => $row['average'] !== null)
+            ->sortBy('average')
+            ->first();
+      @endphp
+
+      <div class="mt-3 pt-3 border-t border-bluelight/70">
+        <div class="text-[10px] font-semibold text-bluedark/50 uppercase tracking-wide mb-1.5">Mata pelajaran terlemah</div>
+
+        @if($weakest === null)
+          <p class="text-xs text-bluedark/55">Belum ada nilai yang terisi pada buku nilai manapun.</p>
+        @else
+          <a href="{{ route('student.grades.show', $weakest['gradebook']) }}" class="flex items-center justify-between gap-2 text-xs text-bluedark/75 hover:text-bluedark">
+            <span class="truncate">{{ $weakest['subject']?->name ?? 'Mata Pelajaran' }}</span>
+            <span class="shrink-0 font-heading font-bold {{ $weakest['passing'] ? 'text-amber-600' : 'text-red-500' }}">
+              {{ rtrim(rtrim(number_format($weakest['average'], 2), '0'), '.') }}
+            </span>
+          </a>
+        @endif
+      </div>
+    @endif
   </div>
 
   <div class="grid lg:grid-cols-3 gap-4 lg:gap-5">
@@ -150,7 +206,8 @@
                   Jam ke-{{ $schedule->startPeriod?->period_number }} sd {{ $schedule->endPeriod?->period_number }}
                   ({{ $schedule->startPeriod?->start_time }} - {{ $schedule->endPeriod?->end_time }})
                   @if($schedule->room) &middot; {{ $schedule->room }} @endif
-                </div>
+</div>
+
               </div>
             </div>
           @empty

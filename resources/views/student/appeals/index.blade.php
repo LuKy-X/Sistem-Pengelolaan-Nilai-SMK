@@ -45,6 +45,7 @@
         @endif
 
         <div class="text-right">
+          <a href="{{ route('student.appeals.show', $appeal) }}" class="text-[11px] font-semibold text-blueprim hover:underline mr-3">Detail banding &rarr;</a>
           <a href="{{ route('student.exit-permits.show', $appeal->exit_permit_id) }}" class="text-[11px] font-semibold text-blueprim hover:underline">Lihat izin terkait &rarr;</a>
         </div>
       </div>

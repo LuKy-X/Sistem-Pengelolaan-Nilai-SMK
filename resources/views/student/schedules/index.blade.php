@@ -35,7 +35,7 @@
 
           <div class="flex flex-col gap-2">
             @forelse($daySchedules as $schedule)
-              <div class="p-2.5 rounded-xl bg-bluelight/40 border border-bluelight">
+              <a href="{{ route('student.schedules.show', $schedule) }}" class="block p-2.5 rounded-xl bg-bluelight/40 border border-bluelight hover:bg-bluelight/70 transition-colors">
                 <div class="flex items-center justify-between gap-2">
                   <div class="text-xs font-semibold text-bluedark truncate">{{ $schedule->teachingAssignment?->subject?->name ?? 'Mapel' }}</div>
                   <div class="text-[10px] font-semibold text-blueprim shrink-0">
@@ -47,7 +47,7 @@
                   @if($schedule->room) &middot; {{ $schedule->room }} @endif
                 </div>
                 <div class="text-[11px] text-bluedark/45 mt-0.5 truncate">{{ $schedule->teachingAssignment?->teacher?->full_name ?? '-' }}</div>
-              </div>
+              </a>
             @empty
               <p class="text-[11px] text-bluedark/40 text-center py-2">Tidak ada pelajaran.</p>
             @endforelse

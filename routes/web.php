@@ -256,10 +256,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/jadwal', [StudentScheduleController::class, 'index'])->name('schedules.index');
+        Route::get('/jadwal/{schedule}', [StudentScheduleController::class, 'show'])->name('schedules.show');
 
         // Nilai & Buku Nilai
         Route::prefix('nilai')->name('grades.')->group(function () {
             Route::get('/', [StudentGradeController::class, 'index'])->name('index');
+            // "rekap" harus didaftarkan sebelum "{gradebook}" agar tidak tertangkap
+            // sebagai parameter buku nilai.
+            Route::get('/rekap', [StudentGradeController::class, 'recap'])->name('recap');
             Route::get('/{gradebook}', [StudentGradeController::class, 'show'])->name('show');
         });
 
@@ -281,6 +285,7 @@ Route::middleware('auth')->group(function () {
 
         // Banding Keterlambatan
         Route::get('/banding', [StudentAppealController::class, 'index'])->name('appeals.index');
+        Route::get('/banding/{appeal}', [StudentAppealController::class, 'show'])->name('appeals.show');
 
         // Buku Saku (Poin Disiplin)
         Route::get('/disiplin', [StudentDisciplineController::class, 'index'])->name('discipline.index');
