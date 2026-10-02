@@ -23,6 +23,7 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
 use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
 use App\Http\Controllers\Student\GradeController as StudentGradeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
 use App\Http\Controllers\Student\ProfileController as StudentProfileController;
 use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\AssessmentController;
@@ -289,6 +290,13 @@ Route::middleware('auth')->group(function () {
 
         // Buku Saku (Poin Disiplin)
         Route::get('/disiplin', [StudentDisciplineController::class, 'index'])->name('discipline.index');
+
+        // Notifikasi
+        Route::prefix('notifikasi')->name('notifications.')->group(function () {
+            Route::get('/', [StudentNotificationController::class, 'index'])->name('index');
+            Route::get('/{notification}', [StudentNotificationController::class, 'read'])->name('read');
+            Route::post('/baca-semua', [StudentNotificationController::class, 'markAllRead'])->name('read-all');
+        });
 
         // Profil & Pengaturan Akun
         Route::prefix('profil')->name('profile.')->group(function () {
