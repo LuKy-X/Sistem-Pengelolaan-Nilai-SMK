@@ -163,6 +163,7 @@
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 
+@stack('modals')
 @stack('scripts')
 </body>
 </html>

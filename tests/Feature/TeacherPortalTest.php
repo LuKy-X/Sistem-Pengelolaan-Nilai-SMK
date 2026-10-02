@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SubmissionStatus;
+use App\Models\Assessment;
+use App\Models\AssessmentSubmission;
 use App\Models\Gradebook;
 use App\Models\LessonPeriod;
 use App\Models\StudentGradeNote;
@@ -244,14 +247,14 @@ class TeacherPortalTest extends TestCase
 
     public function test_teacher_can_store_class_journal(): void
     {
-        $period1 = LessonPeriod::where('period_number', 1)->firstOrFail();
-        $period2 = LessonPeriod::where('period_number', 2)->firstOrFail();
+        $period5 = LessonPeriod::where('period_number', 5)->firstOrFail();
+        $period6 = LessonPeriod::where('period_number', 6)->firstOrFail();
 
         $response = $this->actingAs($this->teacherUser)->post(route('teacher.journals.store'), [
             'teaching_assignment_id' => $this->assignment->id,
             'journal_date' => now()->format('Y-m-d'),
-            'start_period_id' => $period1->id,
-            'end_period_id' => $period2->id,
+            'start_period_id' => $period5->id,
+            'end_period_id' => $period6->id,
             'material' => 'Implementasi Relasi Eloquent One-to-Many',
             'notes' => 'Siswa antusias dan menyelesaikan latihan tepat waktu.',
             'hadir_count' => 34,
@@ -260,7 +263,10 @@ class TeacherPortalTest extends TestCase
             'alpha_count' => 0,
         ]);
 
-        $response->assertRedirect(route('teacher.journals.index', ['assignment_id' => $this->assignment->id]));
+        $response->assertRedirect(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => now()->format('Y-m-d'),
+        ]));
         $this->assertDatabaseHas('class_journals', [
             'teaching_assignment_id' => $this->assignment->id,
             'material' => 'Implementasi Relasi Eloquent One-to-Many',
@@ -303,5 +309,43 @@ class TeacherPortalTest extends TestCase
             'name' => 'Agus Rum, S.Kom., M.Cs., Gr.',
             'email' => 'agus.rum@smk.test',
         ]);
+    }
+
+    public function test_teacher_dashboard_pending_submission_links_to_grading_page(): void
+    {
+        $column = $this->gradebook->columns()->where('column_type', 'SCORE')->firstOrFail();
+        $student = StudentProfile::firstOrFail();
+
+        $assessment = Assessment::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'gradebook_column_id' => $column->id,
+            'title' => 'Tugas Dashboard Test',
+            'type' => 'TASK',
+            'status' => 'PUBLISHED',
+            'submission_required' => true,
+            'created_by' => $this->teacherProfile->id,
+        ]);
+
+        AssessmentSubmission::create([
+            'assessment_id' => $assessment->id,
+            'student_id' => $student->id,
+            'status' => SubmissionStatus::Submitted,
+            'content' => 'Jawaban siswa',
+            'submitted_at' => now(),
+            'late_minutes' => 0,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Tugas Dashboard Test');
+        $expectedUrl = route('teacher.grading.index', [
+            'assignment_id' => $this->assignment->id,
+            'gradebook_id' => $this->gradebook->id,
+            'column_id' => $column->id,
+            'assessment_id' => $assessment->id,
+            'student_id' => $student->id,
+        ]);
+        $response->assertSee($expectedUrl);
     }
 }

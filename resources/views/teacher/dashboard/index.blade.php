@@ -71,12 +71,21 @@
         </div>
         <div class="flex flex-col gap-2" id="tugasBelumDinilaiList">
           @forelse($recentPendingSubmissions as $sub)
-            <div class="hl-row hl-amber">
-              <div class="min-w-0">
-                <div class="font-semibold truncate">{{ $sub->assessment?->title }}</div>
+            @php
+              $gradingUrl = route('teacher.grading.index', array_filter([
+                'assignment_id' => $sub->assessment?->teaching_assignment_id,
+                'gradebook_id' => $sub->assessment?->gradebookColumn?->gradebook_id,
+                'column_id' => $sub->assessment?->gradebook_column_id,
+                'assessment_id' => $sub->assessment_id,
+                'student_id' => $sub->student_id,
+              ]));
+            @endphp
+            <div class="hl-row hl-amber flex items-center justify-between gap-2">
+              <a href="{{ $gradingUrl }}" class="min-w-0 flex-1 hover:underline group">
+                <div class="font-semibold truncate group-hover:text-amber-900 transition-colors">{{ $sub->assessment?->title }}</div>
                 <div class="hl-sub truncate">{{ $sub->assessment?->teachingAssignment?->schoolClass?->name }} &middot; {{ $sub->student?->full_name }}</div>
-              </div>
-              <a href="{{ route('teacher.assessments.show', $sub->assessment_id) }}" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/25 hover:bg-white/40 text-white shrink-0 ml-2 transition-colors">
+              </a>
+              <a href="{{ $gradingUrl }}" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-white/25 hover:bg-white/40 text-white shrink-0 ml-2 transition-colors cursor-pointer">
                 Nilai
               </a>
             </div>

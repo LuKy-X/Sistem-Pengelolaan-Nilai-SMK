@@ -57,6 +57,40 @@ class AdminCmsAchievementsTest extends TestCase
         $response->assertSee('Prestasi Kejuaraan #1');
     }
 
+    public function test_admin_achievement_photos_resolve_legacy_storage_paths_and_disks(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+
+        $admin = $this->getAdminUser();
+        $category = AchievementCategory::create(['name' => 'Robotika', 'slug' => 'robotika']);
+        $path = 'achievements/legacy-photo.jpg';
+
+        Storage::disk('public')->put($path, 'image');
+
+        $achievement = Achievement::create([
+            'achievement_category_id' => $category->id,
+            'title' => 'Prestasi Dengan Foto Legacy',
+            'scope' => 'VOKASI',
+            'level' => 'NASIONAL',
+            'achievement_date' => '2026-06-15',
+        ]);
+        $achievement->media()->create([
+            'collection' => 'photo',
+            'disk' => 'local',
+            'path' => 'public/storage/'.$path,
+            'original_name' => 'legacy-photo.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 5,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.cms.achievements'))
+            ->assertOk()
+            ->assertSee('/storage/'.$path)
+            ->assertDontSee('/storage/public/storage/'.$path);
+    }
+
     public function test_admin_can_filter_achievements(): void
     {
         $admin = $this->getAdminUser();
