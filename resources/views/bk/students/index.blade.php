@@ -19,7 +19,9 @@
       </p>
     </div>
     <div class="flex flex-wrap gap-2">
-      <a href="{{ route('counselor.discipline.create') }}" class="btn btn-outline btn-sm">Catat Poin</a>
+      @can('create', App\Models\DisciplineRecord::class)
+        <a href="{{ route('counselor.discipline.index', ['record' => 1]) }}" class="btn btn-outline btn-sm">Catat Poin</a>
+      @endcan
       <a href="{{ route('counselor.counseling.index') }}" class="btn btn-primary btn-sm">Catat Konseling</a>
     </div>
   </div>

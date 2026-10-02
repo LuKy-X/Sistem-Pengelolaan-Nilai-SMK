@@ -153,7 +153,7 @@
                     <button type="button" class="btn btn-success btn-sm" data-modal-open="approveModal-{{ $permit->id }}">Setujui</button>
                     <button type="button" class="btn btn-danger btn-sm" data-modal-open="rejectModal-{{ $permit->id }}">Tolak</button>
                   @else
-                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm">Detail</a>
+                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm" data-no-transition="true">Detail</a>
                   @endif
                 </div>
               </td>
@@ -170,72 +170,74 @@
     <x-bk.pagination :paginator="$permits" />
   </div>
 
-  @foreach($permits as $permit)
-    @if($permit->status === \App\Enums\ExitPermitStatus::Pending)
-      <div class="modal-overlay" id="approveModal-{{ $permit->id }}" role="dialog" aria-modal="true">
-        <div class="modal-box max-w-lg">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <h3 class="font-heading font-bold text-bluedark">Setujui Izin Keluar</h3>
-              <p class="text-xs text-bluedark/50 mt-0.5">{{ $permit->student?->full_name }} &middot; {{ $permit->reason?->name }}</p>
-            </div>
-            <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-
-          <div class="rounded-xl bg-bluelight/50 p-3 text-xs text-bluedark space-y-1 mb-4">
-            <div class="flex justify-between"><span class="text-bluedark/60">Rencana keluar</span><span class="font-semibold">{{ $permit->planned_exit_at->format('d M Y H:i') }}</span></div>
-            <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $permit->planned_return_at->format('d M Y H:i') }}</span></div>
-            <div class="flex justify-between"><span class="text-bluedark/60">Uraian</span><span class="font-semibold text-right max-w-[60%]">{{ $permit->reason_detail }}</span></div>
-          </div>
-
-          <form action="{{ route('counselor.exit-permits.approve', $permit) }}" method="POST">
-            @csrf
-            <div class="mb-4">
-              <label class="f-label" for="approval_note-{{ $permit->id }}">Catatan Persetujuan (opsional)</label>
-              <textarea id="approval_note-{{ $permit->id }}" name="approval_note" rows="2" class="f-textarea"
-                        placeholder="Contoh: dikembalikan sebelum pukul 12.00, wajib melapor ke BK">{{ old('approval_note') }}</textarea>
-            </div>
-            <div class="flex gap-2">
-              <button type="submit" class="btn btn-success flex-1">Ya, Setujui Izin</button>
-              <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div class="modal-overlay" id="rejectModal-{{ $permit->id }}" role="dialog" aria-modal="true">
-        <div class="modal-box max-w-lg">
-          <div class="flex items-start justify-between mb-4">
-            <div>
-              <h3 class="font-heading font-bold text-bluedark">Tolak Izin Keluar</h3>
-              <p class="text-xs text-bluedark/50 mt-0.5">{{ $permit->student?->full_name }} &middot; {{ $permit->reason?->name }}</p>
-            </div>
-            <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-
-          <form action="{{ route('counselor.exit-permits.reject', $permit) }}" method="POST">
-            @csrf
-            <div class="mb-4">
-              <label class="f-label" for="rejection_note-{{ $permit->id }}">Alasan Penolakan <span class="text-red-500">*</span></label>
-              <textarea id="rejection_note-{{ $permit->id }}" name="rejection_note" rows="3" required class="f-textarea"
-                        placeholder="Contoh: tidak melampirkan surat keterangan orang tua">{{ old('rejection_note') }}</textarea>
-              @error('rejection_note')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-            <div class="flex gap-2">
-              <button type="submit" class="btn btn-danger flex-1">Ya, Tolak Izin</button>
-              <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    @endif
-  @endforeach
-
 </div>
 @endsection
+
+@push('modals')
+@foreach($permits as $permit)
+  @if($permit->status === \App\Enums\ExitPermitStatus::Pending)
+    <div class="modal-overlay" id="approveModal-{{ $permit->id }}" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-lg">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="font-heading font-bold text-bluedark">Setujui Izin Keluar</h3>
+            <p class="text-xs text-bluedark/50 mt-0.5">{{ $permit->student?->full_name }} &middot; {{ $permit->reason?->name }}</p>
+          </div>
+          <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="rounded-xl bg-bluelight/50 p-3 text-xs text-bluedark space-y-1 mb-4">
+          <div class="flex justify-between"><span class="text-bluedark/60">Rencana keluar</span><span class="font-semibold">{{ $permit->planned_exit_at->format('d M Y H:i') }}</span></div>
+          <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $permit->planned_return_at->format('d M Y H:i') }}</span></div>
+          <div class="flex justify-between"><span class="text-bluedark/60">Uraian</span><span class="font-semibold text-right max-w-[60%]">{{ $permit->reason_detail }}</span></div>
+        </div>
+
+        <form action="{{ route('counselor.exit-permits.approve', $permit) }}" method="POST">
+          @csrf
+          <div class="mb-4">
+            <label class="f-label" for="approval_note-{{ $permit->id }}">Catatan Persetujuan (opsional)</label>
+            <textarea id="approval_note-{{ $permit->id }}" name="approval_note" rows="2" class="f-textarea"
+                      placeholder="Contoh: dikembalikan sebelum pukul 12.00, wajib melapor ke BK">{{ old('approval_note') }}</textarea>
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-success flex-1">Ya, Setujui Izin</button>
+            <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="rejectModal-{{ $permit->id }}" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-lg">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h3 class="font-heading font-bold text-bluedark">Tolak Izin Keluar</h3>
+            <p class="text-xs text-bluedark/50 mt-0.5">{{ $permit->student?->full_name }} &middot; {{ $permit->reason?->name }}</p>
+          </div>
+          <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <form action="{{ route('counselor.exit-permits.reject', $permit) }}" method="POST">
+          @csrf
+          <div class="mb-4">
+            <label class="f-label" for="rejection_note-{{ $permit->id }}">Alasan Penolakan <span class="text-red-500">*</span></label>
+            <textarea id="rejection_note-{{ $permit->id }}" name="rejection_note" rows="3" required class="f-textarea"
+                      placeholder="Contoh: tidak melampirkan surat keterangan orang tua">{{ old('rejection_note') }}</textarea>
+            @error('rejection_note')
+              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+          </div>
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-danger flex-1">Ya, Tolak Izin</button>
+            <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  @endif
+@endforeach
+@endpush

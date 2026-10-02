@@ -99,7 +99,9 @@ function initPageTransition() {
         overlay.classList.add('is-hidden');
     });
 
-    // On internal link click — sweep bands in, then navigate
+    // On internal link click — sweep bands in, then navigate.
+    // `data-no-transition="true"` (atau kelas `no-transition`) memberi jalan pintas
+    // tanpa animasi, sama seperti yang sudah dipakai loader.js.
     document.addEventListener('click', function (e) {
         var anchor = e.target.closest('a[href]');
         if (!anchor) return;
@@ -107,6 +109,9 @@ function initPageTransition() {
         var href = anchor.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
         if (anchor.target === '_blank') return;
+        if (anchor.hasAttribute('download')) return;
+        if (anchor.getAttribute('data-no-transition') === 'true') return;
+        if (anchor.classList.contains('no-transition')) return;
 
         try {
             var url = new URL(href, window.location.href);

@@ -109,7 +109,7 @@
               <td><x-bk.status-badge :label="$label" :tone="$tone" :dot="true" /></td>
               <td>
                 <div class="flex items-center justify-end gap-1.5">
-                  <a href="{{ route('counselor.exit-permits.show', $appeal->exit_permit_id) }}" class="btn btn-outline btn-sm">Izin</a>
+                  <a href="{{ route('counselor.exit-permits.show', $appeal->exit_permit_id) }}" class="btn btn-outline btn-sm" data-no-transition="true">Izin</a>
                   @if($decision === 'PENDING')
                     <button type="button" class="btn btn-primary btn-sm" data-modal-open="appealModal-{{ $appeal->id }}">Putuskan</button>
                   @endif
@@ -128,105 +128,107 @@
     <x-bk.pagination :paginator="$appeals" />
   </div>
 
-  @foreach($appeals as $appeal)
-    @if($appeal->decision->value === 'PENDING')
-      <div class="modal-overlay" id="appealModal-{{ $appeal->id }}" role="dialog" aria-modal="true">
-        <div class="modal-box max-w-xl">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="avatar-circle">{{ strtoupper(substr($appeal->exitPermit?->student?->full_name ?? 'S', 0, 2)) }}</div>
-              <div>
-                <h3 class="font-heading font-bold text-bluedark">Putuskan Banding</h3>
-                <p class="text-xs text-bluedark/50 mt-0.5">
-                  {{ $appeal->exitPermit?->student?->full_name }} &middot;
-                  {{ $appeal->exitPermit?->student?->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
-                </p>
-              </div>
-            </div>
-            <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-
-          <div class="rounded-xl bg-bluelight/50 p-3 text-xs text-bluedark space-y-1 mb-4">
-            <div class="flex justify-between">
-              <span class="text-bluedark/60">Keterlambatan</span>
-              <span class="font-semibold">
-                {{ (int) $appeal->exitPermit?->planned_return_at?->diffInMinutes($appeal->exitPermit?->actual_return_at ?? now()) }} menit
-              </span>
-            </div>
-            <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->planned_return_at?->format('d M Y H:i') }}</span></div>
-            <div class="flex justify-between"><span class="text-bluedark/60">Riil kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->actual_return_at?->format('d M Y H:i') ?? '—' }}</span></div>
-          </div>
-
-          <div class="rounded-xl border border-bluelight p-3 text-xs text-bluedark mb-4">
-            <div class="text-bluedark/50 mb-1">Alasan dari siswa</div>
-            {{ $appeal->reason }}
-          </div>
-
-          <form action="{{ route('counselor.appeals.decide', $appeal) }}" method="POST">
-            @csrf
-            <div class="mb-4">
-              <label class="f-label" for="decision-{{ $appeal->id }}">Keputusan <span class="text-red-500">*</span></label>
-              <select id="decision-{{ $appeal->id }}" name="decision" class="f-select" required>
-                <option value="">Pilih keputusan</option>
-                <option value="ACCEPTED">Terima alasan (tanpa sanksi)</option>
-                <option value="REJECTED">Tolak alasan</option>
-              </select>
-              @error('decision')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-
-            <div class="mb-4">
-              <label class="f-label" for="decision_note-{{ $appeal->id }}">Catatan Keputusan</label>
-              <textarea id="decision_note-{{ $appeal->id }}" name="decision_note" rows="2" class="f-textarea"
-                        placeholder="Wajib diisi jika alasan ditolak">{{ old('decision_note') }}</textarea>
-              @error('decision_note')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-
-            <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-3 mb-4">
-              <label class="flex items-start gap-2 text-xs font-semibold text-amber-800 cursor-pointer">
-                <input type="checkbox" name="record_sanction" value="1" class="mt-0.5">
-                Catat sanksi sebagai pelanggaran kedisiplinan
-              </label>
-              <div class="grid sm:grid-cols-2 gap-3 mt-3">
-                <div>
-                  <label class="f-label" for="sanction_category_id-{{ $appeal->id }}">Kategori Pelanggaran</label>
-                  <select id="sanction_category_id-{{ $appeal->id }}" name="sanction_category_id" class="f-select">
-                    <option value="">Pilih kategori</option>
-                    @foreach($violationCategories as $category)
-                      <option value="{{ $category->id }}" data-points="{{ $category->default_points }}">
-                        {{ $category->name }} ({{ $category->default_points }})
-                      </option>
-                    @endforeach
-                  </select>
-                </div>
-                <div>
-                  <label class="f-label" for="sanction_points-{{ $appeal->id }}">Besar Sanksi (poin)</label>
-                  <input type="number" id="sanction_points-{{ $appeal->id }}" name="sanction_points" min="0" max="1000" class="f-input"
-                         placeholder="Ikuti kategori">
-                </div>
-              </div>
-              @error('sanction_category_id')
-                <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
-              @enderror
-            </div>
-
-            <div class="flex gap-2">
-              <button type="submit" class="btn btn-primary flex-1">Simpan Keputusan</button>
-              <button type="button" data-modal-close class="btn btn-outline">Batal</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    @endif
-  @endforeach
-
 </div>
 @endsection
+
+@push('modals')
+@foreach($appeals as $appeal)
+  @if($appeal->decision->value === 'PENDING')
+    <div class="modal-overlay" id="appealModal-{{ $appeal->id }}" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-xl">
+        <div class="flex items-start justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="avatar-circle">{{ strtoupper(substr($appeal->exitPermit?->student?->full_name ?? 'S', 0, 2)) }}</div>
+            <div>
+              <h3 class="font-heading font-bold text-bluedark">Putuskan Banding</h3>
+              <p class="text-xs text-bluedark/50 mt-0.5">
+                {{ $appeal->exitPermit?->student?->full_name }} &middot;
+                {{ $appeal->exitPermit?->student?->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
+              </p>
+            </div>
+          </div>
+          <button type="button" data-modal-close class="text-bluedark/40 hover:text-bluedark" aria-label="Tutup">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="rounded-xl bg-bluelight/50 p-3 text-xs text-bluedark space-y-1 mb-4">
+          <div class="flex justify-between">
+            <span class="text-bluedark/60">Keterlambatan</span>
+            <span class="font-semibold">
+              {{ (int) $appeal->exitPermit?->planned_return_at?->diffInMinutes($appeal->exitPermit?->actual_return_at ?? now()) }} menit
+            </span>
+          </div>
+          <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->planned_return_at?->format('d M Y H:i') }}</span></div>
+          <div class="flex justify-between"><span class="text-bluedark/60">Riil kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->actual_return_at?->format('d M Y H:i') ?? '—' }}</span></div>
+        </div>
+
+        <div class="rounded-xl border border-bluelight p-3 text-xs text-bluedark mb-4">
+          <div class="text-bluedark/50 mb-1">Alasan dari siswa</div>
+          {{ $appeal->reason }}
+        </div>
+
+        <form action="{{ route('counselor.appeals.decide', $appeal) }}" method="POST">
+          @csrf
+          <div class="mb-4">
+            <label class="f-label" for="decision-{{ $appeal->id }}">Keputusan <span class="text-red-500">*</span></label>
+            <select id="decision-{{ $appeal->id }}" name="decision" class="f-select" required>
+              <option value="">Pilih keputusan</option>
+              <option value="ACCEPTED">Terima alasan (tanpa sanksi)</option>
+              <option value="REJECTED">Tolak alasan</option>
+            </select>
+            @error('decision')
+              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+          </div>
+
+          <div class="mb-4">
+            <label class="f-label" for="decision_note-{{ $appeal->id }}">Catatan Keputusan</label>
+            <textarea id="decision_note-{{ $appeal->id }}" name="decision_note" rows="2" class="f-textarea"
+                      placeholder="Wajib diisi jika alasan ditolak">{{ old('decision_note') }}</textarea>
+            @error('decision_note')
+              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+          </div>
+
+          <div class="rounded-xl border border-amber-200 bg-amber-50/50 p-3 mb-4">
+            <label class="flex items-start gap-2 text-xs font-semibold text-amber-800 cursor-pointer">
+              <input type="checkbox" name="record_sanction" value="1" class="mt-0.5">
+              Catat sanksi sebagai pelanggaran kedisiplinan
+            </label>
+            <div class="grid sm:grid-cols-2 gap-3 mt-3">
+              <div>
+                <label class="f-label" for="sanction_category_id-{{ $appeal->id }}">Kategori Pelanggaran</label>
+                <select id="sanction_category_id-{{ $appeal->id }}" name="sanction_category_id" class="f-select">
+                  <option value="">Pilih kategori</option>
+                  @foreach($violationCategories as $category)
+                    <option value="{{ $category->id }}" data-points="{{ $category->default_points }}">
+                      {{ $category->name }} ({{ $category->default_points }})
+                    </option>
+                  @endforeach
+                </select>
+              </div>
+              <div>
+                <label class="f-label" for="sanction_points-{{ $appeal->id }}">Besar Sanksi (poin)</label>
+                <input type="number" id="sanction_points-{{ $appeal->id }}" name="sanction_points" min="0" max="1000" class="f-input"
+                       placeholder="Ikuti kategori">
+              </div>
+            </div>
+            @error('sanction_category_id')
+              <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+            @enderror
+          </div>
+
+          <div class="flex gap-2">
+            <button type="submit" class="btn btn-primary flex-1">Simpan Keputusan</button>
+            <button type="button" data-modal-close class="btn btn-outline">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  @endif
+@endforeach
+@endpush
 
 @push('scripts')
 <script>

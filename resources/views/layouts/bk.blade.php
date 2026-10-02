@@ -167,6 +167,10 @@
 
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
+<script src="{{ asset('assets/js/student-picker.js') }}"></script>
+{{-- Modal WAJIB lewat @push('modals') supaya berada di luar <main>. Bila dirender
+     di dalam konten, animasi kartu pada <main> membuat overlay fixed terpotong
+     dan bayangan gelap hanya menutupi area konten. --}}
 @stack('modals')
 <script>
   // Delegasi global untuk buka/tutup modal via data-modal-open / data-modal-close.
@@ -224,7 +228,6 @@
     window.setInterval(tick, 1000);
   });
 </script>
-@stack('modals')
 @stack('scripts')
 </body>
 </html>
