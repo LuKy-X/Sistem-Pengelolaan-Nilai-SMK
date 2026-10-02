@@ -122,43 +122,65 @@
             <button type="button" onclick="closeTeacherModal()" class="text-bluedark/40 hover:text-bluedark text-xl font-bold">&times;</button>
         </div>
 
-        <form id="teacherForm" method="POST" action="{{ route('admin.users.teachers.store') }}" class="space-y-4">
+        <form id="teacherForm" method="POST" action="{{ old('_action', route('admin.users.teachers.store')) }}" class="space-y-4">
             @csrf
-            <div id="teacherMethodField"></div>
-
-            <div>
-                <label class="f-label">NIP (Nomor Induk Pegawai)</label>
-                <input type="text" name="nip" id="teacher_nip" required placeholder="198501012010011001" class="f-input">
+            <div id="teacherMethodField">
+                @if(old('_method') === 'PUT')
+                    <input type="hidden" name="_method" value="PUT">
+                @endif
             </div>
 
             <div>
-                <label class="f-label">Nama Lengkap &amp; Gelar</label>
-                <input type="text" name="full_name" id="teacher_full_name" required placeholder="Drs. H. Mulyono, M.Kom" class="f-input">
+                <label class="f-label">NIP (Nomor Induk Pegawai) <span class="text-rose-500">*</span></label>
+                <input type="text" name="nip" id="teacher_nip" value="{{ old('nip') }}" data-check-unique="nip" required placeholder="198501012010011001" class="f-input @error('nip') border-rose-500 @enderror">
+                @error('nip')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div>
+                <label class="f-label">Nama Lengkap &amp; Gelar <span class="text-rose-500">*</span></label>
+                <input type="text" name="full_name" id="teacher_full_name" value="{{ old('full_name') }}" required placeholder="Drs. H. Mulyono, M.Kom" class="f-input @error('full_name') border-rose-500 @enderror">
+                @error('full_name')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="f-label">Jenis Kelamin</label>
-                    <select name="gender" id="teacher_gender" class="f-select">
-                        <option value="MALE">Laki-laki</option>
-                        <option value="FEMALE">Perempuan</option>
+                    <select name="gender" id="teacher_gender" class="f-select @error('gender') border-rose-500 @enderror">
+                        <option value="MALE" {{ old('gender') == 'MALE' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="FEMALE" {{ old('gender') == 'FEMALE' ? 'selected' : '' }}>Perempuan</option>
                     </select>
+                    @error('gender')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label">No. Telepon / WA</label>
-                    <input type="text" name="phone" id="teacher_phone" placeholder="08xxxxxxxx" class="f-input">
+                    <input type="text" name="phone" id="teacher_phone" value="{{ old('phone') }}" placeholder="08xxxxxxxx" class="f-input @error('phone') border-rose-500 @enderror">
+                    @error('phone')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div id="teacherAccountFields" class="space-y-3 pt-2 border-t border-bluelight">
                 <div class="text-xs font-bold text-bluedark">Akun Login Guru</div>
                 <div>
-                    <label class="f-label text-xs">Email Resmi Sekolah</label>
-                    <input type="email" name="email" id="teacher_email" placeholder="guru@smkn2kra.sch.id" class="f-input text-xs">
+                    <label class="f-label text-xs">Email Resmi Sekolah <span class="text-rose-500">*</span></label>
+                    <input type="email" name="email" id="teacher_email" value="{{ old('email') }}" data-check-unique="email" placeholder="guru@smkn2kra.sch.id" class="f-input text-xs @error('email') border-rose-500 @enderror">
+                    @error('email')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label text-xs">Password Default</label>
-                    <input type="text" name="password" value="guru12345" class="f-input text-xs">
+                    <input type="text" name="password" value="guru12345" class="f-input text-xs @error('password') border-rose-500 @enderror">
+                    @error('password')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
@@ -172,15 +194,24 @@
 
 @push('scripts')
 <script>
+    function resetUniqueFeedbacks(modalEl) {
+        modalEl.querySelectorAll('.check-unique-feedback').forEach(el => el.innerHTML = '');
+        modalEl.querySelectorAll('input').forEach(el => el.classList.remove('border-emerald-500', 'border-rose-500'));
+    }
+
     function openTeacherModal() {
         document.getElementById('teacherModalTitle').innerText = 'Tambah Guru Baru';
         document.getElementById('teacherForm').action = "{{ route('admin.users.teachers.store') }}";
         document.getElementById('teacherMethodField').innerHTML = '';
         document.getElementById('teacher_nip').value = '';
+        document.getElementById('teacher_nip').removeAttribute('data-ignore-id');
         document.getElementById('teacher_full_name').value = '';
         document.getElementById('teacher_phone').value = '';
+        document.getElementById('teacher_email').value = '';
+        document.getElementById('teacher_email').removeAttribute('data-ignore-id');
         document.getElementById('teacherAccountFields').classList.remove('hidden');
         document.getElementById('teacher_email').required = true;
+        resetUniqueFeedbacks(document.getElementById('teacherModal'));
         document.getElementById('teacherModal').classList.remove('hidden');
     }
 
@@ -189,17 +220,25 @@
         document.getElementById('teacherForm').action = "/admin/users/teachers/" + t.id;
         document.getElementById('teacherMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
         document.getElementById('teacher_nip').value = t.nip;
+        document.getElementById('teacher_nip').setAttribute('data-ignore-id', t.id);
         document.getElementById('teacher_full_name').value = t.full_name;
         document.getElementById('teacher_gender').value = t.gender || 'MALE';
         document.getElementById('teacher_phone').value = t.phone || '';
         document.getElementById('teacherAccountFields').classList.add('hidden');
         document.getElementById('teacher_email').required = false;
+        resetUniqueFeedbacks(document.getElementById('teacherModal'));
         document.getElementById('teacherModal').classList.remove('hidden');
     }
 
     function closeTeacherModal() {
         document.getElementById('teacherModal').classList.add('hidden');
     }
+
+    @if($errors->any() && (old('nip') || old('full_name') || old('email')))
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('teacherModal').classList.remove('hidden');
+    });
+    @endif
 </script>
 @endpush
 @endsection

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\TeachersController;
 use App\Http\Controllers\Admin\TeachingAssignmentController;
 use App\Http\Controllers\Admin\UsersController;
+use App\Http\Controllers\Admin\ValidationCheckController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BK\AppealController;
 use App\Http\Controllers\BK\CounselingController;
@@ -124,6 +125,7 @@ Route::middleware('auth')->group(function () {
     // ==========================================
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/check-unique', [ValidationCheckController::class, 'checkUnique'])->name('check-unique');
 
         // Master Data Akademik
         Route::prefix('academic')->name('academic.')->group(function () {
@@ -173,6 +175,8 @@ Route::middleware('auth')->group(function () {
 
             // Jadwal Mengajar & Jam Pelajaran
             Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+            Route::get('/schedules/export/pdf', [ScheduleController::class, 'exportPdf'])->name('schedules.export.pdf');
+            Route::get('/schedules/export/excel', [ScheduleController::class, 'exportExcel'])->name('schedules.export.excel');
             Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
             Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
             Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');

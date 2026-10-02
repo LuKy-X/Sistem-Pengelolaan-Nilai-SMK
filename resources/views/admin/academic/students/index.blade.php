@@ -166,58 +166,85 @@
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="f-label">NIS (Nomor Induk Siswa)</label>
-                    <input type="text" name="nis" required placeholder="12345" class="f-input">
+                    <label class="f-label">NIS (Nomor Induk Siswa) <span class="text-rose-500">*</span></label>
+                    <input type="text" name="nis" id="student_nis" value="{{ old('nis') }}" data-check-unique="nis" required placeholder="12345" class="f-input @error('nis') border-rose-500 @enderror">
+                    @error('nis')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
-                    <label class="f-label">NISN (Nasional)</label>
-                    <input type="text" name="nisn" required placeholder="0056789012" class="f-input">
+                    <label class="f-label">NISN (Nasional) <span class="text-rose-500">*</span></label>
+                    <input type="text" name="nisn" id="student_nisn" value="{{ old('nisn') }}" data-check-unique="nisn" required placeholder="0056789012" class="f-input @error('nisn') border-rose-500 @enderror">
+                    @error('nisn')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div>
-                <label class="f-label">Nama Lengkap Siswa</label>
-                <input type="text" name="full_name" required placeholder="Nama Siswa" class="f-input">
+                <label class="f-label">Nama Lengkap Siswa <span class="text-rose-500">*</span></label>
+                <input type="text" name="full_name" id="student_full_name" value="{{ old('full_name') }}" required placeholder="Nama Siswa" class="f-input @error('full_name') border-rose-500 @enderror">
+                @error('full_name')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="f-label">Jenis Kelamin</label>
-                    <select name="gender" required class="f-select">
-                        <option value="MALE">Laki-laki</option>
-                        <option value="FEMALE">Perempuan</option>
+                    <label class="f-label">Jenis Kelamin <span class="text-rose-500">*</span></label>
+                    <select name="gender" required class="f-select @error('gender') border-rose-500 @enderror">
+                        <option value="MALE" {{ old('gender', 'MALE') === 'MALE' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="FEMALE" {{ old('gender') === 'FEMALE' ? 'selected' : '' }}>Perempuan</option>
                     </select>
+                    @error('gender')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label">Penempatan Kelas</label>
-                    <select name="class_id" class="f-select">
+                    <select name="class_id" class="f-select @error('class_id') border-rose-500 @enderror">
                         <option value="">-- Pilih Kelas --</option>
                         @foreach($classes as $c)
-                            <option value="{{ $c->id }}">{{ $c->name }} ({{ $c->department?->name }})</option>
+                            <option value="{{ $c->id }}" {{ old('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }} ({{ $c->department?->name }})</option>
                         @endforeach
                     </select>
+                    @error('class_id')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="f-label">Tempat Lahir</label>
-                    <input type="text" name="birth_place" placeholder="Karanganyar" class="f-input">
+                    <input type="text" name="birth_place" value="{{ old('birth_place') }}" placeholder="Karanganyar" class="f-input @error('birth_place') border-rose-500 @enderror">
+                    @error('birth_place')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
                 <div>
                     <label class="f-label">Tanggal Lahir</label>
-                    <input type="date" name="birth_date" class="f-input">
+                    <input type="date" name="birth_date" value="{{ old('birth_date') }}" class="f-input @error('birth_date') border-rose-500 @enderror">
+                    @error('birth_date')
+                        <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                    @enderror
                 </div>
             </div>
 
             <div>
                 <label class="f-label">Nomor Telepon / WhatsApp</label>
-                <input type="text" name="phone" placeholder="08xxxxxxxxxx" class="f-input">
+                <input type="text" name="phone" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx" class="f-input @error('phone') border-rose-500 @enderror">
+                @error('phone')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <div>
                 <label class="f-label">Alamat Domisili</label>
-                <textarea name="address" rows="2" class="f-textarea"></textarea>
+                <textarea name="address" rows="2" class="f-textarea @error('address') border-rose-500 @enderror">{{ old('address') }}</textarea>
+                @error('address')
+                    <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                @enderror
             </div>
 
             <!-- Akun Pengguna Opsional -->
@@ -226,11 +253,17 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="f-label text-xs">Email Login</label>
-                        <input type="email" name="email" placeholder="siswa@smkn2.sch.id" class="f-input text-xs">
+                        <input type="email" name="email" value="{{ old('email') }}" data-check-unique="email" placeholder="siswa@smkn2.sch.id" class="f-input text-xs @error('email') border-rose-500 @enderror">
+                        @error('email')
+                            <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
                     <div>
                         <label class="f-label text-xs">Password Default</label>
-                        <input type="text" name="password" value="password123" class="f-input text-xs">
+                        <input type="text" name="password" value="{{ old('password', 'password123') }}" class="f-input text-xs @error('password') border-rose-500 @enderror">
+                        @error('password')
+                            <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -251,6 +284,12 @@
     function closeStudentModal() {
         document.getElementById('studentModal').classList.add('hidden');
     }
+
+    @if($errors->any() && (old('nis') || old('full_name') || old('nisn')))
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('studentModal').classList.remove('hidden');
+    });
+    @endif
 </script>
 @endpush
 @endsection
