@@ -465,9 +465,10 @@
 
 </div>
 
+@push('modals')
 <!-- Modal Detail Bukti Pengiriman Siswa -->
-<div id="modalBuktiPengiriman" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 hidden opacity-0 transition-opacity duration-200">
-  <div class="bg-white rounded-2xl shadow-xl border border-bluelight max-w-lg w-full overflow-hidden transform transition-transform duration-200 scale-95" id="modalBuktiBox">
+<div id="modalBuktiPengiriman" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/35 backdrop-blur-sm p-4 hidden opacity-0 transition-all duration-200" onclick="if(event.target === this) window.closeModalBukti()">
+  <div class="bg-white rounded-2xl shadow-2xl border border-bluelight max-w-lg w-full overflow-hidden transform transition-all duration-200 scale-95" id="modalBuktiBox">
     <div class="p-4 bg-gradient-to-r from-blueprim to-blue-800 text-white flex items-center justify-between">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
@@ -490,6 +491,7 @@
     </div>
   </div>
 </div>
+@endpush
 
 <!-- Data JSON Embed untuk interaksi instan tanpa delay/reload -->
 <script>
@@ -565,10 +567,18 @@
                                     'size' => $m->size,
                                 ];
                             }
+                            $subStatusVal = $sub->status instanceof \App\Enums\SubmissionStatus ? $sub->status->value : ($sub->status?->value ?? (string) ($sub->status ?? 'SUBMITTED'));
+                            $subStatusLabel = ($sub->status instanceof \App\Enums\SubmissionStatus)
+                                ? $sub->status->label()
+                                : match ($subStatusVal) {
+                                    'DRAFT' => 'Draf',
+                                    'REVIEWED' => 'Sudah Dinilai',
+                                    default => 'Dikumpulkan',
+                                };
                             $submissionsMap[$sub->student_id] = [
                                 'id' => $sub->id,
-                                'status' => $sub->status?->value ?? 'SUBMITTED',
-                                'status_label' => $sub->status?->label() ?? 'Dikumpulkan',
+                                'status' => $subStatusVal,
+                                'status_label' => $subStatusLabel,
                                 'content' => $sub->content ?? '',
                                 'submitted_at' => $sub->submitted_at?->format('d M Y, H:i') ?? '',
                                 'late_minutes' => (int) $sub->late_minutes,
@@ -2039,6 +2049,10 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     }
 
+    if (modal && modal.parentElement !== document.body) {
+      document.body.appendChild(modal);
+    }
+
     modal.classList.remove("hidden");
     setTimeout(() => {
       modal.classList.remove("opacity-0");
@@ -2058,6 +2072,15 @@ document.addEventListener("DOMContentLoaded", () => {
       modal.classList.add("hidden");
     }, 200);
   };
+
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape") {
+      const modal = document.getElementById("modalBuktiPengiriman");
+      if (modal && !modal.classList.contains("hidden")) {
+        window.closeModalBukti();
+      }
+    }
+  });
 
   // Form Direct Score Input Listener
   const inputDirectScore = document.getElementById("inputDirectScore");
@@ -2278,9 +2301,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Auto select class/gradebook/column/student from URL parameters or session
   @php
-    $selAssignId = session('selected_assignment_id') ?? request('assignment_id');
-    $selGradebookId = session('selected_gradebook_id') ?? request('gradebook_id');
-    $selColId = session('selected_column_id') ?? request('column_id');
+    $selAssessmentId = request('assessment_id');
+    $reqAssessment = $selAssessmentId ? $assessments->firstWhere('id', (int) $selAssessmentId) : null;
+    $selAssignId = session('selected_assignment_id') ?? request('assignment_id') ?? $reqAssessment?->teaching_assignment_id;
+    $selGradebookId = session('selected_gradebook_id') ?? request('gradebook_id') ?? $reqAssessment?->gradebookColumn?->gradebook_id;
+    $selColId = session('selected_column_id') ?? request('column_id') ?? $reqAssessment?->gradebook_column_id;
     $selStudentId = session('selected_student_id') ?? request('student_id');
   @endphp
 
@@ -2297,12 +2322,24 @@ document.addEventListener("DOMContentLoaded", () => {
       if (reqGbId && currentClassData && currentClassData.gradebooks) {
         targetGb = currentClassData.gradebooks.find(g => g.id === reqGbId);
       }
+      if (!targetGb && reqColId && currentClassData && currentClassData.gradebooks) {
+        targetGb = currentClassData.gradebooks.find(g => g.columns && g.columns.some(c => c.id === reqColId));
+      }
       if (!targetGb && currentClassData && currentClassData.gradebooks && currentClassData.gradebooks.length > 0) {
         targetGb = currentClassData.gradebooks[0];
       }
 
       if (targetGb) {
         selectGradebook(targetGb, reqColId, reqStudentId);
+
+        if (reqColId || reqStudentId) {
+          setTimeout(() => {
+            const formBlock = document.querySelector('.form-block');
+            if (formBlock) {
+              formBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          }, 120);
+        }
       }
     }
   @endif
