@@ -2,7 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Assessment;
+use App\Models\ExitPermit;
+use App\Models\GradebookScore;
+use App\Observers\AssessmentObserver;
+use App\Observers\ExitPermitObserver;
+use App\Observers\GradebookScoreObserver;
 use App\View\Composers\PublicSiteComposer;
+use App\View\Composers\StudentNotificationCount;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useTailwind();
         $this->composePublicViews();
+        $this->composeStudentViews();
+        $this->registerNotificationObservers();
     }
 
     /**
@@ -47,5 +56,26 @@ class AppServiceProvider extends ServiceProvider
             'components.public.*',
             'auth.*',
         ], PublicSiteComposer::class);
+    }
+
+    /**
+     * Lencana jumlah notifikasi hanya dibutuhkan oleh layout portal siswa, jadi
+     * composer ini sengaja tidak dipasang pada layout Guru atau Guru BK.
+     */
+    private function composeStudentViews(): void
+    {
+        View::composer('layouts.student', StudentNotificationCount::class);
+    }
+
+    /**
+     * Notifikasi siswa dipicu dari model, bukan dari controller Guru atau Guru BK.
+     * Cara ini membuat notifikasi tetap bekerja tanpa mengubah alur kedua modul
+     * tersebut sama sekali.
+     */
+    private function registerNotificationObservers(): void
+    {
+        Assessment::observe(AssessmentObserver::class);
+        ExitPermit::observe(ExitPermitObserver::class);
+        GradebookScore::observe(GradebookScoreObserver::class);
     }
 }

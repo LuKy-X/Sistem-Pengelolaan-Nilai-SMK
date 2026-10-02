@@ -48,6 +48,21 @@ class LessonPeriod extends Model
         return $this->hasMany(TeachingSchedule::class, 'end_period_id');
     }
 
+    public function getNameAttribute(): string
+    {
+        if (! empty($this->attributes['name'] ?? null)) {
+            return $this->attributes['name'];
+        }
+
+        if ($this->is_break) {
+            $cleaned = preg_replace('/\s*\(.*\)/', '', $this->label ?? '');
+
+            return ! empty($cleaned) ? trim($cleaned) : 'Istirahat';
+        }
+
+        return "Jam Ke-{$this->period_number}";
+    }
+
     /**
      * Urutkan ulang nomor jam pelajaran dan sort_order.
      * Jam istirahat TIDAK memengaruhi urutan nomor jam pelajaran reguler.
