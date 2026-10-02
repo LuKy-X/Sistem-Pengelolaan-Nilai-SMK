@@ -586,4 +586,192 @@ class AcademicRevisionTest extends TestCase
         $resExcel->assertSee('Pemrograman Web Export');
         $resExcel->assertSee('Guru Export PDF');
     }
+
+    public function test_counselor_user_has_teacher_profile_and_can_be_assigned_to_teach(): void
+    {
+        $counselorRole = Role::firstOrCreate(['code' => 'COUNSELOR'], ['name' => 'Guru Bimbingan Konseling (BK)']);
+        $counselorUser = User::factory()->create([
+            'name' => 'Ibu Dewi BK, S.Psi.',
+            'username' => 'dewi.bk.test',
+        ]);
+        $counselorUser->roles()->attach($counselorRole);
+
+        // Pastikan counselor diakui sebagai teacher
+        $this->assertTrue($counselorUser->isTeacher());
+        $this->assertTrue($counselorUser->isCounselor());
+
+        // Sinkronisasi profil
+        TeacherProfile::ensureCounselorProfiles();
+        $this->assertNotNull($counselorUser->fresh()->teacherProfile);
+        $this->assertTrue($counselorUser->fresh()->teacherProfile->isCounselor());
+
+        $bkSubject = Subject::firstOrCreate(['code' => 'BK'], [
+            'name' => 'Bimbingan dan Konseling',
+            'category' => 'BIMBINGAN_KONSELING',
+            'is_active' => true,
+        ]);
+
+        $class = SchoolClass::create([
+            'academic_year_id' => $this->year->id,
+            'department_id' => $this->dept->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-TKJ-BK',
+            'name' => 'XII TKJ BK',
+            'is_active' => true,
+        ]);
+
+        // Admin menugaskan Guru BK mengajar
+        $response = $this->actingAs($this->adminUser)->post(route('admin.academic.teaching-assignments.store'), [
+            'teacher_id' => $counselorUser->fresh()->teacherProfile->id,
+            'subject_id' => $bkSubject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 2,
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('teaching_assignments', [
+            'teacher_id' => $counselorUser->fresh()->teacherProfile->id,
+            'subject_id' => $bkSubject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 2,
+        ]);
+
+        // Cek halaman index menampilkan badge Guru BK dan optgroup
+        $indexRes = $this->actingAs($this->adminUser)->get(route('admin.academic.teaching-assignments.index'));
+        $indexRes->assertOk();
+        $indexRes->assertSee('Guru BK');
+        $indexRes->assertSee('Guru Bimbingan Konseling (BK)');
+    }
+
+    public function test_admin_can_update_teaching_assignment_fields_completely(): void
+    {
+        $teacher1 = TeacherProfile::factory()->create(['full_name' => 'Guru Pertama']);
+        $teacher2 = TeacherProfile::factory()->create(['full_name' => 'Guru Kedua']);
+
+        $subject1 = Subject::create(['code' => 'SBJ1', 'name' => 'Mapel Pertama']);
+        $subject2 = Subject::create(['code' => 'SBJ2', 'name' => 'Mapel Kedua']);
+
+        $class1 = SchoolClass::create([
+            'academic_year_id' => $this->year->id,
+            'department_id' => $this->dept->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-TKJ-U1',
+            'name' => 'XII TKJ Update 1',
+            'is_active' => true,
+        ]);
+        $class2 = SchoolClass::create([
+            'academic_year_id' => $this->year->id,
+            'department_id' => $this->dept->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-TKJ-U2',
+            'name' => 'XII TKJ Update 2',
+            'is_active' => true,
+        ]);
+
+        $assignment = TeachingAssignment::create([
+            'teacher_id' => $teacher1->id,
+            'subject_id' => $subject1->id,
+            'class_id' => $class1->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        // Update seluruh field penugasan
+        $response = $this->actingAs($this->adminUser)->put(route('admin.academic.teaching-assignments.update', $assignment), [
+            'teacher_id' => $teacher2->id,
+            'subject_id' => $subject2->id,
+            'class_id' => $class2->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 4,
+            'is_active' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('teaching_assignments', [
+            'id' => $assignment->id,
+            'teacher_id' => $teacher2->id,
+            'subject_id' => $subject2->id,
+            'class_id' => $class2->id,
+            'weekly_hours' => 4,
+        ]);
+    }
+
+    public function test_update_teaching_assignment_prevents_duplicate_combination(): void
+    {
+        $teacher1 = TeacherProfile::factory()->create(['full_name' => 'Guru A']);
+        $teacher2 = TeacherProfile::factory()->create(['full_name' => 'Guru B']);
+
+        $subject = Subject::create(['code' => 'DUP1', 'name' => 'Mapel Duplikat']);
+        $class = SchoolClass::create([
+            'academic_year_id' => $this->year->id,
+            'department_id' => $this->dept->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-TKJ-DUP',
+            'name' => 'XII TKJ Duplikat',
+            'is_active' => true,
+        ]);
+
+        // Penugasan 1
+        $assignment1 = TeachingAssignment::create([
+            'teacher_id' => $teacher1->id,
+            'subject_id' => $subject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        // Penugasan 2
+        $assignment2 = TeachingAssignment::create([
+            'teacher_id' => $teacher2->id,
+            'subject_id' => $subject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 3,
+            'is_active' => true,
+        ]);
+
+        // Coba update assignment 2 agar kombinasi sama dengan assignment 1
+        $response = $this->actingAs($this->adminUser)->put(route('admin.academic.teaching-assignments.update', $assignment2), [
+            'teacher_id' => $teacher1->id,
+            'subject_id' => $subject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 3,
+            'is_active' => 1,
+        ]);
+
+        $response->assertSessionHas('error');
+    }
+
+    public function test_admin_can_delete_teaching_assignment(): void
+    {
+        $teacher = TeacherProfile::factory()->create();
+        $subject = Subject::create(['code' => 'DEL1', 'name' => 'Mapel Hapus']);
+        $class = SchoolClass::create([
+            'academic_year_id' => $this->year->id,
+            'department_id' => $this->dept->id,
+            'grade_level_id' => $this->levelXII->id,
+            'code' => 'XII-TKJ-DEL',
+            'name' => 'XII TKJ Hapus',
+            'is_active' => true,
+        ]);
+
+        $assignment = TeachingAssignment::create([
+            'teacher_id' => $teacher->id,
+            'subject_id' => $subject->id,
+            'class_id' => $class->id,
+            'semester_id' => $this->semester->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->delete(route('admin.academic.teaching-assignments.destroy', $assignment));
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('teaching_assignments', ['id' => $assignment->id]);
+    }
 }
