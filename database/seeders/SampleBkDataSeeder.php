@@ -68,6 +68,8 @@ class SampleBkDataSeeder extends Seeder
             $this->command->warn('Kategori disiplin contoh belum lengkap. Jalankan DisciplineCategorySeeder dulu.');
 
             return;
+        }
+
         // ─── 0. Assign kelas binaan ke Guru BK ───────────────────────────────
         if ($bkUser !== null) {
             $activeClassIds = SchoolClass::where('is_active', true)->pluck('id')->all();
