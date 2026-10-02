@@ -167,7 +167,7 @@ class BkCounselingSeeder extends Seeder
             $logs[] = [
                 'student_id' => $iqbal->id,
                 'academic_year_id' => $year->id,
-                'category_id' => $catMeninggalkan ?? $catMerokok,
+                'category_id' => $catMeninggalkan?->id ?? $catMerokok->id,
                 'points_delta' => 0,
                 'occurred_at' => now()->subDays(60),
                 'description' => 'Kunjungan rumah — Bertemu kedua orang tua. Situasi keluarga cukup baik. Orang tua menyatakan sudah menegur keras. Iqbal berjanji tidak akan mengulangi.',
@@ -178,7 +178,7 @@ class BkCounselingSeeder extends Seeder
             $logs[] = [
                 'student_id' => $iqbal->id,
                 'academic_year_id' => $year->id,
-                'category_id' => $catMeninggalkan ?? $catMerokok,
+                'category_id' => $catMeninggalkan?->id ?? $catMerokok->id,
                 'points_delta' => 0,
                 'occurred_at' => now()->subDays(52),
                 'description' => 'Konseling individual pasca SP-2 — Iqbal mulai menunjukkan perbaikan sikap. Direncanakan konseling kelompok bersama teman-teman yang juga bermasalah kehadiran.',
@@ -189,7 +189,7 @@ class BkCounselingSeeder extends Seeder
             $logs[] = [
                 'student_id' => $iqbal->id,
                 'academic_year_id' => $year->id,
-                'category_id' => $catMeninggalkan ?? $catMerokok,
+                'category_id' => $catMeninggalkan?->id ?? $catMerokok->id,
                 'points_delta' => 0,
                 'occurred_at' => now()->subDays(10),
                 'description' => 'Wawancara check-in mingguan — Iqbal hadir penuh dua minggu terakhir. Ada peningkatan positif. Akan terus dipantau.',

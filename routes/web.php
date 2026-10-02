@@ -1,5 +1,20 @@
 <?php
 
+use App\Http\Controllers\Admin\AcademicYearController;
+use App\Http\Controllers\Admin\AttendanceController;
+use App\Http\Controllers\Admin\ClassController;
+use App\Http\Controllers\Admin\CmsController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
+use App\Http\Controllers\Admin\GradesController;
+use App\Http\Controllers\Admin\GuidanceController;
+use App\Http\Controllers\Admin\ScheduleController;
+use App\Http\Controllers\Admin\SemesterController;
+use App\Http\Controllers\Admin\StudentsController;
+use App\Http\Controllers\Admin\SubjectController;
+use App\Http\Controllers\Admin\TeachersController;
+use App\Http\Controllers\Admin\TeachingAssignmentController;
+use App\Http\Controllers\Admin\UsersController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BK\AppealController;
 use App\Http\Controllers\BK\CounselingController;
@@ -108,85 +123,177 @@ Route::middleware('auth')->group(function () {
     // 3. ADMIN ROUTES (role:admin)
     // ==========================================
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () {
-            return 'Admin Dashboard';
-        })->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Master Data Akademik
-        Route::prefix('academic')->group(function () {
-            Route::get('/years', function () {
-                return 'Kelola Tahun Ajaran';
-            })->name('years.index');
+        Route::prefix('academic')->name('academic.')->group(function () {
+            // Tahun Ajaran
+            Route::get('/years', [AcademicYearController::class, 'index'])->name('years.index');
+            Route::post('/years', [AcademicYearController::class, 'store'])->name('years.store');
+            Route::put('/years/{year}', [AcademicYearController::class, 'update'])->name('years.update');
+            Route::post('/years/{year}/toggle-active', [AcademicYearController::class, 'toggleActive'])->name('years.toggle-active');
+            Route::delete('/years/{year}', [AcademicYearController::class, 'destroy'])->name('years.destroy');
 
-            Route::get('/semesters', function () {
-                return 'Kelola Semester';
-            })->name('semesters.index');
+            // Semester
+            Route::get('/semesters', [SemesterController::class, 'index'])->name('semesters.index');
+            Route::post('/semesters', [SemesterController::class, 'store'])->name('semesters.store');
+            Route::put('/semesters/{semester}', [SemesterController::class, 'update'])->name('semesters.update');
+            Route::post('/semesters/{semester}/toggle-active', [SemesterController::class, 'toggleActive'])->name('semesters.toggle-active');
+            Route::delete('/semesters/{semester}', [SemesterController::class, 'destroy'])->name('semesters.destroy');
 
-            Route::get('/departments', function () {
-                return 'Kelola Jurusan';
-            })->name('departments.index');
+            // Jurusan & Kompetensi
+            Route::get('/departments', [AdminDepartmentController::class, 'index'])->name('departments.index');
+            Route::post('/departments', [AdminDepartmentController::class, 'store'])->name('departments.store');
+            Route::get('/departments/{department}', [AdminDepartmentController::class, 'show'])->name('departments.show');
+            Route::put('/departments/{department}', [AdminDepartmentController::class, 'update'])->name('departments.update');
+            Route::delete('/departments/{department}', [AdminDepartmentController::class, 'destroy'])->name('departments.destroy');
+            Route::post('/departments/{department}/competencies', [AdminDepartmentController::class, 'storeCompetency'])->name('departments.competencies.store');
+            Route::delete('/departments/competencies/{competency}', [AdminDepartmentController::class, 'destroyCompetency'])->name('departments.competencies.destroy');
 
-            Route::get('/classes', function () {
-                return 'Kelola Rombel / Kelas';
-            })->name('classes.index');
+            // Kelas / Rombel
+            Route::get('/classes', [ClassController::class, 'index'])->name('classes.index');
+            Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
+            Route::post('/classes/promote', [ClassController::class, 'promote'])->name('classes.promote');
+            Route::get('/classes/{class}/students-for-promotion', [ClassController::class, 'studentsForPromotion'])->name('classes.students-for-promotion');
+            Route::get('/classes/{class}', [ClassController::class, 'show'])->name('classes.show');
+            Route::put('/classes/{class}', [ClassController::class, 'update'])->name('classes.update');
+            Route::delete('/classes/{class}', [ClassController::class, 'destroy'])->name('classes.destroy');
 
-            Route::get('/subjects', function () {
-                return 'Kelola Mata Pelajaran';
-            })->name('subjects.index');
+            // Mata Pelajaran
+            Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
+            Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
+            Route::put('/subjects/{subject}', [SubjectController::class, 'update'])->name('subjects.update');
+            Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
 
-            Route::get('/teaching-assignments', function () {
-                return 'Kelola Penugasan Guru Mengajar';
-            })->name('teaching-assignments.index');
+            // Penugasan Guru Mengajar
+            Route::get('/teaching-assignments', [TeachingAssignmentController::class, 'index'])->name('teaching-assignments.index');
+            Route::post('/teaching-assignments', [TeachingAssignmentController::class, 'store'])->name('teaching-assignments.store');
+            Route::put('/teaching-assignments/{teachingAssignment}', [TeachingAssignmentController::class, 'update'])->name('teaching-assignments.update');
+            Route::delete('/teaching-assignments/{teachingAssignment}', [TeachingAssignmentController::class, 'destroy'])->name('teaching-assignments.destroy');
 
-            Route::get('/schedules', function () {
-                return 'Kelola Jadwal Mengajar';
-            })->name('schedules.index');
+            // Jadwal Mengajar & Jam Pelajaran
+            Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+            Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+            Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
+            Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+            Route::post('/schedules/periods', [ScheduleController::class, 'storePeriod'])->name('schedules.periods.store');
+            Route::put('/schedules/periods/{period}', [ScheduleController::class, 'updatePeriod'])->name('schedules.periods.update');
+            Route::delete('/schedules/periods/{period}', [ScheduleController::class, 'destroyPeriod'])->name('schedules.periods.destroy');
+
+            // Siswa (Rute Akademik Siswa)
+            Route::get('/students', [StudentsController::class, 'index'])->name('students.index');
+            Route::post('/students', [StudentsController::class, 'store'])->name('students.store');
+            Route::get('/students/{student}', [StudentsController::class, 'show'])->name('students.show');
+            Route::put('/students/{student}', [StudentsController::class, 'update'])->name('students.update');
+            Route::delete('/students/{student}', [StudentsController::class, 'destroy'])->name('students.destroy');
+            Route::post('/students/{student}/enroll', [StudentsController::class, 'enrollClass'])->name('students.enroll');
         });
 
-        // Manajemen Pengguna
-        Route::prefix('users')->group(function () {
-            Route::get('/teachers', function () {
-                return 'Kelola Guru';
-            })->name('teachers.index');
+        // Manajemen Pengguna & Guru
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UsersController::class, 'index'])->name('index');
+            Route::post('/', [UsersController::class, 'store'])->name('store');
+            Route::put('/{user}', [UsersController::class, 'update'])->name('update');
+            Route::post('/{user}/toggle-status', [UsersController::class, 'toggleStatus'])->name('toggle-status');
+            Route::post('/{user}/reset-password', [UsersController::class, 'resetPassword'])->name('reset-password');
+            Route::delete('/{user}', [UsersController::class, 'destroy'])->name('destroy');
 
-            Route::get('/students', function () {
-                return 'Kelola Siswa';
-            })->name('students.index');
+            // Guru
+            Route::get('/teachers', [TeachersController::class, 'index'])->name('teachers.index');
+            Route::post('/teachers', [TeachersController::class, 'store'])->name('teachers.store');
+            Route::get('/teachers/{teacher}', [TeachersController::class, 'show'])->name('teachers.show');
+            Route::put('/teachers/{teacher}', [TeachersController::class, 'update'])->name('teachers.update');
+            Route::delete('/teachers/{teacher}', [TeachersController::class, 'destroy'])->name('teachers.destroy');
 
-            Route::get('/staff', function () {
-                return 'Kelola Staff & BK';
-            })->name('staff.index');
+            // Siswa & Staff (Rute kompatibilitas skeleton)
+            Route::get('/students', fn () => redirect()->route('admin.academic.students.index'))->name('students.index');
+            Route::get('/staff', [UsersController::class, 'index'])->name('staff.index');
         });
+
+        // Absensi Siswa
+        Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('/attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+
+        // Monitoring Buku Nilai
+        Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
+        Route::get('/grades/{gradebook}', [GradesController::class, 'show'])->name('grades.show');
+
+        // Layanan BK & Kedisiplinan
+        Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
 
         // CMS Management
-        Route::prefix('cms')->group(function () {
-            Route::get('/school-profile', function () {
-                return 'Profil Sekolah CMS';
-            })->name('school-profile.edit');
+        Route::prefix('cms')->name('cms.')->group(function () {
+            // Profil Sekolah
+            Route::get('/profile', [CmsController::class, 'profile'])->name('profile');
+            Route::get('/school-profile', [CmsController::class, 'profile'])->name('school-profile.edit');
+            Route::post('/profile', [CmsController::class, 'updateProfile'])->name('profile.update');
 
-            Route::get('/articles', function () {
-                return 'Kelola Berita & Artikel';
-            })->name('articles.index');
+            // Berita & Artikel
+            Route::get('/articles', [CmsController::class, 'articles'])->name('articles');
+            Route::get('/articles/index', [CmsController::class, 'articles'])->name('articles.index');
+            Route::get('/articles/create', [CmsController::class, 'createArticle'])->name('articles.create');
+            Route::post('/articles', [CmsController::class, 'storeArticle'])->name('articles.store');
+            Route::get('/articles/{article}/edit', [CmsController::class, 'editArticle'])->name('articles.edit');
+            Route::put('/articles/{article}', [CmsController::class, 'updateArticle'])->name('articles.update');
+            Route::delete('/articles/{article}', [CmsController::class, 'destroyArticle'])->name('articles.destroy');
+            Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
+            Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
 
-            Route::get('/achievements', function () {
-                return 'Kelola Prestasi';
-            })->name('achievements.index');
+            // PPDB
+            Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
+            Route::get('/ppdb/index', [CmsController::class, 'ppdb'])->name('ppdb.index');
+            Route::post('/ppdb/periods', [CmsController::class, 'storeAdmissionPeriod'])->name('ppdb.periods.store');
+            Route::get('/ppdb/periods/{period}', [CmsController::class, 'manageAdmissionPeriod'])->name('ppdb.periods.manage');
+            Route::put('/ppdb/periods/{period}', [CmsController::class, 'updateAdmissionPeriod'])->name('ppdb.periods.update');
+            Route::delete('/ppdb/periods/{period}', [CmsController::class, 'destroyAdmissionPeriod'])->name('ppdb.periods.destroy');
+            Route::put('/ppdb/periods/{period}/schedules', [CmsController::class, 'updateAdmissionSchedules'])->name('ppdb.periods.schedules.update');
+            Route::put('/ppdb/periods/{period}/paths', [CmsController::class, 'updateAdmissionPaths'])->name('ppdb.periods.paths.update');
+            Route::put('/ppdb/periods/{period}/requirements', [CmsController::class, 'updateAdmissionRequirements'])->name('ppdb.periods.requirements.update');
+            Route::put('/ppdb/periods/{period}/fees', [CmsController::class, 'updateAdmissionFees'])->name('ppdb.periods.fees.update');
+            Route::patch('/ppdb/periods/{period}/toggle-status', [CmsController::class, 'togglePeriodStatus'])->name('ppdb.periods.toggle-status');
 
-            Route::get('/alumni', function () {
-                return 'Kelola Data Alumni';
-            })->name('alumni.index');
+            // Prestasi
+            Route::get('/achievements', [CmsController::class, 'achievements'])->name('achievements');
+            Route::get('/achievements/index', [CmsController::class, 'achievements'])->name('achievements.index');
+            Route::post('/achievements', [CmsController::class, 'storeAchievement'])->name('achievements.store');
+            Route::put('/achievements/{achievement}', [CmsController::class, 'updateAchievement'])->name('achievements.update');
+            Route::delete('/achievements/{achievement}', [CmsController::class, 'destroyAchievement'])->name('achievements.destroy');
+            Route::patch('/achievements/{achievement}/toggle-pin', [CmsController::class, 'togglePinAchievement'])->name('achievements.toggle-pin');
+            Route::get('/achievements/{achievement}/preview', [CmsController::class, 'previewAchievement'])->name('achievements.preview');
 
-            Route::get('/ppdb', function () {
-                return 'Kelola PPDB CMS';
-            })->name('ppdb.index');
+            // Alumni
+            Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
 
-            Route::get('/products', function () {
-                return 'Kelola Produk Siswa';
-            })->name('products.index');
+            // Produk Siswa
+            Route::get('/products', [CmsController::class, 'products'])->name('products');
+            Route::get('/products/index', [CmsController::class, 'products'])->name('products.index');
+            Route::post('/products', [CmsController::class, 'storeProduct'])->name('products.store');
+            Route::put('/products/{product}', [CmsController::class, 'updateProduct'])->name('products.update');
+            Route::delete('/products/{product}', [CmsController::class, 'destroyProduct'])->name('products.destroy');
+            Route::get('/products/{product}/preview', [CmsController::class, 'previewProduct'])->name('products.preview');
 
-            Route::get('/career', function () {
-                return 'Kelola BKK & Mitra Perusahaan';
-            })->name('career.index');
+            // BKK & Mitra Perusahaan / Karir
+            Route::get('/career', [CmsController::class, 'career'])->name('career');
+            Route::get('/career/index', [CmsController::class, 'career'])->name('career.index');
+            Route::post('/career', [CmsController::class, 'storeCareer'])->name('career.store');
+
+            // Lowongan Karir & Magang
+            Route::post('/career/opportunities', [CmsController::class, 'storeCareerOpportunity'])->name('career.opportunities.store');
+            Route::put('/career/opportunities/{opportunity}', [CmsController::class, 'updateCareerOpportunity'])->name('career.opportunities.update');
+            Route::delete('/career/opportunities/{opportunity}', [CmsController::class, 'destroyCareerOpportunity'])->name('career.opportunities.destroy');
+            Route::get('/career/opportunities/{opportunity}/preview', [CmsController::class, 'previewCareerOpportunity'])->name('career.opportunities.preview');
+            Route::patch('/career/opportunities/{opportunity}/toggle-status', [CmsController::class, 'toggleCareerOpportunityStatus'])->name('career.opportunities.toggle-status');
+
+            // Mitra Perusahaan / DUDI
+            Route::post('/career/companies', [CmsController::class, 'storeCareerCompany'])->name('career.companies.store');
+            Route::put('/career/companies/{company}', [CmsController::class, 'updateCareerCompany'])->name('career.companies.update');
+            Route::delete('/career/companies/{company}', [CmsController::class, 'destroyCareerCompany'])->name('career.companies.destroy');
+
+            // Layanan BKK
+            Route::post('/career/services', [CmsController::class, 'storeCareerService'])->name('career.services.store');
+            Route::put('/career/services/{service}', [CmsController::class, 'updateCareerService'])->name('career.services.update');
+            Route::delete('/career/services/{service}', [CmsController::class, 'destroyCareerService'])->name('career.services.destroy');
+            Route::patch('/career/services/{service}/toggle-status', [CmsController::class, 'toggleCareerServiceStatus'])->name('career.services.toggle-status');
         });
     });
 

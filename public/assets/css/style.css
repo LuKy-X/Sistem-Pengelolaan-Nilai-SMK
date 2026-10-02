@@ -589,7 +589,6 @@ body {
 .db-scroll::-webkit-scrollbar-track { background: transparent; }
 .db-scroll::-webkit-scrollbar-thumb { background: #90CAF9; border-radius: 999px; }
 
-
 /* Sidebar */
 .db-sidebar {
   background: #F7FBFF;
@@ -620,7 +619,6 @@ body {
   box-shadow: 0 10px 22px -8px rgba(33,150,243,.55);
 }
 .db-nav-item.active svg { color: #fff; }
-
 
 /* Topbar */
 .db-topbar {
@@ -1603,7 +1601,7 @@ body.teacher-portal {
 
 /* Modals */
 .teacher-portal .modal-box {
-  padding: 1.35rem 1.5rem !important;
-  border-radius: 1.15rem !important;
-  max-width: 30rem !important;
+  padding: 1.15rem 1.25rem !important;
+  border-radius: 1rem !important;
+  max-width: 28rem !important;
 }

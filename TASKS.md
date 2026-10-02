@@ -23,12 +23,13 @@ Dokumen pelacak pekerjaan antar pengembang dan AI Agent untuk mencegah tumpang t
 | MOD-04 | Teacher Assessment & Rubrik | Manajemen tugas, aturan potongan telat, rubrik penskoran multi-kriteria, & koreksi submission | Senior Developer | `app/Http/Controllers/Teacher/AssessmentController.php`, `RubricController.php`, `resources/views/teacher/assessments/*.blade.php` | DONE |
 | MOD-06 | Teacher Journal & Presensi | Jurnal harian mengajar, jam ke- sd ke-, presensi Hadir/S/I/A, dan pencatatan siswa | Senior Developer | `app/Http/Controllers/Teacher/JournalController.php`, `resources/views/teacher/journals/*.blade.php` | DONE |
 | MOD-14 | Catatan Nilai & Profil | Catatan evaluasi/remedial siswa per rombel dan pengelolaan data profil/keamanan guru | Senior Developer | `app/Http/Controllers/Teacher/GradeNoteController.php`, `ProfileController.php`, `tests/Feature/TeacherPortalTest.php` | DONE |
+| MOD-02 | Admin Portal & Akademik | Dashboard admin, Tahun Ajaran, Semester, Jurusan, Rombel/Kelas, Mapel, Teaching Assignments, Jadwal KBM, Siswa, Guru, Users, Presensi & Export CSV, Monitoring Nilai & BK, serta Pengelolaan Konten CMS Sekolah | AI Agent | `app/Http/Controllers/Admin/*.php`, `app/Http/Requests/Admin/*.php`, `resources/views/admin/**/*.blade.php`, `resources/views/layouts/admin.blade.php`, `tests/Feature/AdminPortalTest.php` | DONE |
 
 ---
 
 ## IN PROGRESS
 
-*(Sesi Role Guru & Authentication selesai dengan 32 test passing dan Pint formatting terverifikasi)*
+*(Sesi Role Admin Portal selesai dengan 42 test passing, 111 assertions, dan Laravel Pint code style formatting 100% terverifikasi)*
 
 ---
 
@@ -36,7 +37,6 @@ Dokumen pelacak pekerjaan antar pengembang dan AI Agent untuk mencegah tumpang t
 
 | ID | Modul | Deskripsi | Owner | Dependency | Status |
 |---|---|---|---|---|---|
-| MOD-02 | Admin Akademik | Manajemen Tahun Ajaran, Semester, Jurusan, Tingkat, Kelas, Mapel, Teaching Assignments | Team | MOD-01 | TODO |
 | MOD-05 | Student Submission | Pengumpulan jawaban teks/file oleh siswa, deteksi telat, rekam nilai & feedback | Team | MOD-04 | TODO |
 | MOD-07 | BK Izin Keluar & Timer | Alur pengajuan izin keluar, approval BK, timer kepulangan, & banding terlambat | Team | MOD-01 | TODO |
 | MOD-08 | BK Disiplin & SP | Pencatatan pelanggaran/penghargaan, kalkulasi delta poin, & penerbitan SP1/2/3 | Team | MOD-01 | TODO |
