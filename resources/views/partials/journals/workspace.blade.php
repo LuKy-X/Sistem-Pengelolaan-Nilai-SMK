@@ -435,9 +435,18 @@
                       <td colspan="11" class="py-2.5 px-4 text-center">
                         <div class="inline-flex items-center justify-center gap-2 text-amber-950 font-bold text-xs tracking-wide">
                           @if(str_contains(strtolower($period->name), '2') || str_contains(strtolower($period->name), 'ii') || substr($period->start_time, 0, 2) >= '11')
-                            <span class="text-base leading-none">🕌</span>
+                            <svg class="w-4 h-4 text-amber-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <circle cx="12" cy="12" r="10"/>
+                              <polyline points="12 6 12 12 16 14"/>
+                            </svg>
                           @else
-                            <span class="text-base leading-none">☕</span>
+                            <svg class="w-4 h-4 text-amber-800 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                              <line x1="6" y1="1" x2="6" y2="4"/>
+                              <line x1="10" y1="1" x2="10" y2="4"/>
+                              <line x1="14" y1="1" x2="14" y2="4"/>
+                            </svg>
                           @endif
                           <span class="uppercase tracking-wider font-extrabold text-amber-900">{{ strtoupper($period->name) }}</span>
                           <span class="px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900 font-mono text-[11px] font-semibold">
