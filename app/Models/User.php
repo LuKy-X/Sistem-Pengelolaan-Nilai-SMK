@@ -108,7 +108,7 @@ class User extends Authenticatable
 
     public function isTeacher(): bool
     {
-        return $this->hasRole('TEACHER');
+        return $this->hasRole(['TEACHER', 'COUNSELOR']);
     }
 
     public function isStudent(): bool
@@ -128,8 +128,8 @@ class User extends Authenticatable
     {
         return match (true) {
             $this->isAdmin() => 'admin.dashboard',
-            $this->isTeacher() => 'teacher.dashboard',
             $this->isCounselor() => 'counselor.dashboard',
+            $this->isTeacher() => 'teacher.dashboard',
             $this->isStudent() => 'student.dashboard',
             default => 'public.home',
         };

@@ -218,8 +218,8 @@ function initAutoDismissFlash() {
 /* =========================================================
    AI CHAT WIDGET
 
-   Every answer comes from `POST /tanya-ai`, which reads the live
-   CMS tables server-side. The widget owns presentation only:
+   The backend answers recognized questions from live school data and uses
+   Gemini only when no local keyword handler matches. The widget owns presentation:
    open/close, optimistic echo, typing indicator, suggestion chips
    and a tiny safe renderer for the `**bold**` / newline subset the
    backend emits (no innerHTML, so a CMS value can never inject
@@ -238,9 +238,17 @@ function initAiChat() {
 
     if (!panel || !fab || !list || !form || !input) return;
 
-    var replyUrl  = panel.dataset.replyUrl;
-    var csrfToken = panel.dataset.csrf;
-    var busy      = false;
+    var replyUrl       = panel.dataset.replyUrl;
+    var csrfToken      = panel.dataset.csrf;
+    var busy           = false;
+    var storageKey     = 'smk-school-chat-v1';
+    var conversationId = null;
+    var history        = [];
+    var savedSuggestions = [];
+    var shouldRestoreOpen = false;
+    var requestVersion = 0;
+    var panelCloseTimer = null;
+    var panelIsOpen = false;
 
     var MIN_MESSAGE_LENGTH = 2;
     var MIN_TYPING_MS = 420;
@@ -249,6 +257,81 @@ function initAiChat() {
 
     function scrollToLatest() {
         list.scrollTop = list.scrollHeight;
+    }
+
+    function saveState() {
+        try {
+            window.sessionStorage.setItem(storageKey, JSON.stringify({
+                messages: history.slice(-60),
+                suggestions: savedSuggestions,
+                conversationId: conversationId,
+                isOpen: panelIsOpen,
+            }));
+        } catch (error) {
+            console.warn('Chatbot: percakapan tidak dapat disimpan di sesi browser.', error);
+        }
+    }
+
+    function restoreState() {
+        try {
+            var rawState = window.sessionStorage.getItem(storageKey);
+            if (!rawState) return;
+
+            var savedState = JSON.parse(rawState);
+            if (!savedState || typeof savedState !== 'object' || !Array.isArray(savedState.messages)) {
+                throw new TypeError('Format sesi chatbot tidak valid.');
+            }
+
+            history = savedState.messages
+                .filter(function (message) {
+                    return message
+                        && (message.who === 'bot' || message.who === 'user')
+                        && typeof message.text === 'string';
+                })
+                .slice(-60)
+                .map(function (message) {
+                    return {
+                        text: message.text,
+                        who: message.who,
+                        links: safeLinks(message.links),
+                    };
+                });
+            savedSuggestions = Array.isArray(savedState.suggestions)
+                ? savedState.suggestions.filter(function (item) { return typeof item === 'string'; }).slice(0, 5)
+                : [];
+            conversationId = typeof savedState.conversationId === 'string'
+                ? savedState.conversationId
+                : null;
+            shouldRestoreOpen = savedState.isOpen === true;
+
+            history.forEach(function (message) {
+                addMessage(message.text, message.who, message.links, false);
+            });
+            renderSuggestions(savedSuggestions, false);
+        } catch (error) {
+            console.warn('Chatbot: sesi percakapan tidak dapat dipulihkan.', error);
+            try {
+                window.sessionStorage.removeItem(storageKey);
+            } catch (storageError) {
+                console.warn('Chatbot: sesi percakapan yang rusak tidak dapat dihapus.', storageError);
+            }
+        }
+    }
+
+    function safeLinks(links) {
+        if (!Array.isArray(links)) return [];
+
+        return links.filter(function (link) {
+            if (!link || typeof link.label !== 'string' || typeof link.url !== 'string') return false;
+
+            try {
+                var url = new URL(link.url, window.location.origin);
+                return (url.protocol === 'http:' || url.protocol === 'https:')
+                    && url.origin === window.location.origin;
+            } catch (_) {
+                return false;
+            }
+        }).slice(0, 2);
     }
 
     function bubbleClass(who) {
@@ -261,11 +344,16 @@ function initAiChat() {
      * Build a message row. `reply` may contain newlines and `**bold**`
      * markers; everything is appended as text nodes, never as HTML.
      */
-    function addMessage(text, who, links) {
+    function addMessage(text, who, links, persist) {
+        var message = {
+            text: String(text),
+            who: who === 'user' ? 'user' : 'bot',
+            links: safeLinks(links),
+        };
         var row = document.createElement('div');
-        row.className = 'ai-chat-row ai-chat-row--' + who;
+        row.className = 'ai-chat-row ai-chat-row--' + message.who;
 
-        if (who === 'bot') {
+        if (message.who === 'bot') {
             var avatar = document.createElement('span');
             avatar.className = 'ai-chat-row__avatar';
             avatar.innerHTML = BOT_ICON;
@@ -273,18 +361,18 @@ function initAiChat() {
         }
 
         var bubble = document.createElement('div');
-        bubble.className = bubbleClass(who);
+        bubble.className = bubbleClass(message.who);
 
-        String(text).split('\n').forEach(function (line, index) {
+        message.text.split('\n').forEach(function (line, index) {
             if (index > 0) bubble.appendChild(document.createElement('br'));
             appendRichLine(bubble, line);
         });
 
-        if (links && links.length) {
+        if (message.links.length) {
             var linkWrap = document.createElement('div');
             linkWrap.className = 'ai-chat-links';
 
-            links.forEach(function (link) {
+            message.links.forEach(function (link) {
                 var anchor = document.createElement('a');
                 anchor.href = link.url;
                 anchor.textContent = link.label;
@@ -298,6 +386,12 @@ function initAiChat() {
         row.appendChild(bubble);
         list.appendChild(row);
         scrollToLatest();
+
+        if (persist !== false) {
+            history.push(message);
+            history = history.slice(-60);
+            saveState();
+        }
 
         return row;
     }
@@ -361,12 +455,16 @@ function initAiChat() {
 
     /* ---------- suggestion chips ---------- */
 
-    function renderSuggestions(items) {
+    function renderSuggestions(items, persist) {
         if (!suggestionBar) return;
+
+        savedSuggestions = Array.isArray(items)
+            ? items.filter(function (item) { return typeof item === 'string'; }).slice(0, 5)
+            : [];
 
         suggestionBar.innerHTML = '';
 
-        (items || []).forEach(function (label) {
+        savedSuggestions.forEach(function (label) {
             var chip = document.createElement('button');
             chip.type = 'button';
             chip.className = 'ai-chat-suggestion';
@@ -378,7 +476,8 @@ function initAiChat() {
             suggestionBar.appendChild(chip);
         });
 
-        suggestionBar.hidden = !items || !items.length;
+        suggestionBar.hidden = !savedSuggestions.length;
+        if (persist !== false) saveState();
     }
 
     /* ---------- network ---------- */
@@ -386,6 +485,10 @@ function initAiChat() {
     function post(url, payload) {
         var body = new FormData();
         body.append('_token', csrfToken);
+        // Keep the AI conversation attached to the visitor's active browser tab.
+        if (conversationId) {
+            body.append('conversation_id', conversationId);
+        }
         Object.keys(payload).forEach(function (key) { body.append(key, payload[key]); });
 
         return fetch(url, {
@@ -436,6 +539,7 @@ function initAiChat() {
         addMessage(value, 'user');
         input.value = '';
 
+        var currentRequestVersion = ++requestVersion;
         var typing = showTyping();
         var startedAt = Date.now();
 
@@ -447,7 +551,10 @@ function initAiChat() {
                 return minimumDelay(startedAt).then(function () { return data; });
             })
             .then(function (data) {
+                if (currentRequestVersion !== requestVersion) return;
+
                 removeTyping(typing);
+                if (data.conversation_id) conversationId = data.conversation_id;
                 addMessage(data.reply || 'Maaf, aku belum bisa menjawab itu.', 'bot', data.links);
                 renderSuggestions(data.suggestions);
             })
@@ -455,11 +562,15 @@ function initAiChat() {
                 return minimumDelay(startedAt).then(function () { throw error; });
             })
             .catch(function (error) {
+                if (currentRequestVersion !== requestVersion) return;
+
                 removeTyping(typing);
                 addMessage(error.message || 'Koneksi ke server terputus. Coba beberapa saat lagi.', 'bot');
                 renderSuggestions([]);
             })
             .then(function () {
+                if (currentRequestVersion !== requestVersion) return;
+
                 setBusy(false);
                 input.focus();
                 scrollToLatest();
@@ -469,11 +580,19 @@ function initAiChat() {
     /* ---------- lifecycle ---------- */
 
     function greet() {
+        requestVersion++;
+        setBusy(false);
         list.innerHTML = '';
+        history = [];
+        savedSuggestions = [];
+        conversationId = null;
+        saveState();
+        renderSuggestions([]);
 
         // Render a local greeting immediately so the panel never opens empty,
         // then let the backend replace it with the real opening message.
-        addMessage('Menghubungkan ke data sekolah...', 'bot');
+        addMessage('Menghubungkan ke data sekolah...', 'bot', [], false);
+        var openingRequestVersion = requestVersion;
 
         fetch(panel.dataset.openingUrl, {
             credentials: 'same-origin',
@@ -481,42 +600,62 @@ function initAiChat() {
         })
             .then(function (response) { return response.ok ? response.json() : null; })
             .then(function (data) {
-                if (!data || !data.reply) return;
+                if (openingRequestVersion !== requestVersion || !data || !data.reply) return;
                 list.innerHTML = '';
+                history = [];
                 addMessage(data.reply, 'bot');
                 renderSuggestions(data.suggestions);
             })
             .catch(function () {
-                if (!list.querySelector('.ai-chat-bubble')) {
-                    list.innerHTML = '';
-                    addMessage('Halo! Saya asisten virtual sekolah. Silakan tulis pertanyaanmu.', 'bot');
-                }
+                if (openingRequestVersion !== requestVersion) return;
+                list.innerHTML = '';
+                history = [];
+                addMessage('Halo! Saya asisten virtual sekolah. Silakan tulis pertanyaanmu.', 'bot');
+                renderSuggestions([]);
             });
     }
 
     function openPanel() {
-        if (!panel.hidden) return;
+        if (panelIsOpen) return;
 
+        panelIsOpen = true;
+        window.clearTimeout(panelCloseTimer);
         panel.hidden = false;
+        panel.inert = false;
+        panel.setAttribute('aria-hidden', 'false');
         fab.setAttribute('aria-expanded', 'true');
         fab.setAttribute('aria-label', 'Tutup chat AI');
         if (resetBtn) resetBtn.classList.add('is-visible');
+        saveState();
+
+        window.requestAnimationFrame(function () {
+            if (panelIsOpen) panel.classList.add('is-open');
+        });
 
         if (!list.children.length) greet();
 
-        window.setTimeout(function () { input.focus(); }, 180);
+        window.setTimeout(function () { input.focus(); }, 220);
     }
 
     function closePanel() {
-        if (panel.hidden) return;
+        if (!panelIsOpen) return;
 
-        panel.hidden = true;
+        panelIsOpen = false;
+        panel.classList.remove('is-open');
+        panel.inert = true;
+        panel.setAttribute('aria-hidden', 'true');
         fab.setAttribute('aria-expanded', 'false');
         fab.setAttribute('aria-label', 'Buka chat AI');
         if (resetBtn) resetBtn.classList.remove('is-visible');
+        fab.focus();
+
+        panelCloseTimer = window.setTimeout(function () {
+            if (!panelIsOpen) panel.hidden = true;
+        }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 280);
+        saveState();
     }
 
-    fab.addEventListener('click', function () { panel.hidden ? openPanel() : closePanel(); });
+    fab.addEventListener('click', function () { panelIsOpen ? closePanel() : openPanel(); });
     if (closeBtn) closeBtn.addEventListener('click', closePanel);
     if (resetBtn) resetBtn.addEventListener('click', greet);
     if (resetTop) resetTop.addEventListener('click', greet);
@@ -531,8 +670,14 @@ function initAiChat() {
     });
 
     document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && !panel.hidden) closePanel();
+        if (event.key === 'Escape' && panelIsOpen) closePanel();
     });
+
+    restoreState();
+
+    if (shouldRestoreOpen) {
+        openPanel();
+    }
 }
 
 /* =========================================================

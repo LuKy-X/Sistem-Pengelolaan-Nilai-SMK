@@ -56,4 +56,41 @@ class TeacherProfile extends Model
     {
         return $this->hasMany(ClassJournal::class, 'created_by');
     }
+
+    public function isCounselor(): bool
+    {
+        return $this->user?->hasRole(['COUNSELOR', 'BK']) ?? false;
+    }
+
+    /**
+     * Pastikan semua akun dengan role COUNSELOR / BK memiliki TeacherProfile aktif.
+     */
+    public static function ensureCounselorProfiles(): void
+    {
+        $counselorRoleIds = Role::whereIn('code', ['COUNSELOR', 'counselor', 'BK', 'bk'])->pluck('id')->all();
+        if (empty($counselorRoleIds)) {
+            return;
+        }
+
+        $counselorUsers = User::whereHas('roles', function ($q) use ($counselorRoleIds) {
+            $q->whereIn('roles.id', $counselorRoleIds);
+        })->whereDoesntHave('teacherProfile')->with('staffProfile')->get();
+
+        foreach ($counselorUsers as $user) {
+            $staff = $user->staffProfile;
+            $nip = $staff?->employee_number ?: 'BK'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT);
+            if (self::where('nip', $nip)->exists()) {
+                $nip = 'BK-'.$user->id.'-'.time();
+            }
+
+            self::create([
+                'user_id' => $user->id,
+                'nip' => $nip,
+                'full_name' => $staff?->full_name ?? $user->name,
+                'gender' => 'MALE',
+                'phone' => $staff?->phone,
+                'status' => 'ACTIVE',
+            ]);
+        }
+    }
 }

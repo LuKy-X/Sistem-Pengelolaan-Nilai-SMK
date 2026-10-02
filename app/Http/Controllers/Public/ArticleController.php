@@ -19,7 +19,7 @@ class ArticleController extends Controller
 
         $articles = Article::query()
             ->where('status', ContentStatus::Published)
-            ->with('category')
+            ->with(['category', 'media'])
             ->when(
                 $selectedCategory !== '',
                 fn ($query) => $query->whereHas(
@@ -51,10 +51,11 @@ class ArticleController extends Controller
     {
         abort_unless($article->status === ContentStatus::Published, 404);
 
-        $article->load(['category', 'author']);
+        $article->load(['category', 'author', 'media']);
 
         $relatedArticles = Article::query()
             ->where('status', ContentStatus::Published)
+            ->with(['category', 'media'])
             ->whereKeyNot($article->getKey())
             ->when(
                 $article->category_id !== null,
