@@ -64,6 +64,7 @@ class TeacherJournalFlowTest extends TestCase
 
     public function test_teacher_can_store_journal_with_student_absences(): void
     {
+        ClassJournal::query()->delete();
         $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
         $todayStr = now()->format('Y-m-d');
 
@@ -228,6 +229,7 @@ class TeacherJournalFlowTest extends TestCase
 
     public function test_teacher_can_update_their_own_journal_with_student_notes(): void
     {
+        ClassJournal::query()->delete();
         $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
         $todayStr = now()->format('Y-m-d');
 
@@ -429,5 +431,182 @@ class TeacherJournalFlowTest extends TestCase
         $this->assertDatabaseMissing('class_journals', [
             'material' => 'Materi di Masa Depan',
         ]);
+    }
+
+    public function test_journal_table_renders_break_periods_and_unfilled_slots(): void
+    {
+        ClassJournal::query()->delete();
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+        ]));
+
+        $response->assertStatus(200);
+        // Break period rows
+        $response->assertSee('ISTIRAHAT 1');
+        $response->assertSee('ISTIRAHAT 2');
+        $response->assertSee('Waktu Istirahat, Sholat & Makan Siang');
+
+        // Unfilled slot placeholders
+        $response->assertSee('Belum diisi');
+        $response->assertSee('Belum ada materi pembelajaran');
+        $response->assertSee('Isi Jam Ini');
+    }
+
+    public function test_cancel_edit_button_and_edit_badge_are_hidden_by_default(): void
+    {
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => now()->format('Y-m-d'),
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="btnCancelEdit" style="display: none;"', false);
+        $response->assertSee('id="formEditBadge" style="display: none;"', false);
+    }
+
+    public function test_occupied_periods_are_disabled_in_dropdown_and_cannot_overlap(): void
+    {
+        ClassJournal::query()->delete();
+        $todayStr = now()->format('Y-m-d');
+
+        // Create journal occupying Jam 1 to 2
+        ClassJournal::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $todayStr,
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Sesi Mengajar Jam 1-2',
+            'created_by' => $this->teacherProfile->id,
+            'hadir_count' => 36,
+            'sakit_count' => 0,
+            'izin_count' => 0,
+            'alpha_count' => 0,
+        ]);
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.index', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+        ]));
+
+        $response->assertStatus(200);
+        // Occupied periods are marked with (Terisi) and disabled in select options
+        $response->assertSee('(Terisi)');
+        $response->assertSee('disabled', false);
+
+        // Attempting to create an overlapping journal covering Jam 2 to 3 must fail validation
+        $period3 = LessonPeriod::where('period_number', 3)->firstOrFail();
+        $overlapResponse = $this->actingAs($this->teacherUser)->post(route('teacher.journals.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $todayStr,
+            'start_period_id' => $this->period2->id,
+            'end_period_id' => $period3->id,
+            'material' => 'Sesi yang Bertabrakan',
+            'hadir_count' => 36,
+        ]);
+
+        $overlapResponse->assertSessionHasErrors(['start_period_id']);
+        $this->assertDatabaseMissing('class_journals', [
+            'material' => 'Sesi yang Bertabrakan',
+        ]);
+    }
+
+    public function test_cannot_select_break_period_as_teaching_period(): void
+    {
+        $breakPeriod = LessonPeriod::where('is_break', true)->firstOrFail();
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->post(route('teacher.journals.store'), [
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => $todayStr,
+            'start_period_id' => $breakPeriod->id,
+            'end_period_id' => $breakPeriod->id,
+            'material' => 'Materi Jam Istirahat',
+            'hadir_count' => 36,
+        ]);
+
+        $response->assertSessionHasErrors(['start_period_id']);
+        $this->assertDatabaseMissing('class_journals', [
+            'material' => 'Materi Jam Istirahat',
+        ]);
+    }
+
+    public function test_teacher_can_export_daily_journal_to_pdf(): void
+    {
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.export.pdf', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+            'range' => 'daily',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('BUKU AGENDA JURNAL PEMBELAJARAN');
+        $response->assertSee('SMK NEGERI 2 KARANGANYAR');
+        $response->assertSee('alt="Logo SMK Negeri 2 Karanganyar"', false);
+        $response->assertDontSee('>SMK</div>', false);
+        $response->assertSee('ISTIRAHAT 1');
+        $response->assertSee('Cetak / Simpan PDF');
+        $response->assertSee($this->assignment->schoolClass->name);
+    }
+
+    public function test_teacher_can_export_weekly_journal_to_pdf(): void
+    {
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.export.pdf', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+            'range' => 'weekly',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('BUKU AGENDA JURNAL PEMBELAJARAN');
+        $response->assertSee('Minggu Ke-');
+        $response->assertSee($this->assignment->schoolClass->name);
+    }
+
+    public function test_teacher_can_export_daily_journal_to_excel(): void
+    {
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.export.excel', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+            'range' => 'daily',
+        ]));
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', (string) $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('.xlsx', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('Jurnal_Kelas_', (string) $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_teacher_can_export_weekly_journal_to_excel(): void
+    {
+        $todayStr = now()->format('Y-m-d');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.journals.export.excel', [
+            'assignment_id' => $this->assignment->id,
+            'date' => $todayStr,
+            'range' => 'weekly',
+        ]));
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', (string) $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('Mingguan', (string) $response->headers->get('Content-Disposition'));
+        $this->assertStringContainsString('.xlsx', (string) $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_unauthenticated_user_cannot_export_journal(): void
+    {
+        $responsePdf = $this->get(route('teacher.journals.export.pdf'));
+        $responsePdf->assertRedirect(route('login'));
+
+        $responseExcel = $this->get(route('teacher.journals.export.excel'));
+        $responseExcel->assertRedirect(route('login'));
     }
 }

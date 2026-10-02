@@ -310,10 +310,75 @@
                      class="text-xs font-semibold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 cursor-pointer">
             </form>
 
-            <button type="button" onclick="window.print()" class="btn btn-sm px-4 py-2 rounded-xl bg-[#0D47A1] hover:bg-[#1565C0] text-white font-medium text-xs shadow-sm inline-flex items-center gap-1.5 transition-colors">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 
-              Export
-            </button>
+            <!-- Dropdown Export Jurnal (PDF & Excel) -->
+            <div class="relative inline-block text-left" id="exportJournalDropdownWrapper">
+              <button type="button" 
+                      id="btnExportJournalDropdown"
+                      onclick="toggleExportJournalDropdown(event)"
+                      class="btn btn-sm px-3.5 py-2 rounded-xl bg-[#0D47A1] hover:bg-[#1565C0] text-white font-medium text-xs shadow-sm inline-flex items-center gap-1.5 transition-all">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> 
+                <span>Export Jurnal</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              
+              <div id="exportJournalDropdownMenu" 
+                   style="display: none;" 
+                   class="absolute right-0 mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200 py-2 z-50">
+                <div class="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Format PDF (Cetak / Buku Agenda)
+                </div>
+                <a href="{{ route('teacher.journals.export.pdf', ['assignment_id' => $selectedAssignment->id, 'date' => $selectedDate, 'range' => 'daily']) }}" 
+                   target="_blank" 
+                   class="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                  <div class="w-7 h-7 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold">PDF Jurnal Hari Ini</div>
+                    <div class="text-[11px] font-normal text-slate-400">{{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd, D MMMM Y') }}</div>
+                  </div>
+                </a>
+                <a href="{{ route('teacher.journals.export.pdf', ['assignment_id' => $selectedAssignment->id, 'date' => $selectedDate, 'range' => 'weekly']) }}" 
+                   target="_blank" 
+                   class="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                  <div class="w-7 h-7 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold">PDF Rekap Mingguan</div>
+                    <div class="text-[11px] font-normal text-slate-400">Minggu Ke-{{ $weekStart->isoWeek() }} ({{ $weekStart->format('d/m') }} - {{ $weekEnd->format('d/m/Y') }})</div>
+                  </div>
+                </a>
+
+                <div class="my-1 border-t border-slate-100"></div>
+
+                <div class="px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Format Spreadsheet (Excel .xlsx)
+                </div>
+                <a href="{{ route('teacher.journals.export.excel', ['assignment_id' => $selectedAssignment->id, 'date' => $selectedDate, 'range' => 'daily']) }}" 
+                   class="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                   data-no-transition="true" download>
+                  <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold">Excel Jurnal Hari Ini (.xlsx)</div>
+                    <div class="text-[11px] font-normal text-slate-400">Data sesi &amp; presensi harian</div>
+                  </div>
+                </a>
+                <a href="{{ route('teacher.journals.export.excel', ['assignment_id' => $selectedAssignment->id, 'date' => $selectedDate, 'range' => 'weekly']) }}" 
+                   class="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
+                   data-no-transition="true" download>
+                  <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                  </div>
+                  <div>
+                    <div class="font-bold">Excel Rekap Mingguan (.xlsx)</div>
+                    <div class="text-[11px] font-normal text-slate-400">Seluruh sesi minggu ini</div>
+                  </div>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -341,185 +406,387 @@
               </tr>
             </thead>
             <tbody id="journalTableBody" class="divide-y divide-slate-100 bg-white">
-              @forelse($journals as $j)
-                @php
-                  $currentTeacherId = auth()->user()->teacherProfile?->id;
-                  $isOwner = $currentTeacherId && $j->created_by === $currentTeacherId;
-                  $editPayload = [
-                    'id' => $j->id,
-                    'start_period_id' => $j->start_period_id,
-                    'end_period_id' => $j->end_period_id,
-                    'start_period_number' => $j->startPeriod?->period_number ?? '1',
-                    'end_period_number' => $j->endPeriod?->period_number ?? '2',
-                    'material' => $j->material,
-                    'notes' => trim(preg_replace('/Hadir:\s*\d+\s*\|\s*Sakit:\s*\d+\s*\|\s*Izin:\s*\d+\s*\|\s*Alpha:\s*\d+/i', '', $j->notes ?? '')),
-                    'hadir_count' => $j->hadir_count,
-                    'sakit_count' => $j->sakit_count,
-                    'izin_count' => $j->izin_count,
-                    'alpha_count' => $j->alpha_count,
-                    'update_url' => route('teacher.journals.update', $j->id),
-                    'attendances' => $j->attendances
-                      ->filter(fn($att) => $att->status !== \App\Enums\AttendanceStatus::Present)
-                      ->map(fn($att) => [
-                        'student_id' => $att->student_id,
-                        'status' => match($att->status) {
-                          \App\Enums\AttendanceStatus::Sick => 'SAKIT',
-                          \App\Enums\AttendanceStatus::Permit => 'IZIN',
-                          \App\Enums\AttendanceStatus::Absent => 'ALPHA',
-                          default => 'HADIR',
-                        },
-                        'note' => $att->note ?? '',
-                      ])->values(),
-                  ];
-                @endphp
-                <tr class="hover:bg-blue-50/30 transition-colors">
-                  <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-bluedark text-center align-middle">
+              @php
+                $cDate = \Carbon\Carbon::parse($selectedDate)->locale('id');
+                $dayName = $cDate->isoFormat('dddd');
+                $dateFormatted = $cDate->format('d/m/Y');
+                $coveredPeriodNumbers = [];
+                $renderedJournalIds = [];
+              @endphp
+
+              @if($allDayPeriods->isNotEmpty())
+                @foreach($allDayPeriods as $period)
+                  @if($period->is_break)
+                    <!-- Baris Jam Istirahat Melintang Penuh -->
+                    <tr class="bg-amber-50/70 border-y-2 border-amber-200/80 hover:bg-amber-50 transition-colors">
+                      <td colspan="11" class="py-2.5 px-4 text-center">
+                        <div class="inline-flex items-center justify-center gap-2 text-amber-950 font-bold text-xs tracking-wide">
+                          @if(str_contains(strtolower($period->name), '2') || str_contains(strtolower($period->name), 'ii') || substr($period->start_time, 0, 2) >= '11')
+                            <span class="text-base leading-none">🕌</span>
+                          @else
+                            <span class="text-base leading-none">☕</span>
+                          @endif
+                          <span class="uppercase tracking-wider font-extrabold text-amber-900">{{ strtoupper($period->name) }}</span>
+                          <span class="px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900 font-mono text-[11px] font-semibold">
+                            {{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }}
+                          </span>
+                          @if(str_contains(strtolower($period->name), '2') || str_contains(strtolower($period->name), 'ii') || substr($period->start_time, 0, 2) >= '11')
+                            <span class="text-[11px] text-amber-800/80 font-normal italic ml-1">&middot; Waktu Istirahat, Sholat &amp; Makan Siang</span>
+                          @else
+                            <span class="text-[11px] text-amber-800/80 font-normal italic ml-1">&middot; Waktu Istirahat &amp; Rehat Siswa</span>
+                          @endif
+                        </div>
+                      </td>
+                    </tr>
+                  @else
                     @php
-                      $cDate = \Carbon\Carbon::parse($j->journal_date)->locale('id');
-                      $dayName = $cDate->isoFormat('dddd');
-                      $dateFormatted = $cDate->format('d/m/Y');
+                      $pNum = $period->period_number;
                     @endphp
-                    <div class="font-bold text-bluedark text-xs capitalize">{{ $dayName }}</div>
-                    <div class="text-[11px] font-mono text-slate-500 font-normal">{{ $dateFormatted }}</div>
-                  </td>
-                  <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-                    <span class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-bluedark font-mono font-bold text-xs">
-                      {{ $j->startPeriod?->period_number ?? '1' }} sd {{ $j->endPeriod?->period_number ?? '2' }}
-                    </span>
-                  </td>
-                  <td class="px-3.5 py-3 text-xs font-semibold text-bluedark align-middle">
-                    {{ $j->teachingAssignment?->subject?->name ?? $selectedAssignment->subject?->name }}
-                  </td>
-                  <td class="px-3.5 py-3 text-xs text-slate-700 align-middle">
-                    {{ $j->creator?->user?->name ?? $j->creator?->full_name ?? auth()->user()->name }}
-                  </td>
-                  <td class="px-3.5 py-3 text-xs text-slate-800 align-middle font-medium leading-relaxed">
-                    {{ $j->material }}
-                  </td>
-                  <td class="px-2 py-3 text-center align-middle">
-                    <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg bg-emerald-50 text-emerald-700 font-bold font-mono text-xs border border-emerald-200/80">
-                      {{ $j->hadir_count }}
-                    </span>
-                  </td>
-                  <td class="px-2 py-3 text-center align-middle">
-                    @if($j->sakit_count > 0)
-                      <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold font-mono text-xs border border-amber-200/80">
-                        {{ $j->sakit_count }}
-                      </span>
-                    @else
-                      <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
-                    @endif
-                  </td>
-                  <td class="px-2 py-3 text-center align-middle">
-                    @if($j->izin_count > 0)
-                      <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold font-mono text-xs border border-blue-200/80">
-                        {{ $j->izin_count }}
-                      </span>
-                    @else
-                      <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
-                    @endif
-                  </td>
-                  <td class="px-2 py-3 text-center align-middle">
-                    @if($j->alpha_count > 0)
-                      <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-red-50 text-red-700 font-bold font-mono text-xs border border-red-200/80">
-                        {{ $j->alpha_count }}
-                      </span>
-                    @else
-                      <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
-                    @endif
-                  </td>
-                  <td class="px-3.5 py-3 text-xs align-middle">
-                    @php
-                      $absentStudents = $j->attendances->filter(fn($a) => $a->status !== \App\Enums\AttendanceStatus::Present);
-                    @endphp
-                    @if($absentStudents->isNotEmpty())
-                      <div class="flex flex-wrap gap-1.5">
-                        @foreach($absentStudents as $att)
-                          @php
-                            $bCls = match($att->status) {
-                              \App\Enums\AttendanceStatus::Sick => [
-                                'pill' => 'bg-amber-50 text-amber-900 border-amber-200',
-                                'name' => 'text-amber-800',
-                                'tag'  => 'bg-amber-200/80 text-amber-900',
-                                'label' => 'Sakit'
-                              ],
-                              \App\Enums\AttendanceStatus::Permit => [
-                                'pill' => 'bg-blue-50 text-blue-900 border-blue-200',
-                                'name' => 'text-blue-800',
-                                'tag'  => 'bg-blue-200/80 text-blue-900',
-                                'label' => 'Izin'
-                              ],
-                              \App\Enums\AttendanceStatus::Absent => [
-                                'pill' => 'bg-red-50 text-red-900 border-red-200',
-                                'name' => 'text-red-800',
-                                'tag'  => 'bg-red-200/80 text-red-900',
-                                'label' => 'Alpha'
-                              ],
-                              default => [
-                                'pill' => 'bg-slate-50 text-slate-800 border-slate-200',
-                                'name' => 'text-slate-800',
-                                'tag'  => 'bg-slate-200 text-slate-700',
-                                'label' => 'Hadir'
-                              ],
-                            };
-                          @endphp
-                          <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs {{ $bCls['pill'] }} border shadow-2xs">
-                            <span class="font-bold {{ $bCls['name'] }}">{{ $att->student?->full_name ?? 'Siswa' }}</span>
-                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $bCls['tag'] }} uppercase tracking-wider">{{ $bCls['label'] }}</span>
-                            @if($att->note)
-                              <span class="text-[11px] opacity-75">- {{ $att->note }}</span>
-                            @endif
-                          </div>
-                        @endforeach
-                      </div>
-                    @else
-                      <span class="text-xs text-slate-400 italic">Semua Hadir</span>
+
+                    @if(in_array($pNum, $coveredPeriodNumbers))
+                      {{-- Jam ini telah terangkum dalam rentang jurnal multi-jam sebelumnya --}}
+                      @continue
                     @endif
 
                     @php
-                      $extraNote = trim(preg_replace('/Hadir:\s*\d+\s*\|\s*Sakit:\s*\d+\s*\|\s*Izin:\s*\d+\s*\|\s*Alpha:\s*\d+/i', '', $j->notes ?? ''));
+                      // Cari apakah ada jurnal yang dimulai pada jam pelajaran ini
+                      $j = $journals->first(function($item) use ($pNum, $period) {
+                        $startNum = $item->startPeriod?->period_number ?? $item->start_period_id;
+                        return $startNum == $pNum || $item->start_period_id == $period->id;
+                      });
                     @endphp
-                    @if($extraNote)
-                      <div class="text-[11px] text-slate-500 mt-1 italic flex items-center gap-1">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                        <span>{{ $extraNote }}</span>
-                      </div>
-                    @endif
-                  </td>
-                  <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-                    @if($isOwner)
-                      <div class="inline-flex items-center gap-1.5">
-                        <button type="button" 
-                                class="btn-edit-journal p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors shadow-2xs"
-                                title="Edit Jurnal"
-                                data-journal='@json($editPayload)'>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        <form action="{{ route('teacher.journals.destroy', $j->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data jurnal jam pelajaran ini?')" class="inline-block">
-                          @csrf
-                          @method('DELETE')
-                          <button type="submit" 
-                                  class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors shadow-2xs"
-                                  title="Hapus Jurnal">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                          </button>
-                        </form>
-                      </div>
+
+                    @if($j)
+                      @php
+                        $renderedJournalIds[] = $j->id;
+                        $startNum = $j->startPeriod?->period_number ?? $pNum;
+                        $endNum = $j->endPeriod?->period_number ?? $startNum;
+                        for ($k = min($startNum, $endNum); $k <= max($startNum, $endNum); $k++) {
+                          $coveredPeriodNumbers[] = $k;
+                        }
+
+                        $currentTeacherId = auth()->user()->teacherProfile?->id;
+                        $isOwner = $currentTeacherId && $j->created_by === $currentTeacherId;
+                        $editPayload = [
+                          'id' => $j->id,
+                          'start_period_id' => $j->start_period_id,
+                          'end_period_id' => $j->end_period_id,
+                          'start_period_number' => $startNum,
+                          'end_period_number' => $endNum,
+                          'material' => $j->material,
+                          'notes' => trim(preg_replace('/Hadir:\s*\d+\s*\|\s*Sakit:\s*\d+\s*\|\s*Izin:\s*\d+\s*\|\s*Alpha:\s*\d+/i', '', $j->notes ?? '')),
+                          'hadir_count' => $j->hadir_count,
+                          'sakit_count' => $j->sakit_count,
+                          'izin_count' => $j->izin_count,
+                          'alpha_count' => $j->alpha_count,
+                          'update_url' => route('teacher.journals.update', $j->id),
+                          'attendances' => $j->attendances
+                            ->filter(fn($att) => $att->status !== \App\Enums\AttendanceStatus::Present)
+                            ->map(fn($att) => [
+                              'student_id' => $att->student_id,
+                              'status' => match($att->status) {
+                                \App\Enums\AttendanceStatus::Sick => 'SAKIT',
+                                \App\Enums\AttendanceStatus::Permit => 'IZIN',
+                                \App\Enums\AttendanceStatus::Absent => 'ALPHA',
+                                default => 'HADIR',
+                              },
+                              'note' => $att->note ?? '',
+                            ])->values(),
+                        ];
+                      @endphp
+                      <tr class="hover:bg-blue-50/30 transition-colors">
+                        <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-bluedark text-center align-middle">
+                          <div class="font-bold text-bluedark text-xs capitalize">{{ $dayName }}</div>
+                          <div class="text-[11px] font-mono text-slate-500 font-normal">{{ $dateFormatted }}</div>
+                        </td>
+                        <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                          <span class="inline-flex flex-col items-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-900 border border-blue-200/80 font-mono font-bold text-xs">
+                              @if($startNum == $endNum)
+                                Jam {{ $startNum }}
+                              @else
+                                Jam {{ $startNum }} sd {{ $endNum }}
+                              @endif
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 mt-0.5">
+                              {{ substr($j->startPeriod?->start_time ?? $period->start_time, 0, 5) }} - {{ substr($j->endPeriod?->end_time ?? $period->end_time, 0, 5) }}
+                            </span>
+                          </span>
+                        </td>
+                        <td class="px-3.5 py-3 text-xs font-semibold text-bluedark align-middle">
+                          {{ $j->teachingAssignment?->subject?->name ?? $selectedAssignment->subject?->name }}
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-700 align-middle">
+                          {{ $j->creator?->user?->name ?? $j->creator?->full_name ?? auth()->user()->name }}
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-800 align-middle font-medium leading-relaxed">
+                          {{ $j->material }}
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg bg-emerald-50 text-emerald-700 font-bold font-mono text-xs border border-emerald-200/80">
+                            {{ $j->hadir_count }}
+                          </span>
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          @if($j->sakit_count > 0)
+                            <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-amber-50 text-amber-700 font-bold font-mono text-xs border border-amber-200/80">
+                              {{ $j->sakit_count }}
+                            </span>
+                          @else
+                            <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
+                          @endif
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          @if($j->izin_count > 0)
+                            <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold font-mono text-xs border border-blue-200/80">
+                              {{ $j->izin_count }}
+                            </span>
+                          @else
+                            <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
+                          @endif
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          @if($j->alpha_count > 0)
+                            <span class="inline-flex items-center justify-center min-w-[26px] h-7 px-1.5 rounded-lg bg-red-50 text-red-700 font-bold font-mono text-xs border border-red-200/80">
+                              {{ $j->alpha_count }}
+                            </span>
+                          @else
+                            <span class="text-slate-300 font-mono text-xs font-semibold">0</span>
+                          @endif
+                        </td>
+                        <td class="px-3.5 py-3 text-xs align-middle">
+                          @php
+                            $absentStudents = $j->attendances->filter(fn($a) => $a->status !== \App\Enums\AttendanceStatus::Present);
+                          @endphp
+                          @if($absentStudents->isNotEmpty())
+                            <div class="flex flex-wrap gap-1.5">
+                              @foreach($absentStudents as $att)
+                                @php
+                                  $bCls = match($att->status) {
+                                    \App\Enums\AttendanceStatus::Sick => [
+                                      'pill' => 'bg-amber-50 text-amber-900 border-amber-200',
+                                      'name' => 'text-amber-800',
+                                      'tag'  => 'bg-amber-200/80 text-amber-900',
+                                      'label' => 'Sakit'
+                                    ],
+                                    \App\Enums\AttendanceStatus::Permit => [
+                                      'pill' => 'bg-blue-50 text-blue-900 border-blue-200',
+                                      'name' => 'text-blue-800',
+                                      'tag'  => 'bg-blue-200/80 text-blue-900',
+                                      'label' => 'Izin'
+                                    ],
+                                    \App\Enums\AttendanceStatus::Absent => [
+                                      'pill' => 'bg-red-50 text-red-900 border-red-200',
+                                      'name' => 'text-red-800',
+                                      'tag'  => 'bg-red-200/80 text-red-900',
+                                      'label' => 'Alpha'
+                                    ],
+                                    default => [
+                                      'pill' => 'bg-slate-50 text-slate-800 border-slate-200',
+                                      'name' => 'text-slate-800',
+                                      'tag'  => 'bg-slate-200 text-slate-700',
+                                      'label' => 'Hadir'
+                                    ],
+                                  };
+                                @endphp
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs {{ $bCls['pill'] }} border shadow-2xs">
+                                  <span class="font-bold {{ $bCls['name'] }}">{{ $att->student?->full_name ?? 'Siswa' }}</span>
+                                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded {{ $bCls['tag'] }} uppercase tracking-wider">{{ $bCls['label'] }}</span>
+                                  @if($att->note)
+                                    <span class="text-[11px] opacity-75">- {{ $att->note }}</span>
+                                  @endif
+                                </div>
+                              @endforeach
+                            </div>
+                          @else
+                            <span class="text-xs text-slate-400 italic">Semua Hadir</span>
+                          @endif
+
+                          @php
+                            $extraNote = trim(preg_replace('/Hadir:\s*\d+\s*\|\s*Sakit:\s*\d+\s*\|\s*Izin:\s*\d+\s*\|\s*Alpha:\s*\d+/i', '', $j->notes ?? ''));
+                          @endphp
+                          @if($extraNote)
+                            <div class="text-[11px] text-slate-500 mt-1 italic flex items-center gap-1">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                              <span>{{ $extraNote }}</span>
+                            </div>
+                          @endif
+                        </td>
+                        <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                          @if($isOwner)
+                            <div class="inline-flex items-center gap-1.5">
+                              <button type="button" 
+                                      class="btn-edit-journal p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition-colors shadow-2xs"
+                                      title="Edit Jurnal"
+                                      data-journal='@json($editPayload)'>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
+                              <form action="{{ route('teacher.journals.destroy', $j->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data jurnal jam pelajaran ini?')" class="inline-block">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        class="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition-colors shadow-2xs"
+                                        title="Hapus Jurnal">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                              </form>
+                            </div>
+                          @else
+                            <span class="inline-flex items-center gap-1 text-[11px] text-slate-400 font-medium" title="Hanya guru pembuat yang dapat mengedit/menghapus">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                              Terkunci
+                            </span>
+                          @endif
+                        </td>
+                      </tr>
                     @else
-                      <span class="inline-flex items-center gap-1 text-[11px] text-slate-400 font-medium" title="Hanya guru pembuat yang dapat mengedit/menghapus">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        Terkunci
-                      </span>
+                      {{-- Jam belum diisi: Baris Placeholder Agenda Buku Jurnal Fisik --}}
+                      <tr class="hover:bg-slate-50/60 transition-colors bg-white/40">
+                        <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-slate-500 text-center align-middle">
+                          <div class="font-medium text-slate-600 text-xs capitalize">{{ $dayName }}</div>
+                          <div class="text-[11px] font-mono text-slate-400 font-normal">{{ $dateFormatted }}</div>
+                        </td>
+                        <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                          <span class="inline-flex flex-col items-center">
+                            <span class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-slate-600 font-mono font-bold text-xs">
+                              Jam {{ $pNum }}
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-400 mt-0.5">
+                              {{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }}
+                            </span>
+                          </span>
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-400 italic align-middle">
+                          Belum diisi
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-400 italic align-middle">
+                          -
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-400 italic align-middle">
+                          Belum ada materi pembelajaran
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          <span class="text-slate-300 font-mono text-xs font-semibold">-</span>
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          <span class="text-slate-300 font-mono text-xs font-semibold">-</span>
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          <span class="text-slate-300 font-mono text-xs font-semibold">-</span>
+                        </td>
+                        <td class="px-2 py-3 text-center align-middle">
+                          <span class="text-slate-300 font-mono text-xs font-semibold">-</span>
+                        </td>
+                        <td class="px-3.5 py-3 text-xs text-slate-400 italic align-middle">
+                          -
+                        </td>
+                        <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                          <button type="button" 
+                                  onclick="selectPeriodRange({{ $period->id }}, {{ $period->id }})"
+                                  class="btn-fill-period inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-blue-50 text-blue-700 border border-blue-200/80 hover:bg-blue-100 hover:text-blue-800 transition-colors shadow-2xs"
+                                  title="Isi jurnal untuk Jam ke-{{ $pNum }}">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                            <span>Isi Jam Ini</span>
+                          </button>
+                        </td>
+                      </tr>
                     @endif
-                  </td>
-                </tr>
-              @empty
-                <tr>
-                  <td colspan="11" class="text-center py-10 text-xs text-slate-400">
-                    Belum ada data jurnal kelas pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->locale('id')->isoFormat('dddd, D MMMM Y') }}. Silakan isi form absensi di bawah.
-                  </td>
-                </tr>
-              @endforelse
+                  @endif
+                @endforeach
+
+                {{-- Render residual journals outside regular periods if any --}}
+                @foreach($journals->whereNotIn('id', $renderedJournalIds) as $j)
+                  <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-bluedark text-center align-middle">
+                      <div class="font-bold text-bluedark text-xs capitalize">{{ $dayName }}</div>
+                      <div class="text-[11px] font-mono text-slate-500 font-normal">{{ $dateFormatted }}</div>
+                    </td>
+                    <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                      <span class="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-900 border border-blue-200/80 font-mono font-bold text-xs">
+                        Jam {{ $j->startPeriod?->period_number ?? '?' }} sd {{ $j->endPeriod?->period_number ?? '?' }}
+                      </span>
+                    </td>
+                    <td class="px-3.5 py-3 text-xs font-semibold text-bluedark align-middle">
+                      {{ $j->teachingAssignment?->subject?->name ?? $selectedAssignment->subject?->name }}
+                    </td>
+                    <td class="px-3.5 py-3 text-xs text-slate-700 align-middle">
+                      {{ $j->creator?->user?->name ?? 'Guru' }}
+                    </td>
+                    <td class="px-3.5 py-3 text-xs text-slate-800 align-middle font-medium leading-relaxed">
+                      {{ $j->material }}
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg bg-emerald-50 text-emerald-700 font-bold font-mono text-xs border border-emerald-200/80">
+                        {{ $j->hadir_count }}
+                      </span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->sakit_count }}</span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->izin_count }}</span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->alpha_count }}</span>
+                    </td>
+                    <td class="px-3.5 py-3 text-xs align-middle">
+                      {{ $j->notes ?: '-' }}
+                    </td>
+                    <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                      -
+                    </td>
+                  </tr>
+                @endforeach
+              @else
+                @forelse($journals as $j)
+                  <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="px-3.5 py-3 font-semibold text-xs whitespace-nowrap text-bluedark text-center align-middle">
+                      <div class="font-bold text-bluedark text-xs capitalize">{{ $dayName }}</div>
+                      <div class="text-[11px] font-mono text-slate-500 font-normal">{{ $dateFormatted }}</div>
+                    </td>
+                    <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                      <span class="inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-bluedark font-mono font-bold text-xs">
+                        {{ $j->startPeriod?->period_number ?? '1' }} sd {{ $j->endPeriod?->period_number ?? '2' }}
+                      </span>
+                    </td>
+                    <td class="px-3.5 py-3 text-xs font-semibold text-bluedark align-middle">
+                      {{ $j->teachingAssignment?->subject?->name ?? $selectedAssignment->subject?->name }}
+                    </td>
+                    <td class="px-3.5 py-3 text-xs text-slate-700 align-middle">
+                      {{ $j->creator?->user?->name ?? 'Guru' }}
+                    </td>
+                    <td class="px-3.5 py-3 text-xs text-slate-800 align-middle font-medium leading-relaxed">
+                      {{ $j->material }}
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-lg bg-emerald-50 text-emerald-700 font-bold font-mono text-xs border border-emerald-200/80">
+                        {{ $j->hadir_count }}
+                      </span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->sakit_count }}</span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->izin_count }}</span>
+                    </td>
+                    <td class="px-2 py-3 text-center align-middle">
+                      <span class="font-mono text-xs font-semibold">{{ $j->alpha_count }}</span>
+                    </td>
+                    <td class="px-3.5 py-3 text-xs align-middle">
+                      {{ $j->notes ?: '-' }}
+                    </td>
+                    <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
+                      -
+                    </td>
+                  </tr>
+                @empty
+                  <tr>
+                    <td colspan="11" class="text-center py-10 text-xs text-slate-400">
+                      Belum ada data jadwal jam pelajaran. Silakan hubungi kurikulum/administrator.
+                    </td>
+                  </tr>
+                @endforelse
+              @endif
             </tbody>
           </table>
         </div>
@@ -532,13 +799,13 @@
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
               <h3 class="font-heading font-bold text-lg text-white" id="formCardTitle">Manajemen Absensi</h3>
-              <span id="formEditBadge" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-amber-950 uppercase tracking-wide">
+              <span id="formEditBadge" style="display: none;" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-amber-950 uppercase tracking-wide">
                 Mode Edit
               </span>
             </div>
             <p class="text-xs text-blue-100 mt-0.5" id="formCardDesc">Isi form berikut untuk memanajemen kolom absensi pada journal kelas</p>
           </div>
-          <button type="button" id="btnCancelEdit" class="hidden btn btn-sm px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold items-center gap-1.5 transition-colors self-start sm:self-auto">
+          <button type="button" id="btnCancelEdit" style="display: none;" class="btn btn-sm px-3.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-semibold items-center gap-1.5 transition-colors self-start sm:self-auto">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             Batal Edit
           </button>
@@ -557,16 +824,30 @@
               <div class="flex items-center gap-2">
                 <select name="start_period_id" id="startPeriodSelect" class="f-select flex-1" required>
                   @foreach($lessonPeriods as $period)
-                    <option value="{{ $period->id }}" {{ ($defaultStartPeriodId ? $period->id == $defaultStartPeriodId : $loop->iteration == 1) ? 'selected' : '' }}>
-                      {{ $period->period_number }} ({{ substr($period->start_time, 0, 5) }})
+                    @php
+                      $isOccupied = isset($occupiedPeriods[$period->period_number]);
+                    @endphp
+                    <option value="{{ $period->id }}" 
+                            data-period="{{ $period->period_number }}"
+                            {{ $isOccupied ? 'disabled' : '' }}
+                            {{ ($defaultStartPeriodId ? $period->id == $defaultStartPeriodId : (!$isOccupied && $loop->iteration == 1)) ? 'selected' : '' }}
+                            class="{{ $isOccupied ? 'text-slate-400 bg-slate-50 italic' : '' }}">
+                      {{ $period->period_number }} ({{ substr($period->start_time, 0, 5) }}) {{ $isOccupied ? '(Terisi)' : '' }}
                     </option>
                   @endforeach
                 </select>
                 <span class="text-slate-500 font-semibold px-1 text-sm">sd</span>
                 <select name="end_period_id" id="endPeriodSelect" class="f-select flex-1" required>
                   @foreach($lessonPeriods as $period)
-                    <option value="{{ $period->id }}" {{ ($defaultEndPeriodId ? $period->id == $defaultEndPeriodId : $loop->iteration == min(2, $lessonPeriods->count())) ? 'selected' : '' }}>
-                      {{ $period->period_number }} ({{ substr($period->end_time, 0, 5) }})
+                    @php
+                      $isOccupied = isset($occupiedPeriods[$period->period_number]);
+                    @endphp
+                    <option value="{{ $period->id }}" 
+                            data-period="{{ $period->period_number }}"
+                            {{ $isOccupied ? 'disabled' : '' }}
+                            {{ ($defaultEndPeriodId ? $period->id == $defaultEndPeriodId : (!$isOccupied && $loop->iteration == min(2, $lessonPeriods->count()))) ? 'selected' : '' }}
+                            class="{{ $isOccupied ? 'text-slate-400 bg-slate-50 italic' : '' }}">
+                      {{ $period->period_number }} ({{ substr($period->end_time, 0, 5) }}) {{ $isOccupied ? '(Terisi)' : '' }}
                     </option>
                   @endforeach
                 </select>
@@ -916,6 +1197,23 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const occupiedPeriods = @json($occupiedPeriods ?? []);
+  const defaultStartPeriodId = @json($defaultStartPeriodId ?? null);
+  const defaultEndPeriodId = @json($defaultEndPeriodId ?? null);
+
+  window.selectPeriodRange = function(startId, endId) {
+    if (startPeriodSelect && startId) startPeriodSelect.value = startId;
+    if (endPeriodSelect && endId) endPeriodSelect.value = endId;
+    const card = document.getElementById('cardManajemenAbsensi');
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    const matInput = formManajemenAbsensi ? formManajemenAbsensi.querySelector('input[name="material"]') : null;
+    if (matInput) {
+      setTimeout(() => matInput.focus(), 350);
+    }
+  };
+
   // Edit Jurnal Mode Handlers
   function switchToEdit(journalData) {
     if (!journalData) return;
@@ -924,12 +1222,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (formManajemenAbsensi) formManajemenAbsensi.action = journalData.update_url;
     if (formCardTitle) formCardTitle.textContent = `Edit Jurnal Kelas (Jam ${journalData.start_period_number} sd ${journalData.end_period_number})`;
     if (formCardDesc) formCardDesc.textContent = 'Perbarui data materi, catatan tambahan, dan absensi untuk jam pelajaran ini';
-    if (formEditBadge) formEditBadge.classList.remove('hidden');
-    if (btnCancelEdit) {
-      btnCancelEdit.classList.remove('hidden');
-      btnCancelEdit.classList.add('inline-flex');
-    }
+    if (formEditBadge) formEditBadge.style.display = 'inline-block';
+    if (btnCancelEdit) btnCancelEdit.style.display = 'inline-flex';
     if (btnSubmitText) btnSubmitText.textContent = 'Simpan Perubahan';
+
+    // Re-enable options for the current journal being edited
+    const editStartNum = parseInt(journalData.start_period_number);
+    const editEndNum = parseInt(journalData.end_period_number || editStartNum);
+    [startPeriodSelect, endPeriodSelect].forEach(select => {
+      if (!select) return;
+      Array.from(select.options).forEach(opt => {
+        const pNum = parseInt(opt.dataset.period);
+        if (pNum >= Math.min(editStartNum, editEndNum) && pNum <= Math.max(editStartNum, editEndNum)) {
+          opt.disabled = false;
+          opt.classList.remove('text-slate-400', 'bg-slate-50', 'italic');
+          opt.textContent = opt.textContent.replace(' (Terisi)', '');
+        }
+      });
+    });
 
     if (startPeriodSelect) startPeriodSelect.value = journalData.start_period_id;
     if (endPeriodSelect) endPeriodSelect.value = journalData.end_period_id;
@@ -969,12 +1279,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     if (formCardTitle) formCardTitle.textContent = 'Manajemen Absensi';
     if (formCardDesc) formCardDesc.textContent = 'Isi form berikut untuk memanajemen kolom absensi pada journal kelas';
-    if (formEditBadge) formEditBadge.classList.add('hidden');
-    if (btnCancelEdit) {
-      btnCancelEdit.classList.add('hidden');
-      btnCancelEdit.classList.remove('inline-flex');
-    }
+    if (formEditBadge) formEditBadge.style.display = 'none';
+    if (btnCancelEdit) btnCancelEdit.style.display = 'none';
     if (btnSubmitText) btnSubmitText.textContent = 'Simpan Journal';
+
+    // Restore occupied periods disabled state
+    [startPeriodSelect, endPeriodSelect].forEach(select => {
+      if (!select) return;
+      Array.from(select.options).forEach(opt => {
+        const pNum = parseInt(opt.dataset.period);
+        if (occupiedPeriods[pNum]) {
+          opt.disabled = true;
+          opt.classList.add('text-slate-400', 'bg-slate-50', 'italic');
+          if (!opt.textContent.includes('(Terisi)')) {
+            opt.textContent = opt.textContent.trim() + ' (Terisi)';
+          }
+        }
+      });
+    });
+
+    if (startPeriodSelect && defaultStartPeriodId) startPeriodSelect.value = defaultStartPeriodId;
+    if (endPeriodSelect && defaultEndPeriodId) endPeriodSelect.value = defaultEndPeriodId;
 
     container.innerHTML = '';
     if (emptyNotice) emptyNotice.classList.remove('hidden');
@@ -1000,6 +1325,10 @@ document.addEventListener('DOMContentLoaded', function() {
   if (btnReset) {
     btnReset.addEventListener('click', function() {
       setTimeout(() => {
+        if (formEditBadge) formEditBadge.style.display = 'none';
+        if (btnCancelEdit) btnCancelEdit.style.display = 'none';
+        if (startPeriodSelect && defaultStartPeriodId) startPeriodSelect.value = defaultStartPeriodId;
+        if (endPeriodSelect && defaultEndPeriodId) endPeriodSelect.value = defaultEndPeriodId;
         container.innerHTML = '';
         if (emptyNotice) emptyNotice.classList.remove('hidden');
         if (headerCols) headerCols.classList.add('hidden');
@@ -1020,6 +1349,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     recalculateCounts();
   @endif
+});
+
+// Dropdown Export Jurnal Toggle
+function toggleExportJournalDropdown(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('exportJournalDropdownMenu');
+  if (menu) {
+    const isHidden = menu.style.display === 'none' || menu.classList.contains('hidden');
+    menu.style.display = isHidden ? 'block' : 'none';
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('exportJournalDropdownWrapper');
+  const menu = document.getElementById('exportJournalDropdownMenu');
+  if (wrapper && menu && !wrapper.contains(e.target)) {
+    menu.style.display = 'none';
+  }
 });
 </script>
 @endpush
