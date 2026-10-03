@@ -152,7 +152,7 @@
               $classModel = $assignment->schoolClass;
               $className = $classModel?->name ?? 'Kelas';
               $deptName = $classModel?->department?->name ?? $assignment->subject?->name ?? 'Rekayasa Perangkat Lunak';
-              $studentCount = $classModel?->students_count ?? $classModel?->enrollments?->count() ?? 36;
+              $studentCount = $classModel?->activeStudentCount() ?? 0;
               $semesterName = $assignment->semester?->semester_number == 1 ? 'Gasal' : 'Genap';
               $academicYear = $assignment->semester?->academicYear?->name ?? '2025/2026';
 

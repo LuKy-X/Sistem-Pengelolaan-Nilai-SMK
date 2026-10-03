@@ -350,6 +350,11 @@ class SampleTeachingAssignmentSeeder extends Seeder
 
         // Journal Jam 1-2 Bahasa Indonesia (Guru Budi)
         if ($assignBudi && $period1 && $period2) {
+            // Rekap mengikuti jumlah siswa aktif nyata, bukan angka tetap.
+            $activeStudentCount = ClassEnrollment::where('class_id', $classXiiRpl1->id)
+                ->where('status', 'ACTIVE')
+                ->count();
+
             $journalBin = ClassJournal::firstOrCreate(
                 [
                     'teaching_assignment_id' => $assignBudi->id,
@@ -359,7 +364,7 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 ],
                 [
                     'material' => 'Menganalisis Kaidah Kebahasaan dan Struktur Teks Editorial',
-                    'notes' => "Diskusi kelompok aktif. Materi tuntas disampaikan.\nHadir: 34 | Sakit: 1 | Izin: 1 | Alpha: 0",
+                    'notes' => "Diskusi kelompok aktif. Materi tuntas disampaikan.\nHadir: ".max(0, $activeStudentCount - 2).' | Sakit: 1 | Izin: 1 | Alpha: 0',
                     'created_by' => $teacherBudi->id,
                 ]
             );
@@ -384,6 +389,10 @@ class SampleTeachingAssignmentSeeder extends Seeder
 
         // Previous Journal Jam 3-4 Matematika (Guru Agus) on yesterday
         if ($assign1 && $period3 && $period4) {
+            $activeStudentCountMtk = ClassEnrollment::where('class_id', $classXiiRpl1->id)
+                ->where('status', 'ACTIVE')
+                ->count();
+
             $journalMtk = ClassJournal::firstOrCreate(
                 [
                     'teaching_assignment_id' => $assign1->id,
@@ -393,7 +402,7 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 ],
                 [
                     'material' => 'Sistem Persamaan Linear Dua Variabel (SPLDV) dan Matriks',
-                    'notes' => "Latihan soal mandiri berjalan tertib.\nHadir: 35 | Sakit: 0 | Izin: 1 | Alpha: 0",
+                    'notes' => "Latihan soal mandiri berjalan tertib.\nHadir: ".max(0, $activeStudentCountMtk - 1).' | Sakit: 0 | Izin: 1 | Alpha: 0',
                     'created_by' => $teacherAgus->id,
                 ]
             );

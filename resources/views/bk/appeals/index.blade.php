@@ -153,14 +153,18 @@
         </div>
 
         <div class="rounded-xl bg-bluelight/50 p-3 text-xs text-bluedark space-y-1 mb-4">
+          @php($appealPermit = $appeal->exitPermit)
           <div class="flex justify-between">
             <span class="text-bluedark/60">Keterlambatan</span>
             <span class="font-semibold">
-              {{ (int) $appeal->exitPermit?->planned_return_at?->diffInMinutes($appeal->exitPermit?->actual_return_at ?? now()) }} menit
+              {{ $appealPermit ? (int) $appealPermit->effectiveReturnAt()->diffInMinutes($appealPermit->actual_return_at ?? now()) : 0 }} menit
             </span>
           </div>
-          <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->planned_return_at?->format('d M Y H:i') }}</span></div>
-          <div class="flex justify-between"><span class="text-bluedark/60">Riil kembali</span><span class="font-semibold">{{ $appeal->exitPermit?->actual_return_at?->format('d M Y H:i') ?? '—' }}</span></div>
+          <div class="flex justify-between"><span class="text-bluedark/60">Rencana kembali</span><span class="font-semibold">{{ $appealPermit?->planned_return_at?->format('d M Y H:i') }}</span></div>
+          @if($appealPermit?->approved_return_at)
+            <div class="flex justify-between"><span class="text-bluedark/60">Batas kembali (disetujui BK)</span><span class="font-semibold text-emerald-700">{{ $appealPermit->approved_return_at->format('d M Y H:i') }}</span></div>
+          @endif
+          <div class="flex justify-between"><span class="text-bluedark/60">Riil kembali</span><span class="font-semibold">{{ $appealPermit?->actual_return_at?->format('d M Y H:i') ?? '—' }}</span></div>
         </div>
 
         <div class="rounded-xl border border-bluelight p-3 text-xs text-bluedark mb-4">

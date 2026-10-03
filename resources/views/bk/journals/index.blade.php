@@ -99,9 +99,15 @@
     </div>
   @endif
 
-  <div>
-    <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Absensi Kelas</h1>
-    <p class="text-sm text-bluedark/60 mt-1">Kelola Absensi Kelas &amp; Jurnal Harian Kelas Binaan</p>
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Absensi Kelas</h1>
+      <p class="text-sm text-bluedark/60 mt-1">Kelola absensi &amp; jurnal harian seluruh kelas yang Anda ampu</p>
+    </div>
+    <a href="{{ route('counselor.journals.history') }}" class="btn btn-outline btn-sm" data-no-transition="true">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+      Riwayat Semua Jurnal
+    </a>
   </div>
 
   @if(! $selectedClass)
@@ -116,7 +122,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           @forelse($counselorClasses as $schoolClass)
             @php
-              $studentCount = $schoolClass->enrollments_count ?? $schoolClass->enrollments?->count() ?? 0;
+              $studentCount = $schoolClass->activeStudentCount();
             @endphp
             <a href="{{ route('counselor.journals.index', ['class_id' => $schoolClass->id, 'date' => $selectedDate]) }}"
                class="kelas-card block group p-5 md:p-6 rounded-2xl bg-white border border-bluelight/70 hover:border-blueprim hover:shadow-md transition-all text-left">
@@ -279,6 +285,7 @@
                     @endif
                   </td>
                   <td class="px-3.5 py-3 text-xs align-middle">
+                    <a href="{{ route('counselor.journals.show', $j) }}" class="btn btn-outline btn-sm mb-2" data-no-transition="true">Rincian Absensi</a>
                     @php
                       $absentStudents = $j->attendances->filter(fn ($a) => $a->status !== \App\Enums\AttendanceStatus::Present);
                     @endphp
@@ -369,21 +376,17 @@
               <div class="flex items-center gap-2">
                 <select name="start_period_id" id="startPeriodSelect" class="f-select flex-1" required>
                   @foreach($lessonPeriods as $period)
-                    @if(! $period->is_break)
-                      <option value="{{ $period->id }}" {{ $loop->first ? 'selected' : '' }}>
-                        {{ $period->period_number }} ({{ substr($period->start_time, 0, 5) }})
-                      </option>
-                    @endif
+                    <option value="{{ $period->id }}" @selected(old('start_period_id', $defaultStartPeriodId) == $period->id)>
+                      {{ $period->period_number }} ({{ substr($period->start_time, 0, 5) }})
+                    </option>
                   @endforeach
                 </select>
                 <span class="text-slate-500 font-semibold px-1 text-sm">sd</span>
                 <select name="end_period_id" id="endPeriodSelect" class="f-select flex-1" required>
                   @foreach($lessonPeriods as $period)
-                    @if(! $period->is_break)
-                      <option value="{{ $period->id }}" {{ $loop->iteration == 2 ? 'selected' : '' }}>
-                        {{ $period->period_number }} ({{ substr($period->end_time, 0, 5) }})
-                      </option>
-                    @endif
+                    <option value="{{ $period->id }}" @selected(old('end_period_id', $defaultEndPeriodId) == $period->id)>
+                      {{ $period->period_number }} ({{ substr($period->end_time, 0, 5) }})
+                    </option>
                   @endforeach
                 </select>
               </div>

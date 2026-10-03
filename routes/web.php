@@ -484,6 +484,8 @@ Route::middleware('auth')->group(function () {
         // Absensi Kelas & Jurnal
         Route::prefix('journals')->name('journals.')->group(function () {
             Route::get('/', [CounselorJournalController::class, 'index'])->name('index');
+            Route::get('/riwayat', [CounselorJournalController::class, 'history'])->name('history');
+            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
             Route::post('/', [CounselorJournalController::class, 'store'])->name('store');
         });
     });

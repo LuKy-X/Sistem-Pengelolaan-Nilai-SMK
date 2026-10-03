@@ -11,6 +11,8 @@ use App\Models\LessonPeriod;
 use App\Models\SchoolProfile;
 use App\Models\TeachingAssignment;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,12 +34,16 @@ class JournalController extends Controller
         $teacher = Auth::user()->teacherProfile;
 
         $assignments = TeachingAssignment::with([
-            'schoolClass.gradeLevel',
-            'schoolClass.department',
             'subject',
             'semester.academicYear',
             'schedules.startPeriod',
             'schedules.endPeriod',
+            'schoolClass' => fn (Relation $classRelation) => $classRelation
+                ->with(['gradeLevel', 'department'])
+                ->withCount([
+                    'enrollments as active_enrollments_count' => fn (Builder $enrollmentQuery) => $enrollmentQuery
+                        ->where('status', 'ACTIVE'),
+                ]),
         ])
             ->where('teacher_id', $teacher->id)
             ->where('is_active', true)
@@ -186,13 +192,14 @@ class JournalController extends Controller
 
         if ($selectedAssignment) {
             // Journals displayed ONLY for the single selected day, ordered chronologically from period 1 to the end
-            $journals = ClassJournal::with([
-                'startPeriod',
-                'endPeriod',
-                'attendances.student',
-                'creator.user',
-                'teachingAssignment.subject',
-            ])
+            $journals = ClassJournal::withActiveClassStudentCount()
+                ->with([
+                    'startPeriod',
+                    'endPeriod',
+                    'attendances.student',
+                    'creator.user',
+                    'teachingAssignment.subject',
+                ])
                 ->whereHas('teachingAssignment', function ($q) use ($selectedAssignment) {
                     $q->where('class_id', $selectedAssignment->class_id);
                 })
@@ -227,13 +234,14 @@ class JournalController extends Controller
 
             // Find previous journal entry for this class to allow copying attendance
             // Prefers the latest session from today if exists; otherwise falls back to the most recent historical session
-            $latestJournal = $journals->last() ?? ClassJournal::with([
-                'startPeriod',
-                'endPeriod',
-                'attendances.student',
-                'creator.user',
-                'teachingAssignment.subject',
-            ])
+            $latestJournal = $journals->last() ?? ClassJournal::withActiveClassStudentCount()
+                ->with([
+                    'startPeriod',
+                    'endPeriod',
+                    'attendances.student',
+                    'creator.user',
+                    'teachingAssignment.subject',
+                ])
                 ->whereHas('teachingAssignment', function ($q) use ($selectedAssignment) {
                     $q->where('class_id', $selectedAssignment->class_id);
                 })
@@ -928,13 +936,14 @@ class JournalController extends Controller
 
         $allDayPeriods = LessonPeriod::orderBy('sort_order')->orderBy('start_time')->get();
 
-        $journalQuery = ClassJournal::with([
-            'startPeriod',
-            'endPeriod',
-            'attendances.student',
-            'creator.user',
-            'teachingAssignment.subject',
-        ])
+        $journalQuery = ClassJournal::withActiveClassStudentCount()
+            ->with([
+                'startPeriod',
+                'endPeriod',
+                'attendances.student',
+                'creator.user',
+                'teachingAssignment.subject',
+            ])
             ->whereHas('teachingAssignment', function ($q) use ($assignment) {
                 $q->where('class_id', $assignment->class_id);
             });

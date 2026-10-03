@@ -48,6 +48,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
         <span>Dashboard</span>
       </a>
+      <a href="{{ route('counselor.journals.index') }}" class="db-nav-item {{ request()->routeIs('counselor.journals.*') ? 'active' : '' }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+        <span>Absensi Kelas</span>
+      </a>
       <a href="{{ route('counselor.exit-permits.index') }}" class="db-nav-item {{ request()->routeIs('counselor.exit-permits.*') ? 'active' : '' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
         <span>Izin Keluar</span>
@@ -83,11 +87,11 @@
       </button>
       <div class="hidden sm:block text-[11px] text-bluedark/50 leading-none" id="todayLabel">&nbsp;</div>
       <div class="ml-auto flex items-center gap-2">
-        @isset($pendingCount)
+        @isset($pendingPermitCount)
           <a href="{{ route('counselor.exit-permits.index', ['status' => 'PENDING']) }}"
              class="hidden md:inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 transition-colors">
             <span class="dot bg-amber-500"></span>
-            {{ $pendingCount }} pengajuan menunggu
+            {{ $pendingPermitCount }} pengajuan menunggu
           </a>
         @endisset
         <button class="relative w-7 h-7 rounded-lg bg-bluelight/70 flex items-center justify-center text-bluedark" title="Notifikasi">
