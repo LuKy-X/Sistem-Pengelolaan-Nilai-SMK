@@ -569,7 +569,6 @@ thead .sticky-col-period {
                                 <!-- Kolom Hari: Banner Kuning Jam Istirahat Penuh (Tidak Bisa Diklik) -->
                                 <td colspan="{{ count($days) + ($daysCount < 6 ? 1 : 0) }}" class="py-2.5 px-4 bg-amber-50/80 border-r border-b border-amber-200 select-none cursor-not-allowed">
                                     <div class="w-full py-2 px-4 rounded-xl bg-amber-100/90 border border-amber-300 text-amber-950 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs">
-                                        <svg class="w-4 h-4 text-amber-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
                                         <span class="tracking-wider uppercase font-heading text-xs">ISTIRAHAT &bull; {{ $startTime }} - {{ $endTime }} WIB</span>
                                     </div>
                                 </td>

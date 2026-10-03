@@ -193,12 +193,16 @@
                 <!-- Schedule / Missed / Filled Badge -->
                 <div class="flex flex-col items-end">
                   <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border {{ $summary['badge_class'] }} shadow-2xs">
-                    @if($summary['status_code'] === 'today_unfilled')
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    @if(in_array($summary['status_code'], ['today_filled', 'past_filled']))
+                      <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    @elseif($summary['status_code'] === 'today_unfilled')
+                      <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3"/></svg>
                     @elseif($summary['status_code'] === 'overdue')
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                      <svg class="w-3.5 h-3.5 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    @elseif($summary['status_code'] === 'upcoming')
+                      <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/></svg>
                     @endif
-                    {{ $summary['status_label'] }}
+                    <span>{{ $summary['status_label'] }}</span>
                   </span>
                 </div>
               </div>
@@ -421,11 +425,6 @@
                     <tr class="bg-amber-50/70 border-y-2 border-amber-200/80 hover:bg-amber-50 transition-colors">
                       <td colspan="11" class="py-2.5 px-4 text-center">
                         <div class="inline-flex items-center justify-center gap-2 text-amber-950 font-bold text-xs tracking-wide">
-                          @if(str_contains(strtolower($period->name), '2') || str_contains(strtolower($period->name), 'ii') || substr($period->start_time, 0, 2) >= '11')
-                            <span class="text-base leading-none">🕌</span>
-                          @else
-                            <span class="text-base leading-none">☕</span>
-                          @endif
                           <span class="uppercase tracking-wider font-extrabold text-amber-900">{{ strtoupper($period->name) }}</span>
                           <span class="px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900 font-mono text-[11px] font-semibold">
                             {{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }}
