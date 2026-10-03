@@ -44,9 +44,7 @@ class DepartmentController extends Controller
     }
 
     /**
-     * Partner companies shown as the "Mitra Industri" chips. There is no
-     * department-to-company relation in the schema, so every company that has
-     * placements is a valid partner for the program.
+     * Company records are school-wide; the schema does not associate them with a department.
      */
     private function partnerCompanies(): mixed
     {

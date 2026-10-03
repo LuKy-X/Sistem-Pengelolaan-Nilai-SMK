@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Public;
 
 use App\Enums\CareerOpportunityStatus;
+use App\Enums\CareerOpportunityType;
 use App\Enums\ContentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Achievement;
@@ -11,10 +12,9 @@ use App\Models\AlumniProfile;
 use App\Models\Article;
 use App\Models\CareerCompany;
 use App\Models\CareerOpportunity;
-use App\Models\CareerService;
-use App\Models\SiteStatistic;
 use App\Models\StudentProduct;
 use App\Services\PublicSiteService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -41,32 +41,23 @@ class HomeController extends Controller
         return view('public.home', [
             'navSections' => self::NAV_SECTIONS,
             'schoolProfile' => $this->publicSite->profile(),
-            'statistics' => $this->statistics(),
             'departments' => $this->publicSite->activeDepartments(),
             'alumni' => $this->featuredAlumni(),
-            'careerServices' => $this->careerServices(),
-            'careerOpportunities' => $this->openOpportunities(),
+            'jobOpportunities' => $this->openOpportunities(CareerOpportunityType::Job),
+            'internshipOpportunities' => $this->openOpportunities(CareerOpportunityType::Internship),
             'companies' => $this->partnerCompanies(),
             'products' => $this->featuredProducts(),
-            'achievements' => $this->latestAchievements(),
+            'achievements' => $this->featuredAchievements(),
             'articles' => $this->latestArticles(),
             'admissionPeriod' => $this->activeAdmissionPeriod(),
         ]);
     }
 
     /**
-     * Hero counters managed by the CMS (`site_statistics`, section = HERO).
+     * Latest published news for the landing page.
+     *
+     * Articles have no pin column, so recency is the only ordering available.
      */
-    private function statistics(): mixed
-    {
-        return SiteStatistic::query()
-            ->where('section', 'HERO')
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get();
-    }
-
     private function latestArticles(): mixed
     {
         return Article::query()
@@ -78,13 +69,17 @@ class HomeController extends Controller
             ->get();
     }
 
-    private function latestAchievements(): mixed
+    /**
+     * Only achievements selected by the school are shown on the landing page.
+     */
+    private function featuredAchievements(): mixed
     {
         return Achievement::query()
             ->with(['category', 'media'])
-            ->orderByDesc('is_featured')
+            ->where('is_featured', true)
             ->orderByDesc('achievement_date')
             ->orderByDesc('id')
+            ->limit(config('public_site.landing_limits.achievements'))
             ->get();
     }
 
@@ -100,12 +95,30 @@ class HomeController extends Controller
 
     private function featuredAlumni(): mixed
     {
+        $featuredStory = fn ($query) => $query
+            ->where('is_featured', true)
+            ->whereNotNull('title')
+            ->where('title', '!=', '')
+            ->where(function ($query): void {
+                $query->whereNotNull('career_story')->where('career_story', '!=', '')
+                    ->orWhereNotNull('story')->where('story', '!=', '')
+                    ->orWhereNotNull('quote')->where('quote', '!=', '');
+            });
+
         return AlumniProfile::query()
-            ->with(['student', 'stories' => fn ($query) => $query->where('is_featured', true)])
+            ->with([
+                'student',
+                'stories' => fn ($query) => $featuredStory($query)->with('media')->latest('id'),
+            ])
+            ->whereHas('stories', $featuredStory)
+            ->whereHas('student', fn ($query) => $query
+                ->where('status', 'GRADUATED')
+                ->whereNotNull('full_name')
+                ->where('full_name', '!=', ''))
             ->orderByDesc('is_featured')
             ->orderByDesc('graduation_year')
             ->orderByDesc('id')
-            ->limit(3)
+            ->limit(1)
             ->get();
     }
 
@@ -113,27 +126,17 @@ class HomeController extends Controller
     {
         return AdmissionPeriod::query()
             ->with(['academicYear', 'scheduleItems', 'paths', 'requirements'])
-            ->whereIn('status', ['OPEN', 'CLOSED'])
-            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', ['OPEN'])
+            ->where('status', 'OPEN')
             ->orderByDesc('registration_start')
             ->first();
     }
 
-    private function careerServices(): mixed
-    {
-        return CareerService::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->limit(4)
-            ->get();
-    }
-
-    private function openOpportunities(): mixed
+    private function openOpportunities(CareerOpportunityType $type): Collection
     {
         return CareerOpportunity::query()
-            ->with('company')
+            ->with(['company', 'media'])
             ->where('status', CareerOpportunityStatus::Open)
+            ->where('type', $type)
             ->orderByDesc('open_date')
             ->orderByDesc('id')
             ->limit(config('public_site.landing_limits.opportunities'))
@@ -141,15 +144,18 @@ class HomeController extends Controller
     }
 
     /**
-     * Partner companies for the "Kerja Sama Industri" strip. The view falls
-     * back to the company name badge when no logo is stored, so companies
-     * without artwork still make the strip.
+     * Partner companies with published logos for the landing-page strip.
+     *
+     * `career_companies` has no pin column, so the newest partnerships lead the
+     * marquee, which is the closest thing to a "pinned" order available here.
      */
     private function partnerCompanies(): mixed
     {
         return CareerCompany::query()
-            ->orderBy('name')
-            ->limit(7)
+            ->whereNotNull('logo')
+            ->where('logo', '!=', '')
+            ->orderByDesc('id')
+            ->limit(12)
             ->get();
     }
 

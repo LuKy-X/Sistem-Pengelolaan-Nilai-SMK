@@ -10,7 +10,6 @@ use App\Models\AlumniStory;
 use App\Models\Article;
 use App\Models\CareerOpportunity;
 use App\Models\Department;
-use App\Models\SiteStatistic;
 use App\Models\StudentProduct;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
@@ -89,7 +88,10 @@ class PublicChatbotService
      */
     private array $memo = [];
 
-    public function __construct(private readonly PublicSiteService $publicSite) {}
+    public function __construct(
+        private readonly PublicSiteService $publicSite,
+        private readonly SchoolStatisticsService $schoolStatistics,
+    ) {}
 
     /**
      * Opening message shown whenever the chat panel is empty.
@@ -654,12 +656,7 @@ class PublicChatbotService
      */
     private function statisticsAnswer(): array
     {
-        $statistics = $this->guard(fn (): Collection => SiteStatistic::query()
-            ->where('is_active', true)
-            ->where('section', 'HERO')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get()) ?? new Collection;
+        $statistics = $this->schoolStatistics->heroStatistics();
 
         if ($statistics->isEmpty()) {
             return $this->reply(
@@ -673,7 +670,7 @@ class PublicChatbotService
         $lines = ['Angka resmi sekolah:'];
 
         foreach ($statistics as $statistic) {
-            $lines[] = "• {$statistic->label}: **{$statistic->value}**";
+            $lines[] = "• {$statistic['label']}: **{$statistic['value']}{$statistic['suffix']}**";
         }
 
         return $this->reply(

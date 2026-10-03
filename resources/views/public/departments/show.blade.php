@@ -209,7 +209,7 @@
      ====================================================== --}}
 @if ($partners->isNotEmpty())
     <section class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-16 md:mt-20 reveal">
-        <h3 class="font-heading font-semibold text-lg sm:text-xl text-bluedark mb-4">Mitra Industri Program Keahlian Ini</h3>
+        <h3 class="font-heading font-semibold text-lg sm:text-xl text-bluedark mb-4">Mitra Industri Sekolah</h3>
         <div class="flex flex-wrap gap-2.5">
             @foreach ($partners as $partner)
                 <span class="text-xs sm:text-sm bg-bluelight/70 text-bluedark/80 px-3.5 py-1.5 rounded-full font-medium">

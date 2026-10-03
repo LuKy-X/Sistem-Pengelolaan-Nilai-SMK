@@ -285,13 +285,15 @@ body.is-landing .link-card:focus-within::before {
   display: flex;
   align-items: center;
   width: max-content;
-  padding: 0.25rem 2rem;
-  animation: industri-marquee 34s linear infinite;
+  padding: 0.5rem 2rem;
+  animation: industri-marquee 16s linear infinite;
   will-change: transform;
 }
 .industri-marquee-set {
   display: flex;
   align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+  padding-right: clamp(2rem, 5vw, 5rem);
   flex: none;
 }
 .industri-marquee-wrap:hover .industri-marquee-track {
@@ -305,20 +307,29 @@ body.is-landing .link-card:focus-within::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  background: #FFFFFF;
-  border: 1px solid #E3F2FD;
-  border-radius: 1.25rem;
-  padding: 1.1rem 1.75rem;
-  margin-right: 1.25rem;
-  box-shadow: 0 10px 30px -12px rgba(13, 71, 161, 0.12);
-  opacity: 0.75;
-  transition: opacity .4s cubic-bezier(0.22, 1, 0.36, 1), transform .4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .4s cubic-bezier(0.22, 1, 0.36, 1);
+  flex: 0 0 auto;
+  width: clamp(9rem, 15vw, 13rem);
+  height: 5rem;
 }
-.industri-logo-card:hover {
+.industri-logo-card > :is(a, span) {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+.industri-logo-card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: .58;
+  transition: filter .25s ease, opacity .25s ease;
+}
+.industri-logo-card :is(a, span):hover img,
+.industri-logo-card a:focus-visible img {
+  filter: grayscale(0);
   opacity: 1;
-  transform: translateY(-3px);
-  box-shadow: 0 16px 34px -12px rgba(13, 71, 161, 0.22);
 }
 
 
@@ -365,15 +376,18 @@ body.is-landing .link-card:focus-within::before {
 
 
 /* Berita filter buttons */
-.berita-filter-btn {
+.berita-filter-btn,
+.public-filter-btn {
   color: #0D47A1;
   background: #FFFFFF;
   border-color: #E3F2FD;
 }
-.berita-filter-btn:hover {
+.berita-filter-btn:hover,
+.public-filter-btn:hover {
   background: #E3F2FD;
 }
-.berita-filter-btn.is-active {
+.berita-filter-btn.is-active,
+.public-filter-btn.is-active {
   background: #0D47A1;
   border-color: #0D47A1;
   color: #FFFFFF;
@@ -2385,4 +2399,103 @@ body.bk-portal {
 }
 .bk-portal .space-y-4 > :not([hidden]) ~ :not([hidden]) {
   margin-top: 0.9rem !important;
+}
+
+/* Homepage-only presentation. Keep these rules scoped away from public detail
+   pages and the authenticated portals that share this compiled stylesheet. */
+.public-home {
+  --home-space: clamp(4rem, 8vw, 7rem);
+  --home-radius: 1rem;
+}
+
+.public-home > section:not(:first-child) {
+  margin-top: var(--home-space);
+}
+
+/* The hero owns the first screen: it fills the space under the sticky navbar and
+   centres its content, so the landing page never opens half a section below.
+   Symmetric padding keeps that centre true. */
+.public-home > #beranda {
+  margin-top: 0;
+  padding-block: clamp(1rem, 3vw, 2rem);
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - 4rem);
+  min-height: calc(100svh - 4rem);
+}
+
+@media (min-width: 768px) {
+  .public-home > #beranda {
+    min-height: calc(100vh - 5rem);
+    min-height: calc(100svh - 5rem);
+  }
+}
+
+.public-home > #ringkasan {
+  margin-top: 0;
+}
+
+.public-home > #beranda > div > div {
+  border-radius: 1.25rem;
+  background: #edf4f3;
+  background-image: none;
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+}
+
+.public-home > #beranda > div > div > div[aria-hidden="true"] {
+  display: none;
+}
+
+.public-home > #beranda h1 {
+  max-width: 12ch;
+  font-size: clamp(2.35rem, 5.4vw, 4.5rem);
+  letter-spacing: -0.045em;
+  line-height: 1.08;
+}
+
+.public-home > #beranda .hero-badge {
+  letter-spacing: 0.12em;
+}
+
+.public-home > #beranda a:first-of-type {
+  border-radius: 0.65rem;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.public-home > #beranda a:focus-visible,
+.public-home a:focus-visible {
+  outline: 3px solid #0d47a1;
+  outline-offset: 3px;
+}
+
+.public-home .link-card,
+.public-home article {
+  border-radius: var(--home-radius);
+  box-shadow: none;
+}
+
+.public-home .link-card:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 640px) {
+  .public-home > #beranda h1 {
+    max-width: 11ch;
+  }
+
+  .public-home > #beranda > div > div {
+    border-radius: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-home *,
+  .public-home *::before,
+  .public-home *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

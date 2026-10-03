@@ -87,8 +87,10 @@ Route::name('public.')->group(function () {
     Route::get('/berita/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 
     Route::get('/prestasi', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/prestasi/{achievement}', [AchievementController::class, 'show'])->name('achievements.show');
 
     Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+    Route::get('/alumni/{alumni}', [AlumniController::class, 'show'])->name('alumni.show');
 
     Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
@@ -99,6 +101,7 @@ Route::name('public.')->group(function () {
     Route::redirect('/karir', '/karier')->name('career.legacy');
 
     Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
+    Route::get('/karier/{opportunity}', [CareerController::class, 'show'])->name('career.show');
 
     // ==========================================
     // 1b. PUBLIC CHATBOT (JSON, read-only)
@@ -278,7 +281,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/achievements/{achievement}/preview', [CmsController::class, 'previewAchievement'])->name('achievements.preview');
 
             // Alumni
-            Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
+            Route::get('/alumni', [CmsController::class, 'alumni'])->name('alumni.index');
+            Route::put('/alumni/{student}', [CmsController::class, 'updateAlumni'])->name('alumni.update');
 
             // Produk Siswa
             Route::get('/products', [CmsController::class, 'products'])->name('products');

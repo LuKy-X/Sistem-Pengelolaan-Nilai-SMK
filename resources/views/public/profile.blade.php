@@ -25,13 +25,6 @@
 
                     {{-- Main column --}}
                     <div class="lg:col-span-2 space-y-6">
-                        <div class="rounded-3xl overflow-hidden border border-bluelight shadow-card">
-                            <x-public.media
-                                :src="app(\App\Services\PublicMediaService::class)->url($schoolProfile->hero_image, 'public') ?? asset(config('public_site.hero_fallback'))"
-                                alt="{{ $schoolName }}"
-                                class="w-full aspect-[16/9] bg-bluelight/50" />
-                        </div>
-
                         @if (filled($schoolProfile->history))
                             <div class="bg-white border border-bluelight rounded-3xl shadow-xs p-6 sm:p-8">
                                 <h2 class="font-heading font-semibold text-xl text-bluedark">Sejarah Sekolah</h2>
@@ -91,7 +84,7 @@
                         <div class="bg-white border border-bluelight rounded-3xl shadow-xs p-6 text-center">
                             <span class="inline-grid place-items-center w-24 h-24 mx-auto rounded-3xl bg-bluelight/70 p-2">
                                 <x-public.media
-                                    :src="app(\App\Services\PublicMediaService::class)->url($schoolProfile->logo, 'public') ?? asset(config('public_site.logo_fallback'))"
+                                    :src="$schoolProfile->logo_url"
                                     alt="Logo {{ $schoolName }}" fit="contain" />
                             </span>
 

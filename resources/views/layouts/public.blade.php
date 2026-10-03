@@ -16,8 +16,8 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
     {{-- GSAP for scroll animations and parallax (local, from the JHIC template) --}}
-    <script src="{{ asset('assets/vendor/gsap/gsap.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/gsap/ScrollTrigger.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/gsap/gsap.min.js') }}" defer></script>
+    <script src="{{ asset('assets/vendor/gsap/ScrollTrigger.min.js') }}" defer></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -56,7 +56,7 @@
 
     <x-public.navbar :nav-sections="$navSections ?? \App\Http\Controllers\Public\HomeController::navSections()" />
 
-    <main id="konten-utama">
+    <main id="konten-utama" @if (request()->routeIs('public.home')) class="public-home" @endif>
         @include('partials.flash')
 
         @yield('content')

@@ -51,130 +51,137 @@
                         </ul>
                     @endif
 
-                    @if ($companies->isNotEmpty())
+                    @if ($hasCompanies)
                         <div class="mt-8">
                             <h2 class="font-heading font-semibold text-base text-bluedark">Mitra Industri</h2>
-                            <ul class="mt-4 space-y-2">
-                                @foreach ($companies as $company)
-                                    <li class="flex items-center gap-3 p-3 bg-white border border-bluelight rounded-xl">
-                                        <div class="w-9 h-9 rounded-lg bg-bluelight/70 grid place-items-center shrink-0 overflow-hidden">
-                                            <x-public.media :model="$company" column="logo" :alt="$company->name" icon="briefcase" />
-                                        </div>
-                                        <div class="min-w-0">
-                                            <p class="text-sm font-heading font-medium text-bluedark truncate">{{ $company->name }}</p>
-                                            @if (filled($company->industry))
-                                                <p class="text-xs text-bluedark/50 truncate">{{ $company->industry }}</p>
-                                            @endif
-                                        </div>
-                                    </li>
-                                @endforeach
-                            </ul>
+                            <div class="mt-4">
+                                <x-public.search-form
+                                    :action="route('public.career.index')"
+                                    id="career-company-search"
+                                    label="Cari mitra industri"
+                                    search-name="company_q"
+                                    :search-value="$companySearch"
+                                    placeholder="Cari mitra..."
+                                    :hidden-fields="['q' => $search, 'type' => $selectedType]" />
+                                <ul id="careerCompanies" class="mt-4 space-y-2">
+                                    @foreach ($companies as $company)
+                                        <li class="flex items-center gap-3 p-3 bg-white border border-bluelight rounded-xl">
+                                            <div class="w-9 h-9 rounded-lg bg-bluelight/70 grid place-items-center shrink-0 overflow-hidden">
+                                                <x-public.media :model="$company" column="logo" :alt="$company->name" icon="briefcase" />
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-heading font-medium text-bluedark truncate">{{ $company->name }}</p>
+                                                @if (filled($company->industry))
+                                                    <p class="text-xs text-bluedark/50 truncate">{{ $company->industry }}</p>
+                                                @endif
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @if ($companies->hasPages())
+                                <div class="mt-4">
+                                    {{ $companies->links() }}
+                                </div>
+                            @endif
                         </div>
                     @endif
                 </div>
 
                 {{-- Opportunities --}}
                 <div class="lg:col-span-2">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <a href="{{ route('public.career.index') }}"
-                            @class([
-                                'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                                'bg-bluedark text-white border-bluedark' => ! in_array($selectedType, ['JOB', 'INTERNSHIP'], true),
-                                'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => in_array($selectedType, ['JOB', 'INTERNSHIP'], true),
-                            ])>
-                            Semua
-                        </a>
-                        <a href="{{ route('public.career.index', ['tipe' => 'INTERNSHIP']) }}"
-                            @class([
-                                'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                                'bg-bluedark text-white border-bluedark' => $selectedType === 'INTERNSHIP',
-                                'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedType !== 'INTERNSHIP',
-                            ])>
-                            Magang
-                        </a>
-                        <a href="{{ route('public.career.index', ['tipe' => 'JOB']) }}"
-                            @class([
-                                'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                                'bg-bluedark text-white border-bluedark' => $selectedType === 'JOB',
-                                'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedType !== 'JOB',
-                            ])>
-                            Kerja
-                        </a>
+                    @php
+                        $opportunityTypes = [
+                            ['value' => 'JOB', 'label' => 'Lowongan Kerja'],
+                            ['value' => 'INTERNSHIP', 'label' => 'Magang / PKL'],
+                        ];
+                    @endphp
+                    <div class="mb-8 flex justify-end">
+                        <x-public.search-form
+                            :action="route('public.career.index')"
+                            id="career-opportunity-search"
+                            :search-value="$search"
+                            placeholder="Cari lowongan..."
+                            filter-name="type"
+                            filter-label="Semua jenis"
+                            :filter-value="$selectedType"
+                            :filters="$opportunityTypes"
+                            :hidden-fields="['company_q' => $companySearch]" />
                     </div>
 
-                    <h2 class="font-heading font-semibold text-xl text-bluedark mt-8">Lowongan Terbuka</h2>
+                    <h2 class="font-heading font-semibold text-xl text-bluedark">Lowongan Terbuka</h2>
 
                     @if ($opportunities->isEmpty())
                         <div class="mt-6 bg-white border border-bluelight rounded-3xl">
                             <x-public.empty-state
                                 class="py-10"
                                 icon="briefcase"
-                                title="Belum ada lowongan"
-                                description="Belum ada lowongan magang atau kerja yang dipublikasikan." />
+                                :title="$search !== '' || $selectedType !== '' ? 'Lowongan tidak ditemukan' : 'Belum ada lowongan'"
+                                :description="$search !== '' || $selectedType !== '' ? 'Coba ubah kata kunci atau jenis lowongan.' : 'Belum ada lowongan magang atau kerja yang dipublikasikan.'" />
                         </div>
                     @else
-                        <div class="mt-6 space-y-4">
+                        <div id="careerOpportunities" class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                             @foreach ($opportunities as $opportunity)
-                                <article class="p-5 sm:p-6 bg-white rounded-3xl border border-bluelight shadow-xs card-hover">
-                                    <div class="flex items-start justify-between gap-4">
-                                        <div class="flex min-w-0 items-start gap-3">
-                                            @if ($opportunity->company && filled($opportunity->company->logo))
-                                                <x-public.media
-                                                    :model="$opportunity->company"
-                                                    column="logo"
-                                                    :alt="$opportunity->company->name"
-                                                    fit="contain"
-                                                    class="w-12 h-12 shrink-0 rounded-xl border border-bluelight bg-white" />
-                                            @endif
-
-                                            <div class="min-w-0">
-                                                <div class="flex flex-wrap items-center gap-2">
-                                                    <span class="text-xs font-heading font-semibold text-blueprim bg-bluelight px-2.5 py-1 rounded-full">
-                                                        {{ $opportunity->type->label() }}
-                                                    </span>
-                                                    @if (filled($opportunity->company?->industry))
-                                                        <span class="text-xs text-bluedark/50">{{ $opportunity->company->industry }}</span>
-                                                    @endif
-                                                </div>
-
-                                                <h3 class="font-heading font-semibold text-bluedark mt-2.5 leading-snug">
-                                                    {{ $opportunity->title }}
-                                                </h3>
-
-                                                <p class="text-xs text-bluedark/50 mt-1.5">
-                                                    {{ collect([$opportunity->company?->name, $opportunity->location])->filter()->implode(' · ') }}
-                                                </p>
-
-                                                @if (filled($opportunity->description))
-                                                    <p class="text-sm text-bluedark/65 mt-3 leading-relaxed line-clamp-2">
-                                                        {{ $opportunity->description }}
-                                                    </p>
-                                                @endif
-                                            </div>
+                                <article class="flex h-full flex-col overflow-hidden rounded-3xl border border-bluelight bg-white shadow-xs transition-shadow hover:shadow-card">
+                                    <a href="{{ route('public.career.show', $opportunity) }}"
+                                        class="group flex flex-1 flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blueprim"
+                                        aria-label="Lihat detail {{ $opportunity->type->label() }}: {{ $opportunity->title }}">
+                                        <div class="aspect-[4/3] overflow-hidden bg-bluelight">
+                                            <x-public.media :model="$opportunity" :alt="$opportunity->title" icon="briefcase"
+                                                class="h-full w-full transition-transform duration-300 group-hover:scale-[1.03]" />
                                         </div>
-
-                                        <div class="shrink-0 text-right">
+                                        <div class="flex flex-1 flex-col p-5">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="rounded-full bg-bluelight px-2.5 py-1 text-xs font-heading font-semibold text-blueprim">
+                                                    {{ $opportunity->type->label() }}
+                                                </span>
+                                                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-heading font-semibold text-emerald-800">
+                                                    Dibuka
+                                                </span>
+                                            </div>
+                                            <h3 class="mt-3 font-heading font-semibold leading-snug text-bluedark group-hover:text-blueprim">
+                                                {{ $opportunity->title }}
+                                            </h3>
+                                            <p class="mt-1.5 text-xs text-bluedark/50">
+                                                {{ collect([$opportunity->company?->name, $opportunity->location])->filter()->implode(' · ') }}
+                                            </p>
+                                            @if (filled($opportunity->description))
+                                                <p class="mt-3 line-clamp-3 text-sm leading-relaxed text-bluedark/65">
+                                                    {{ $opportunity->description }}
+                                                </p>
+                                            @endif
+                                            <span class="mt-auto inline-flex items-center gap-1.5 pt-5 text-xs font-heading font-semibold text-blueprim">
+                                                Lihat detail
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.4" aria-hidden="true">
+                                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </a>
+                                    @if (filled($opportunity->close_date) || filled($opportunity->application_link))
+                                        <div class="flex items-center justify-between gap-3 border-t border-bluelight px-5 py-3">
                                             @if (filled($opportunity->close_date))
                                                 <p class="text-[11px] text-bluedark/45">
-                                                    Ditutup<br>
-                                                    <span class="font-heading font-semibold text-bluedark/70">
+                                                    Batas pendaftaran
+                                                    <span class="mt-0.5 block font-heading font-semibold text-bluedark/70">
                                                         {{ $opportunity->close_date->translatedFormat('d M Y') }}
                                                     </span>
                                                 </p>
+                                            @else
+                                                <span></span>
                                             @endif
-
                                             @if (filled($opportunity->application_link))
                                                 <a href="{{ $opportunity->application_link }}" target="_blank" rel="noopener noreferrer"
-                                                    class="mt-3 inline-flex items-center gap-1.5 bg-bluedark hover:bg-blueprim transition-colors text-white font-heading font-semibold text-xs px-4 py-2 rounded-full">
+                                                    class="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-bluedark px-4 py-2 font-heading text-xs font-semibold text-white transition-colors hover:bg-blueprim">
                                                     Lamar
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
-                                                        aria-hidden="true">
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
                                                         <path d="M7 17 17 7M9 7h8v8" />
                                                     </svg>
                                                 </a>
                                             @endif
                                         </div>
-                                    </div>
+                                    @endif
                                 </article>
                             @endforeach
                         </div>

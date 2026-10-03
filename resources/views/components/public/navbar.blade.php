@@ -12,7 +12,7 @@
 
         {{-- Brand --}}
         <a href="{{ route('public.home') }}" class="flex items-center gap-2.5 md:gap-3 min-w-0">
-            <img src="{{ asset('assets/images/logo/logo.png') }}"
+            <img src="{{ $schoolProfile?->logo_url ?? asset(config('public_site.logo_fallback')) }}"
                 alt="Logo {{ $schoolName }}"
                 class="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0">
             <span class="font-heading leading-tight truncate">
@@ -25,10 +25,11 @@
         <nav class="hidden lg:flex items-center gap-4 xl:gap-6 font-heading text-sm font-medium text-bluedark/80">
             @php
                 $templateNavItems = [
-                    ['label' => 'Home',             'href' => $isHomePage ? '#beranda'          : route('public.home'),              'route' => 'public.home'],
-                    ['label' => 'PPDB',             'href' => $isHomePage ? '#ppdb'             : route('public.ppdb.index'),        'route' => 'public.ppdb.index'],
+                    ['label' => 'Beranda',          'href' => $isHomePage ? '#beranda'          : route('public.home'),              'route' => 'public.home'],
+                    ['label' => 'Profil',           'href' => route('public.profile'),          'route' => 'public.profile'],
                     ['label' => 'Jurusan',          'href' => $isHomePage ? '#jurusan'          : route('public.departments.index'), 'route' => 'public.departments.index'],
                     ['label' => 'PKL & Karier',     'href' => $isHomePage ? '#karier'           : route('public.career.index'),      'route' => 'public.career.index'],
+                    ['label' => 'Prestasi',         'href' => $isHomePage ? '#prestasi'         : route('public.achievements.index'), 'route' => 'public.achievements.index'],
                     ['label' => 'Produk Unggulan',  'href' => $isHomePage ? '#produk-unggulan'  : route('public.products.index'),    'route' => 'public.products.index'],
                     ['label' => 'Berita',           'href' => $isHomePage ? '#berita'           : route('public.articles.index'),    'route' => 'public.articles.index'],
                 ];
@@ -87,18 +88,20 @@
     <div id="publicMobileMenu" class="hidden lg:hidden border-t border-bluelight bg-white">
         <nav class="flex flex-col px-4 sm:px-6 py-4 gap-1 font-heading text-bluedark">
             <a href="{{ $isHomePage ? '#beranda' : route('public.home') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Home</a>
-            <a href="{{ $isHomePage ? '#ppdb' : route('public.ppdb.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">PPDB</a>
+                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Beranda</a>
+            <a href="{{ route('public.profile') }}"
+                @if ($currentRoute === 'public.profile') aria-current="page" @endif
+                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Profil</a>
             <a href="{{ $isHomePage ? '#jurusan' : route('public.departments.index') }}"
                 class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Jurusan</a>
             <a href="{{ $isHomePage ? '#karier' : route('public.career.index') }}"
                 class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">PKL &amp; Karier</a>
+            <a href="{{ $isHomePage ? '#prestasi' : route('public.achievements.index') }}"
+                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Prestasi</a>
             <a href="{{ $isHomePage ? '#produk-unggulan' : route('public.products.index') }}"
                 class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Produk Unggulan</a>
             <a href="{{ $isHomePage ? '#berita' : route('public.articles.index') }}"
                 class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Berita</a>
-
             @auth
                 <a href="{{ route(auth()->user()->dashboardRouteName()) }}"
                     class="mt-2 text-center bg-bluedark text-white py-2.5 px-2 rounded-full font-medium">
