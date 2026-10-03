@@ -59,16 +59,17 @@ class CounselingController extends Controller
             : null;
         $search = trim((string) $request->query('q', ''));
 
-        // Daftar siswa dibatasi oleh kelas binaan BK; bila filter kelas aktif, saring lebih lanjut.
+        // Daftar siswa dibatasi oleh kelas binaan BK. Filter kelas hanya mempersempit
+        // cakupan, tidak boleh memperluas ke kelas di luar binaan BK.
+        $allowedClassIds = $classIdFilter !== null && in_array($classIdFilter, $counselorClassIds, true)
+            ? [$classIdFilter]
+            : $counselorClassIds;
+
         $students = StudentProfile::query()
             ->with('currentEnrollment.schoolClass')
             ->where('status', 'ACTIVE')
             ->whereHas('currentEnrollment', fn (Builder $query) => $query
-                ->when(
-                    $classIdFilter !== null,
-                    fn (Builder $inner) => $inner->where('class_id', $classIdFilter),
-                    fn (Builder $inner) => $inner->whereIn('class_id', $counselorClassIds === [] ? [0] : $counselorClassIds),
-                ))
+                ->whereIn('class_id', $allowedClassIds === [] ? [0] : $allowedClassIds))
             ->orderBy('full_name')
             ->get();
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="teacher-portal-html">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,16 +10,23 @@
 @vite(['resources/css/app.css'])
 <script src="{{ asset('assets/js/vendor/chart.umd.min.js') }}"></script>
 <style>
-  /* Indikator fokus keyboard untuk portal siswa.
-     Diletakkan di layout ini, bukan di app.css, supaya tidak mengubah
-     tampilan dashboard Guru dan Guru BK. */
+  /* Seluruh perbaikan tampilan portal siswa ditulis di sini, bukan di app.css,
+     supaya dashboard Guru dan Guru BK tidak ikut berubah.
+
+     1. Indikator fokus keyboard.
+     2. Perbaikan overflow: app.css memberi body { overflow-x: hidden } sehingga
+        konten yang terlalu lebar terpotong dan tidak bisa digeser. Di portal
+        siswa aturan itu dilonggarkan menjadi clip pada elemen html supaya
+        halaman tetap bisa digeser horizontal bila memang ada konten melebar.
+     3. Perbaikan .info-list yang memakai kolom 9rem 1fr. Karena 1fr berarti
+        minmax(auto, 1fr), nilai yang panjang tanpa spasi seperti alamat email
+        memaksa kolom melebar keluar kartu. minmax(0, 1fr) membuatnyashrink. */
   .teacher-portal :is(a, button, input, select, textarea, [tabindex]):focus-visible {
     outline: 2px solid #2196F3;
     outline-offset: 2px;
     border-radius: 6px;
   }
 
-  /* Elemen yang sudah punya gaya fokus sendiri tidak perlu outline ganda. */
   .teacher-portal .f-input:focus-visible,
   .teacher-portal .f-select:focus-visible,
   .teacher-portal .f-textarea:focus-visible {
@@ -30,9 +37,63 @@
     outline-offset: -2px;
   }
 
-  /* Ikon lencana notifikasi tidak boleh hilang indikatornya. */
   .teacher-portal .badge:focus-visible {
     outline: 2px solid #0D47A1;
+  }
+
+  html {
+    overflow-x: clip;
+  }
+
+  body.teacher-portal {
+    overflow-x: clip;
+  }
+
+  .teacher-portal .info-list__row {
+    grid-template-columns: minmax(0, 9rem) minmax(0, 1fr);
+  }
+
+  .teacher-portal .info-list__row dd {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .teacher-portal .info-list__row dt {
+    overflow-wrap: break-word;
+  }
+
+  .teacher-portal :is(.panel, .crud-card, .kpi-card) :is(p, dd, dt, li, td, h1, h2, h3, span, div) {
+    overflow-wrap: break-word;
+  }
+
+  @media (max-width: 639px) {
+    .teacher-portal .info-list__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.1rem;
+    }
+
+    .teacher-portal .info-list__row dt {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      opacity: 0.75;
+    }
+  }
+
+  /* Animasi denyut pada lencana keterlambatan. Tanpa ini, animasi berjalan
+     terus-menerus bagi pengguna yang meminta gerak dikurangi. */
+  @media (prefers-reduced-motion: reduce) {
+    .teacher-portal .countdown-pill.over {
+      animation: none !important;
+    }
+
+    .teacher-portal .db-sidebar {
+      transition: none !important;
+    }
+
+    .teacher-portal .profile-dropdown {
+      transition: none !important;
+    }
   }
 </style>
 @stack('styles')
@@ -57,16 +118,21 @@
 
   <div class="db-sidebar-backdrop" id="dbBackdrop"></div>
 
-  <aside class="db-sidebar w-48 sm:w-52 lg:w-56 flex-shrink-0 flex flex-col p-2.5 lg:p-3" id="dbSidebar">
-    <a href="{{ route('student.dashboard') }}" class="flex items-center gap-2 px-1 mb-4">
-      <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-7 h-7 object-contain">
-      <div class="leading-tight">
-        <div class="font-heading font-bold text-bluedark text-xs">SMK Negeri 2</div>
-        <div class="text-[9.5px] text-bluedark/60 font-medium">Portal Siswa</div>
-      </div>
-    </a>
+  <aside class="db-sidebar db-scroll w-48 sm:w-52 lg:w-56 flex-shrink-0 flex flex-col p-2.5 lg:p-3" id="dbSidebar" aria-label="Menu navigasi siswa">
+    <div class="flex items-center gap-2 px-1 mb-4">
+      <a href="{{ route('student.dashboard') }}" class="flex items-center gap-2 min-w-0 flex-1">
+        <img src="{{ asset('assets/images/logo/logo.png') }}" alt="Logo" class="w-7 h-7 object-contain shrink-0">
+        <span class="leading-tight min-w-0">
+          <span class="font-heading font-bold text-bluedark text-xs block truncate">SMK Negeri 2</span>
+          <span class="text-[9.5px] text-bluedark/60 font-medium block truncate">Portal Siswa</span>
+        </span>
+      </a>
+      <button type="button" id="sidebarClose" class="lg:hidden text-bluedark/60 hover:text-bluedark p-1 -mr-1" aria-label="Tutup Menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
 
-    <nav class="flex flex-col gap-1 flex-1 db-scroll overflow-y-auto">
+    <nav class="flex flex-col gap-1 flex-1 min-h-0">
       <a href="{{ route('student.dashboard') }}" class="db-nav-item {{ request()->routeIs('student.dashboard') ? 'active' : '' }}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/></svg>
         <span>Dashboard</span>
@@ -112,7 +178,7 @@
   <div class="flex-1 min-w-0 flex flex-col">
 
     <header class="db-topbar sticky top-0 z-30 flex items-center gap-2 px-3 sm:px-4 md:px-5 h-11 min-h-[44px]">
-      <button id="sidebarToggle" class="lg:hidden text-bluedark p-1.5 -ml-1.5" aria-label="Buka Menu">
+      <button id="sidebarToggle" class="lg:hidden text-bluedark p-1.5 -ml-1.5" aria-label="Buka Menu" aria-expanded="false" aria-controls="dbSidebar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       <div class="hidden sm:block">
@@ -194,6 +260,65 @@
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 <script>
+  // Perbaikan drawer navigasi untuk layar kecil.
+  //
+  // dashboard-ui.js sudah membuka dan menutup sidebar, tetapi tidak mengunci
+  // scroll halaman di belakangnya, tidak menyediakan tombol tutup, dan tidak
+  // menutup drawer dengan tombol Escape. Ketiganya dilengkapi di sini agar
+  // dashboard Guru dan Guru BK tidak ikut berubah.
+  document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.getElementById('sidebarToggle');
+    var sidebar = document.getElementById('dbSidebar');
+    var backdrop = document.getElementById('dbBackdrop');
+
+    if (!toggle || !sidebar || !backdrop) return;
+
+    var isOpen = function () {
+      return sidebar.classList.contains('open');
+    };
+
+    var close = function () {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.setAttribute('aria-label', 'Buka Menu');
+      document.body.style.overflow = '';
+    };
+
+    // Tombol tutup di dalam drawer, untuk layar sentuh.
+    var closeButton = document.getElementById('sidebarClose');
+
+    if (closeButton) {
+      closeButton.addEventListener('click', close);
+    }
+
+    // Mengunci scroll halaman supaya konten tidak bisa meluncur di belakang
+    // drawer yang sedang terbuka.
+    var observe = function () {
+      if (isOpen()) {
+        document.body.style.overflow = 'hidden';
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.setAttribute('aria-label', 'Tutup Menu');
+      } else {
+        document.body.style.overflow = '';
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Buka Menu');
+      }
+    };
+
+    new MutationObserver(observe).observe(sidebar, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+
+    // Escape menutup drawer.
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && isOpen()) {
+        close();
+      }
+    });
+  });
+
   // Delegasi global untuk buka/tutup modal via data-modal-open / data-modal-close.
   // Pola yang sama dengan dashboard Guru BK (layouts/bk.blade.php) supaya portal siswa
   // punya perilaku modal yang konsisten tanpa mengubah script bersama dashboard-ui.js.

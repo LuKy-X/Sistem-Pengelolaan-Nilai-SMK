@@ -28,11 +28,15 @@ class DecideAppealRequest extends FormRequest
         return [
             'decision' => ['required', Rule::enum(AppealDecision::class)->only([AppealDecision::Accepted, AppealDecision::Rejected])],
             'decision_note' => ['nullable', 'required_if:decision,REJECTED', 'string', 'max:1000'],
-            'record_sanction' => ['nullable', 'boolean'],
+            // Sanksi hanya relevan bila banding DITOLAK. Jika banding diterima, siswa
+            // tidak boleh diberi poin (apa pun yang dikirim).
+            'record_sanction' => ['nullable', 'boolean', 'prohibited_unless:decision,REJECTED'],
             'sanction_category_id' => [
                 'nullable',
                 'required_if:record_sanction,1,on',
-                Rule::exists(DisciplineCategory::class, 'id')->where('is_active', true),
+                Rule::exists(DisciplineCategory::class, 'id')
+                    ->where('is_active', true)
+                    ->where('type', DisciplineCategoryType::Violation->value),
             ],
             'sanction_points' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ];
@@ -48,7 +52,8 @@ class DecideAppealRequest extends FormRequest
             'decision.enum' => 'Keputusan banding tidak valid.',
             'decision_note.required_if' => 'Catatan keputusan wajib diisi saat banding ditolak.',
             'sanction_category_id.required_if' => 'Pilih jenis pelanggaran yang akan dicatat sebagai sanksi.',
-            'sanction_category_id.exists' => 'Kategori pelanggaran tidak ditemukan atau tidak aktif.',
+            'sanction_category_id.exists' => 'Kategori pelanggaran tidak ditemukan, tidak aktif, atau bukan jenis pelanggaran.',
+            'record_sanction.prohibited_unless' => 'Sanksi hanya dapat dicatat bila banding ditolak.',
         ];
     }
 

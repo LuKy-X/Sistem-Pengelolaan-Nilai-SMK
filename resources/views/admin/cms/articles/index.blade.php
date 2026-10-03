@@ -141,11 +141,15 @@
             </p>
         </div>
 
-        <div class="flex items-center gap-2.5 shrink-0">
+        <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
             <a href="{{ route('public.articles.index') }}" target="_blank" class="btn btn-outline btn-sm flex items-center gap-1.5 text-xs text-blueprim border-bluelight hover:border-blueprim transition-colors">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                 <span>Lihat Web Publik</span>
             </a>
+            <button type="button" onclick="openCategoryModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 text-xs text-slate-700 border-slate-300 hover:border-blueprim hover:text-blueprim transition-colors shadow-2xs">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                <span>Kelola Kategori</span>
+            </button>
             <a href="{{ route('admin.cms.articles.create') }}" class="btn btn-primary btn-sm flex items-center gap-2 text-xs shadow-xs hover:shadow-md transition-all font-semibold">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 <span>Tulis Artikel Baru</span>
@@ -590,6 +594,119 @@
         </div>
     </div>
 </div>
+<!-- ========================================================================= -->
+<!-- MODAL: CRUD KATEGORI ARTIKEL                                              -->
+<!-- ========================================================================= -->
+<div id="categoryCrudModal" class="hidden art-modal-overlay">
+    <div class="art-modal-dialog max-w-xl w-full">
+        <!-- Header Modal -->
+        <div class="px-6 py-4 border-b border-bluelight bg-slate-50/80 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-xl bg-blueprim/10 text-blueprim flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                </div>
+                <div>
+                    <h3 class="font-heading font-bold text-base text-bluedark">Kelola Kategori Artikel</h3>
+                    <p class="text-xs text-bluedark/60">Tambah, ubah nama, dan kelola kategori untuk pengelompokan berita</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCategoryModal()" class="text-bluedark/40 hover:text-bluedark text-xl font-bold p-1 leading-none">&times;</button>
+        </div>
+
+        <!-- Body Modal -->
+        <div class="p-6 space-y-5 overflow-y-auto max-h-[75vh]">
+            
+            <!-- Alert Feedback Message -->
+            <div id="catAlertBox" class="hidden p-3 rounded-xl text-xs flex items-center justify-between transition-all">
+                <span id="catAlertMessage"></span>
+                <button type="button" onclick="document.getElementById('catAlertBox').classList.add('hidden')" class="font-bold ml-2 text-base leading-none">&times;</button>
+            </div>
+
+            <!-- Form Tambah / Edit Kategori -->
+            <div class="p-4 rounded-xl border border-bluelight bg-[#F9FBFE] space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold text-bluedark uppercase tracking-wider" id="catFormHeading">
+                        Tambah Kategori Baru
+                    </h4>
+                    <button type="button" id="btnCancelEditCat" onclick="cancelEditCategory()" class="hidden text-[11px] font-semibold text-rose-600 hover:text-rose-800 flex items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <span>Batal Ubah</span>
+                    </button>
+                </div>
+
+                <form id="categoryForm" onsubmit="handleCategoryFormSubmit(event)" class="space-y-3">
+                    <input type="hidden" id="editCatId" value="">
+                    <div>
+                        <label for="catNameInput" class="block text-xs font-semibold text-bluedark mb-1">
+                            Nama Kategori <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" id="catNameInput" required maxlength="100"
+                                placeholder="Contoh: Prestasi Siswa, Pengumuman, Agenda..."
+                                class="f-input text-xs w-full py-2">
+                            <button type="submit" id="btnSaveCategory" class="btn btn-primary text-xs py-2 px-4 shrink-0 font-semibold shadow-xs flex items-center gap-1.5">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                <span id="btnSaveCatText">Tambah</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Daftar Kategori Tersedia -->
+            <div class="space-y-2.5">
+                <div class="flex items-center justify-between text-xs font-semibold text-bluedark">
+                    <span>Daftar Kategori Saat Ini (<span id="catTotalCount">{{ $categories->count() }}</span>)</span>
+                    <span class="text-[11px] text-bluedark/50">Kategori dengan artikel tidak dapat dihapus</span>
+                </div>
+
+                <div class="border border-bluelight rounded-xl overflow-hidden divide-y divide-bluelight/70 bg-white" id="categoryListContainer">
+                    @forelse($categories as $cat)
+                        <div class="p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors" id="catRow{{ $cat->id }}">
+                            <div class="min-w-0">
+                                <div class="font-bold text-xs text-bluedark truncate flex items-center gap-2">
+                                    <span id="catNameText{{ $cat->id }}">{{ $cat->name }}</span>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200" id="catSlugText{{ $cat->id }}">
+                                        {{ $cat->slug }}
+                                    </span>
+                                </div>
+                                <div class="text-[11px] text-bluedark/60 mt-0.5 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $cat->articles_count > 0 ? 'bg-blue-50 text-blueprim' : 'bg-slate-100 text-slate-500' }}" id="catArticlesCount{{ $cat->id }}">
+                                        {{ $cat->articles_count }} Artikel
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <button type="button" onclick="startEditCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}', '{{ $cat->slug }}')"
+                                    class="p-1.5 rounded-lg text-slate-500 hover:text-blueprim hover:bg-blue-50 transition-colors" title="Edit Kategori">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </button>
+                                <button type="button" onclick="confirmDeleteCategory({{ $cat->id }}, '{{ addslashes($cat->name) }}', {{ $cat->articles_count }})"
+                                    class="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Hapus Kategori">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-6 text-center text-xs text-bluedark/50" id="emptyCategoryNotice">
+                            Belum ada kategori artikel yang dibuat.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="px-6 py-3 border-t border-bluelight bg-slate-50 flex items-center justify-between">
+            <span class="text-xs text-bluedark/50">Kategori dapat langsung digunakan saat menulis artikel</span>
+            <button type="button" onclick="closeCategoryModal()" class="btn btn-outline btn-sm text-xs py-1.5 px-4">
+                Selesai &amp; Tutup
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -728,16 +845,218 @@ function closeDeleteModal() {
     modal.classList.remove('show');
 }
 
+/* ==========================================================================
+   CATEGORY CRUD MODAL LOGIC
+   ========================================================================== */
+function openCategoryModal() {
+    const modal = document.getElementById('categoryCrudModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
+    cancelEditCategory();
+    document.getElementById('catAlertBox').classList.add('hidden');
+}
+
+function closeCategoryModal() {
+    const modal = document.getElementById('categoryCrudModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('show');
+    cancelEditCategory();
+}
+
+function showCatAlert(message, isSuccess = true) {
+    const box = document.getElementById('catAlertBox');
+    const msg = document.getElementById('catAlertMessage');
+    msg.innerText = message;
+    box.className = isSuccess 
+        ? 'p-3 rounded-xl text-xs flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200'
+        : 'p-3 rounded-xl text-xs flex items-center justify-between bg-rose-50 text-rose-800 border border-rose-200';
+    box.classList.remove('hidden');
+}
+
+function startEditCategory(id, name, slug) {
+    document.getElementById('editCatId').value = id;
+    document.getElementById('catNameInput').value = name;
+    document.getElementById('catFormHeading').innerText = 'Ubah Kategori: ' + name;
+    document.getElementById('btnSaveCatText').innerText = 'Simpan';
+    document.getElementById('btnCancelEditCat').classList.remove('hidden');
+    document.getElementById('catNameInput').focus();
+}
+
+function cancelEditCategory() {
+    document.getElementById('editCatId').value = '';
+    document.getElementById('catNameInput').value = '';
+    document.getElementById('catFormHeading').innerText = 'Tambah Kategori Baru';
+    document.getElementById('btnSaveCatText').innerText = 'Tambah';
+    document.getElementById('btnCancelEditCat').classList.add('hidden');
+}
+
+function handleCategoryFormSubmit(e) {
+    e.preventDefault();
+    const editId = document.getElementById('editCatId').value;
+    const name = document.getElementById('catNameInput').value.trim();
+
+    if (!name) {
+        showCatAlert('Silakan masukkan nama kategori.', false);
+        return;
+    }
+
+    const isEdit = Boolean(editId);
+    const url = isEdit ? '{{ url("admin/cms/article-categories") }}/' + editId : '{{ route("admin.cms.article-categories.store") }}';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const btn = document.getElementById('btnSaveCategory');
+    btn.disabled = true;
+
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ name: name })
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            const err = (data && data.errors && Object.values(data.errors).flat()[0]) || data.message || 'Gagal menyimpan kategori.';
+            throw new Error(err);
+        }
+        return data;
+    })
+    .then(data => {
+        btn.disabled = false;
+        showCatAlert(data.message || 'Kategori berhasil disimpan.', true);
+        const cat = data.category;
+
+        if (isEdit) {
+            // Update row in table
+            const nameEl = document.getElementById('catNameText' + cat.id);
+            const slugEl = document.getElementById('catSlugText' + cat.id);
+            if (nameEl) nameEl.innerText = cat.name;
+            if (slugEl) slugEl.innerText = cat.slug;
+
+            // Update dropdown in filter
+            const filterOption = document.querySelector(`select[name="category_id"] option[value="${cat.id}"]`);
+            if (filterOption) filterOption.innerText = cat.name;
+        } else {
+            // Remove empty notice if present
+            const emptyNotice = document.getElementById('emptyCategoryNotice');
+            if (emptyNotice) emptyNotice.remove();
+
+            // Append new row
+            const container = document.getElementById('categoryListContainer');
+            const row = document.createElement('div');
+            row.id = 'catRow' + cat.id;
+            row.className = 'p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50/60 transition-colors';
+            row.innerHTML = `
+                <div class="min-w-0">
+                    <div class="font-bold text-xs text-bluedark truncate flex items-center gap-2">
+                        <span id="catNameText${cat.id}">${cat.name}</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200" id="catSlugText${cat.id}">
+                            ${cat.slug}
+                        </span>
+                    </div>
+                    <div class="text-[11px] text-bluedark/60 mt-0.5 flex items-center gap-1.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500" id="catArticlesCount${cat.id}">
+                            0 Artikel
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button type="button" onclick="startEditCategory(${cat.id}, '${cat.name.replace(/'/g, "\\'")}', '${cat.slug}')"
+                        class="p-1.5 rounded-lg text-slate-500 hover:text-blueprim hover:bg-blue-50 transition-colors" title="Edit Kategori">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    </button>
+                    <button type="button" onclick="confirmDeleteCategory(${cat.id}, '${cat.name.replace(/'/g, "\\'")}', 0)"
+                        class="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Hapus Kategori">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                </div>
+            `;
+            container.prepend(row);
+
+            // Increment count in header
+            const totalEl = document.getElementById('catTotalCount');
+            if (totalEl) totalEl.innerText = parseInt(totalEl.innerText || 0) + 1;
+
+            // Add option to filter dropdown
+            const filterSelect = document.querySelector('select[name="category_id"]');
+            if (filterSelect) {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.innerText = cat.name;
+                filterSelect.appendChild(opt);
+            }
+        }
+
+        cancelEditCategory();
+    })
+    .catch(err => {
+        btn.disabled = false;
+        showCatAlert(err.message, false);
+    });
+}
+
+function confirmDeleteCategory(id, name, articlesCount) {
+    if (articlesCount > 0) {
+        showCatAlert(`Kategori "${name}" masih memuat ${articlesCount} artikel dan tidak dapat dihapus. Silakan pindahkan atau hapus artikel terkait terlebih dahulu.`, false);
+        return;
+    }
+
+    if (!confirm(`Apakah Anda yakin ingin menghapus kategori "${name}"?`)) {
+        return;
+    }
+
+    fetch('{{ url("admin/cms/article-categories") }}/' + id, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        }
+    })
+    .then(async res => {
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.message || 'Gagal menghapus kategori.');
+        }
+        return data;
+    })
+    .then(data => {
+        showCatAlert(data.message || 'Kategori berhasil dihapus.', true);
+
+        // Remove row
+        const row = document.getElementById('catRow' + id);
+        if (row) row.remove();
+
+        // Decrement total
+        const totalEl = document.getElementById('catTotalCount');
+        if (totalEl) totalEl.innerText = Math.max(0, parseInt(totalEl.innerText || 1) - 1);
+
+        // Remove from filter dropdown
+        const filterOption = document.querySelector(`select[name="category_id"] option[value="${id}"]`);
+        if (filterOption) filterOption.remove();
+    })
+    .catch(err => {
+        showCatAlert(err.message, false);
+    });
+}
+
 // Close modals when clicking backdrop
 window.addEventListener('click', function(e) {
     const prevModal = document.getElementById('previewModal');
     const delModal = document.getElementById('deleteArticleModal');
+    const catModal = document.getElementById('categoryCrudModal');
     if (e.target === prevModal) {
         closePreviewModal();
     }
     if (e.target === delModal) {
         closeDeleteModal();
     }
+    if (e.target === catModal) {
+        closeCategoryModal();
+    }
 });
 </script>
 @endpush
+

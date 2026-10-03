@@ -57,7 +57,7 @@
           <span class="badge badge-red">{{ $letter->type->value }}</span>
           <div class="min-w-0">
             <div class="text-xs font-semibold text-bluedark truncate">{{ $letter->reason }}</div>
-            <div class="text-[10px] text-bluedark/45">Diterbitkan {{ $letter->issued_at?->format('d M Y') }}</div>
+            <div class="text-[10px] text-bluedark/45 break-words">Diterbitkan {{ $letter->issued_at?->format('d M Y') }}</div>
           </div>
         </div>
       @empty
@@ -76,7 +76,7 @@
             <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-bluelight/80">
               <div class="min-w-0">
                 <div class="text-xs font-semibold text-bluedark">{{ $category->name }}</div>
-                @if($category->description)<div class="text-[10px] text-bluedark/45">{{ $category->description }}</div>@endif
+                @if($category->description)<div class="text-[10px] text-bluedark/45 break-words">{{ $category->description }}</div>@endif
               </div>
               <span class="badge badge-red shrink-0">{{ $category->default_points }}</span>
             </div>
@@ -92,7 +92,7 @@
             <div class="flex items-center justify-between gap-2 p-2 rounded-lg border border-bluelight/80">
               <div class="min-w-0">
                 <div class="text-xs font-semibold text-bluedark">{{ $category->name }}</div>
-                @if($category->description)<div class="text-[10px] text-bluedark/45">{{ $category->description }}</div>@endif
+                @if($category->description)<div class="text-[10px] text-bluedark/45 break-words">{{ $category->description }}</div>@endif
               </div>
               <span class="badge badge-green shrink-0">+{{ $category->default_points }}</span>
             </div>
@@ -104,34 +104,56 @@
     </div>
   </div>
 
-  <div class="panel p-4 lg:p-5 overflow-x-auto">
+  {{-- Kartu untuk layar kecil, tabel untuk layar lebar.
+       Catatan riwayat tidak dipaginationtogether dengan panel lain. --}}
+  <div class="panel p-4 lg:p-5">
     <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-3">Riwayat Catatan</h2>
-    <table class="w-full text-xs min-w-[560px]">
-      <thead>
-        <tr class="text-left text-bluedark/50 border-b border-bluelight">
-          <th class="py-2 pr-3 font-semibold">Tanggal</th>
-          <th class="py-2 pr-3 font-semibold">Kategori</th>
-          <th class="py-2 pr-3 font-semibold">Keterangan</th>
-          <th class="py-2 font-semibold text-right">Poin</th>
-        </tr>
-      </thead>
-      <tbody>
-        @forelse($records as $record)
-          <tr class="border-b border-bluelight/60">
-            <td class="py-2.5 pr-3 text-bluedark/70 whitespace-nowrap">{{ $record->occurred_at?->format('d M Y') }}</td>
-            <td class="py-2.5 pr-3 font-semibold text-bluedark">{{ $record->category?->name ?? '-' }}</td>
-            <td class="py-2.5 pr-3 text-bluedark/70">{{ $record->description ?? '-' }}</td>
-            <td class="py-2.5 text-right">
-              <span class="badge {{ $record->points_delta >= 0 ? 'badge-green' : 'badge-red' }}">{{ $record->points_delta >= 0 ? '+'.$record->points_delta : $record->points_delta }}</span>
-            </td>
+
+    <div class="space-y-2.5 md:hidden">
+      @forelse($records as $record)
+        <div class="rounded-xl border border-bluelight/80 px-3 py-2.5">
+          <div class="flex items-start justify-between gap-2 mb-1.5">
+            <div class="text-xs font-semibold text-bluedark min-w-0 break-words">{{ $record->category?->name ?? '-' }}</div>
+            <span class="badge shrink-0 {{ $record->points_delta >= 0 ? 'badge-green' : 'badge-red' }}">
+              {{ $record->points_delta >= 0 ? '+'.$record->points_delta : $record->points_delta }}
+            </span>
+          </div>
+          <div class="text-[10px] text-bluedark/45 mb-1">{{ $record->occurred_at?->format('d M Y') }}</div>
+          <p class="text-xs text-bluedark/70 break-words">{{ $record->description ?? '-' }}</p>
+        </div>
+      @empty
+        <p class="text-sm text-bluedark/60 text-center py-4">Belum ada catatan pelanggaran maupun penghargaan.</p>
+      @endforelse
+    </div>
+
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full text-xs min-w-[560px]">
+        <thead>
+          <tr class="text-left text-bluedark/50 border-b border-bluelight">
+            <th class="py-2 pr-3 font-semibold">Tanggal</th>
+            <th class="py-2 pr-3 font-semibold">Kategori</th>
+            <th class="py-2 pr-3 font-semibold">Keterangan</th>
+            <th class="py-2 font-semibold text-right">Poin</th>
           </tr>
-        @empty
-          <tr>
-            <td colspan="4" class="py-6 text-center text-bluedark/50">Belum ada catatan pelanggaran maupun penghargaan.</td>
-          </tr>
-        @endforelse
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @forelse($records as $record)
+            <tr class="border-b border-bluelight/60">
+              <td class="py-2.5 pr-3 text-bluedark/70 whitespace-nowrap">{{ $record->occurred_at?->format('d M Y') }}</td>
+              <td class="py-2.5 pr-3 font-semibold text-bluedark max-w-[200px] break-words">{{ $record->category?->name ?? '-' }}</td>
+              <td class="py-2.5 pr-3 text-bluedark/70 max-w-[320px] break-words">{{ $record->description ?? '-' }}</td>
+              <td class="py-2.5 text-right">
+                <span class="badge {{ $record->points_delta >= 0 ? 'badge-green' : 'badge-red' }}">{{ $record->points_delta >= 0 ? '+'.$record->points_delta : $record->points_delta }}</span>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="4" class="py-6 text-center text-bluedark/50">Belum ada catatan pelanggaran maupun penghargaan.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
 
     <x-bk.pagination :paginator="$records" />
   </div>

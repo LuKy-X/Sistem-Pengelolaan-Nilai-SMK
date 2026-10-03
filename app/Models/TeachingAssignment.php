@@ -63,6 +63,11 @@ class TeachingAssignment extends Model
         return $this->hasMany(ClassJournal::class);
     }
 
+    public function classJournals(): HasMany
+    {
+        return $this->journals();
+    }
+
     public function assessments(): HasMany
     {
         return $this->hasMany(Assessment::class);

@@ -608,7 +608,7 @@
                         instructions: @json($linkedAssessment->instructions ?? ''),
                         description: @json($linkedAssessment->description ?? ''),
                         due_at: @json($linkedAssessment->due_at?->format('Y-m-d') ?? ''),
-                        max_score: {{ (float) $linkedAssessment->max_score }},
+                        max_score: {{ (float) ($col->max_score ?? $linkedAssessment->max_score) }},
                         rubric_id: {{ $linkedAssessment->rubric_id ?? 'null' }},
                         late_policy: @if($linkedAssessment->latePolicy)
                           {

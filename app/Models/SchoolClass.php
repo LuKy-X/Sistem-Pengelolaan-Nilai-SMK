@@ -75,4 +75,19 @@ class SchoolClass extends Model
         return $this->belongsToMany(User::class, 'counselor_class', 'class_id', 'user_id')
             ->withTimestamps();
     }
+
+    /**
+     * Jumlah siswa aktif di kelas ini.
+     *
+     * Memakai hasil eager load `withCount(['enrollments as active_enrollments_count' => ...])`
+     * bila tersedia agar daftar jurnal tidak memicu query per baris.
+     */
+    public function activeStudentCount(): int
+    {
+        if (array_key_exists('active_enrollments_count', $this->attributes)) {
+            return (int) $this->attributes['active_enrollments_count'];
+        }
+
+        return $this->enrollments()->where('status', 'ACTIVE')->count();
+    }
 }

@@ -50,8 +50,8 @@
   border-color: #93C5FD !important;
 }
 .score-cell-scheduled {
-  background-color: #EFF6FF !important;
-  border-left: 3px solid #2563EB !important;
+  background-color: transparent !important;
+  border-left: none !important;
   vertical-align: top;
   height: 100% !important;
 }
@@ -93,6 +93,9 @@
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.08);
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
 }
 .schedule-card-inner:hover {
   border-color: #2563EB;
@@ -200,7 +203,7 @@ thead .sticky-col-period {
     @endif
 
     <!-- Header Section (Mirip Desain Guru Daftar Nilai) -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 no-print">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print relative z-30">
         <div>
             <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Jadwal Pelajaran &amp; Jam Belajar</h1>
             <p class="text-sm text-bluedark/60 mt-1">
@@ -208,48 +211,84 @@ thead .sticky-col-period {
             </p>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
+        <!-- Tombol Aksi Atas (1 Baris Sejajar Rapi, Floating Dropdown z-99999 Bebas Scroll & Bebas Tertimpa) -->
+        <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0 relative">
             <!-- Tombol Tambah Baris Jam Pelajaran (Kolom ke Bawah) -->
-            <button type="button" onclick="openAddPeriodModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs">
+            <button type="button" onclick="openAddPeriodModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
                 <svg class="w-3.5 h-3.5 shrink-0 text-blueprim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>Jam Pelajaran Baru (Baris)</span>
+                <span>Tambah Jam</span>
             </button>
 
             <!-- Tombol Kelola Kolom Hari (5 atau 6 Hari) -->
-            <button type="button" onclick="openColumnManagerModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs">
+            <button type="button" onclick="openColumnManagerModal()" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs whitespace-nowrap">
                 <svg class="w-3.5 h-3.5 shrink-0 text-bluedark/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-                <span>Edit Kolom Hari</span>
+                <span>Kelola Hari</span>
             </button>
 
             <!-- Tombol Tambah Kolom Cepat (Sabtu) jika masih 5 hari, atau sebaliknya -->
             @if($daysCount < 6)
-                <a href="{{ route('admin.academic.schedules.index', ['class_id' => $selectedClass?->id, 'days_count' => 6]) }}" class="btn btn-primary btn-sm flex items-center gap-1.5 shadow-xs">
+                <a href="{{ route('admin.academic.schedules.index', ['class_id' => $selectedClass?->id, 'days_count' => 6]) }}" class="btn btn-primary btn-sm flex items-center gap-1.5 shadow-xs whitespace-nowrap">
                     <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>Tambah Kolom (Sabtu)</span>
+                    <span>Tambah Sabtu</span>
                 </a>
             @else
-                <a href="{{ route('admin.academic.schedules.index', ['class_id' => $selectedClass?->id, 'days_count' => 5]) }}" class="btn btn-outline btn-sm flex items-center gap-1.5 text-slate-600 shadow-2xs">
+                <a href="{{ route('admin.academic.schedules.index', ['class_id' => $selectedClass?->id, 'days_count' => 5]) }}" class="btn btn-outline btn-sm flex items-center gap-1.5 text-slate-600 shadow-2xs whitespace-nowrap">
                     <svg class="w-3.5 h-3.5 shrink-0 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>Sembunyikan Sabtu (5 Hari)</span>
+                    <span>Sembunyikan Sabtu</span>
                 </a>
             @endif
 
-            <!-- Dropdown Export Jadwal (PDF / Excel) -->
-            <div class="relative inline-block text-left" id="exportScheduleDropdownWrapper">
-                <button type="button" onclick="toggleExportDropdown(event)" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs hover:bg-slate-50 transition-colors">
+            <!-- Dropdown Export Jadwal (PDF / Excel) — 1 Kelas & Semua Kelas -->
+            <div class="relative inline-block text-left shrink-0" id="exportScheduleDropdownWrapper">
+                <button type="button" id="exportScheduleBtn" onclick="toggleExportDropdown(event)" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs hover:bg-slate-50 transition-colors whitespace-nowrap">
                     <svg class="w-3.5 h-3.5 shrink-0 text-bluedark/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     <span>Export Jadwal</span>
-                    <svg class="w-3 h-3 text-bluedark/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    <svg class="w-3 h-3 text-bluedark/50 transition-transform duration-200" id="exportScheduleChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
-                <div id="exportScheduleDropdownMenu" class="hidden absolute right-0 mt-1.5 w-44 rounded-xl bg-white shadow-xl border border-bluelight py-1 z-50">
-                    <a href="{{ route('admin.academic.schedules.export.pdf', ['class_id' => $selectedClass?->id, 'days_count' => $daysCount]) }}" target="_blank" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-bluedark hover:bg-rose-50 hover:text-rose-600 transition-colors">
-                        <svg class="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                        <span>Export ke PDF</span>
-                    </a>
-                    <a href="{{ route('admin.academic.schedules.export.excel', ['class_id' => $selectedClass?->id, 'days_count' => $daysCount]) }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-bluedark hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-                        <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="8" y1="17" x2="16" y2="13"/></svg>
-                        <span>Export ke Excel</span>
-                    </a>
+                <div id="exportScheduleDropdownMenu" class="hidden absolute right-0 top-full mt-1.5 z-50 w-72 rounded-2xl bg-white shadow-2xl border border-bluelight divide-y divide-slate-100 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-100">
+                    <!-- Opsi Export Kelas Ini -->
+                    <div class="px-3.5 py-2 bg-slate-50">
+                        <span class="text-[10px] font-bold text-bluedark/60 uppercase tracking-wider block">Export 1 Kelas</span>
+                        <span class="text-xs font-bold text-bluedark block truncate">{{ $selectedClass?->name ?? 'Kelas Terpilih' }}</span>
+                    </div>
+                    <div class="py-1">
+                        <a href="{{ route('admin.academic.schedules.export.pdf', ['class_id' => $selectedClass?->id, 'days_count' => $daysCount]) }}" target="_blank" onclick="closeExportDropdown()" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-bluedark hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                            <svg class="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            <div class="min-w-0">
+                                <span class="block">PDF (Kelas Ini)</span>
+                                <span class="text-[10.5px] font-normal text-slate-400 block">Jadwal mingguan {{ $selectedClass?->name }}</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('admin.academic.schedules.export.excel', ['class_id' => $selectedClass?->id, 'days_count' => $daysCount]) }}" onclick="closeExportDropdown()" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-bluedark hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="8" y1="17" x2="16" y2="13"/></svg>
+                            <div class="min-w-0">
+                                <span class="block">Excel (Kelas Ini)</span>
+                                <span class="text-[10.5px] font-normal text-slate-400 block">Spreadsheet .xls {{ $selectedClass?->name }}</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Opsi Export Seluruh Kelas & Semua Jurusan -->
+                    <div class="px-3.5 py-2 bg-blue-50/70">
+                        <span class="text-[10px] font-bold text-blueprim uppercase tracking-wider block">Export Seluruh Kelas</span>
+                        <span class="text-xs font-bold text-bluedark block">Semua Jurusan (Kode Mapel)</span>
+                    </div>
+                    <div class="py-1">
+                        <a href="{{ route('admin.academic.schedules.export.pdf', ['scope' => 'all', 'days_count' => $daysCount]) }}" target="_blank" onclick="closeExportDropdown()" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-bluedark hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                            <svg class="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            <div class="min-w-0">
+                                <span class="block">PDF (Semua Kelas)</span>
+                                <span class="text-[10.5px] font-normal text-slate-400 block">Jadwal Induk Matriks (Kode Mapel)</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('admin.academic.schedules.export.excel', ['scope' => 'all', 'days_count' => $daysCount]) }}" onclick="closeExportDropdown()" class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-bluedark hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="8" y1="17" x2="16" y2="13"/></svg>
+                            <div class="min-w-0">
+                                <span class="block">Excel (Semua Kelas)</span>
+                                <span class="text-[10.5px] font-normal text-slate-400 block">Matriks Rekap Seluruh Jurusan (.xls)</span>
+                            </div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -364,43 +403,83 @@ thead .sticky-col-period {
         </div>
 
         @php
-            // Hitung Matrix Penjadwalan dengan Dukungan Rentang Jam (Rowspan)
-            $matrix = [];
-            $periodsSorted = $periods->sortBy('sort_order')->values();
-            $periodIndexMap = [];
-            foreach ($periodsSorted as $idx => $p) {
-                $periodIndexMap[$p->id] = $idx;
-            }
+            // Hitung Matrix Penjadwalan dengan Dukungan Rentang Jam (Rowspan) & Pemotongan Jam Istirahat
+            $periodsSorted = $periodsSorted ?? $periods->sortBy('sort_order')->values();
+            if (!isset($matrix) || empty($matrix)) {
+                $matrix = [];
+                $periodIndexMap = [];
+                foreach ($periodsSorted as $idx => $p) {
+                    $periodIndexMap[$p->id] = $idx;
+                }
 
-            foreach ($schedules as $sch) {
-                $day = $sch->day_of_week;
-                $startId = $sch->start_period_id;
-                $endId = $sch->end_period_id;
+                foreach ($schedules as $sch) {
+                    $day = $sch->day_of_week;
+                    $startId = $sch->start_period_id;
+                    $endId = $sch->end_period_id;
 
-                $startIdx = $periodIndexMap[$startId] ?? null;
-                $endIdx = $periodIndexMap[$endId] ?? null;
+                    $startIdx = $periodIndexMap[$startId] ?? null;
+                    $endIdx = $periodIndexMap[$endId] ?? null;
 
-                if ($startIdx !== null && $endIdx !== null && $endIdx >= $startIdx) {
-                    $span = $endIdx - $startIdx + 1;
-                    $matrix[$startId][$day] = [
-                        'type' => 'start',
-                        'schedule' => $sch,
-                        'span' => $span,
-                    ];
+                    if ($startIdx === null) continue;
+                    if ($endIdx === null || $endIdx < $startIdx) $endIdx = $startIdx;
 
-                    for ($i = $startIdx + 1; $i <= $endIdx; $i++) {
-                        $pId = $periodsSorted[$i]->id;
-                        $matrix[$pId][$day] = [
-                            'type' => 'covered',
-                            'schedule' => $sch,
-                        ];
+                    $actualHours = 0;
+                    $actualMinutes = 0;
+                    for ($i = $startIdx; $i <= $endIdx; $i++) {
+                        $p = $periodsSorted[$i];
+                        if (! $p->is_break) {
+                            $actualHours++;
+                            $startT = \Carbon\Carbon::parse($p->start_time);
+                            $endT = \Carbon\Carbon::parse($p->end_time);
+                            $actualMinutes += max(0, $startT->diffInMinutes($endT));
+                        }
                     }
-                } elseif ($startIdx !== null) {
-                    $matrix[$startId][$day] = [
-                        'type' => 'start',
-                        'schedule' => $sch,
-                        'span' => 1,
-                    ];
+                    if ($actualMinutes === 0) $actualMinutes = $actualHours * 45;
+
+                    $segments = [];
+                    $curStart = null;
+                    $curSpan = 0;
+                    for ($i = $startIdx; $i <= $endIdx; $i++) {
+                        $p = $periodsSorted[$i];
+                        if ($p->is_break) {
+                            if ($curStart !== null) {
+                                $segments[] = ['start_idx' => $curStart, 'span' => $curSpan];
+                                $curStart = null;
+                                $curSpan = 0;
+                            }
+                        } else {
+                            if ($curStart === null) {
+                                $curStart = $i;
+                                $curSpan = 1;
+                            } else {
+                                $curSpan++;
+                            }
+                        }
+                    }
+                    if ($curStart !== null) {
+                        $segments[] = ['start_idx' => $curStart, 'span' => $curSpan];
+                    }
+
+                    $totalSegs = count($segments);
+                    foreach ($segments as $sIdx => $seg) {
+                        $startP = $periodsSorted[$seg['start_idx']];
+                        $matrix[$startP->id][$day] = [
+                            'type' => 'start',
+                            'schedule' => $sch,
+                            'span' => $seg['span'],
+                            'segment_index' => $sIdx + 1,
+                            'total_segments' => $totalSegs,
+                            'actual_lesson_hours' => $actualHours,
+                            'actual_duration_minutes' => $actualMinutes,
+                            'is_split_by_break' => ($totalSegs > 1),
+                        ];
+                        for ($k = $seg['start_idx'] + 1; $k < $seg['start_idx'] + $seg['span']; $k++) {
+                            $matrix[$periodsSorted[$k]->id][$day] = [
+                                'type' => 'covered',
+                                'schedule' => $sch,
+                            ];
+                        }
+                    }
                 }
             }
         @endphp
@@ -490,7 +569,6 @@ thead .sticky-col-period {
                                 <!-- Kolom Hari: Banner Kuning Jam Istirahat Penuh (Tidak Bisa Diklik) -->
                                 <td colspan="{{ count($days) + ($daysCount < 6 ? 1 : 0) }}" class="py-2.5 px-4 bg-amber-50/80 border-r border-b border-amber-200 select-none cursor-not-allowed">
                                     <div class="w-full py-2 px-4 rounded-xl bg-amber-100/90 border border-amber-300 text-amber-950 font-bold text-xs flex items-center justify-center gap-2 shadow-2xs">
-                                        <svg class="w-4 h-4 text-amber-800 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
                                         <span class="tracking-wider uppercase font-heading text-xs">ISTIRAHAT &bull; {{ $startTime }} - {{ $endTime }} WIB</span>
                                     </div>
                                 </td>
@@ -539,19 +617,23 @@ thead .sticky-col-period {
                                         @php
                                             $sch = $cell['schedule'];
                                             $span = $cell['span'];
+                                            $actualHours = $cell['actual_lesson_hours'] ?? $span;
+                                            $actualMinutes = $cell['actual_duration_minutes'] ?? ($actualHours * 45);
+                                            $isSplit = $cell['is_split_by_break'] ?? false;
+                                            $segIdx = $cell['segment_index'] ?? 1;
+                                            $totalSegs = $cell['total_segments'] ?? 1;
                                             $subjectName = $sch->teachingAssignment?->subject?->name ?? 'Mata Pelajaran';
                                             $teacherName = $sch->teachingAssignment?->teacher?->full_name ?? 'Guru Pengampu';
                                             $roomName = $sch->room ?: 'R. Kelas';
                                             $startPeriodNum = $sch->startPeriod?->period_number ?? $p->period_number;
                                             $endPeriodNum = $sch->endPeriod?->period_number ?? $p->period_number;
                                             $durationText = $startPeriodNum === $endPeriodNum 
-                                                ? "Jam {$startPeriodNum}" 
-                                                : "Jam {$startPeriodNum} - {$endPeriodNum} ({$span} Jam / " . ($span * 45) . "m)";
+                                                ? "Jam {$startPeriodNum} ({$actualHours} Jam / {$actualMinutes}m)" 
+                                                : "Jam {$startPeriodNum} - {$endPeriodNum} ({$actualHours} Jam / {$actualMinutes}m)";
                                         @endphp
 
                                         <td rowspan="{{ $span }}"
-                                            class="score-cell-interactive score-cell-scheduled p-1.5 align-top relative border-r border-b border-bluelight transition-all"
-                                            style="height: {{ $span * 72 }}px;"
+                                            class="score-cell-interactive score-cell-scheduled p-1.5 align-top relative border-r border-b border-bluelight transition-all h-full"
                                             data-day="{{ $dayNum }}"
                                             data-day-name="{{ $dayName }}"
                                             data-period-id="{{ $p->id }}"
@@ -569,15 +651,21 @@ thead .sticky-col-period {
                                             ondblclick="handleCellDblClick(this)"
                                             title="Klik untuk memilih &bull; Klik 2x untuk mengedit jadwal">
                                             
-                                            <div class="schedule-card-inner p-2.5 flex flex-col justify-between shadow-2xs group"
-                                                 style="height: calc({{ $span }} * 72px - 14px); min-height: calc({{ $span }} * 72px - 14px);">
+                                            <div class="schedule-card-inner p-2.5 flex flex-col justify-between shadow-2xs group w-full h-full min-h-full">
                                                 <div class="space-y-1">
                                                     <div class="flex items-start justify-between gap-1">
-                                                        <span class="font-heading font-bold text-xs text-bluedark leading-tight line-clamp-2">
-                                                             {{ $subjectName }}
-                                                        </span>
+                                                        <div class="min-w-0">
+                                                            <span class="font-heading font-bold text-xs text-bluedark leading-tight line-clamp-2">
+                                                                {{ $subjectName }}
+                                                            </span>
+                                                            @if($isSplit)
+                                                                <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                                                                    Bagian {{ $segIdx }}/{{ $totalSegs }} (Terpotong Istirahat)
+                                                                </span>
+                                                            @endif
+                                                        </div>
                                                         <!-- Tombol Hapus Cepat (Hover) -->
-                                                        <form action="{{ route('admin.academic.schedules.destroy', $sch) }}" method="POST" onsubmit="return confirm('Hapus jadwal mata pelajaran ini?');" class="opacity-0 group-hover:opacity-100 transition-opacity no-print">
+                                                        <form action="{{ route('admin.academic.schedules.destroy', $sch) }}" method="POST" onsubmit="return confirm('Hapus jadwal mata pelajaran ini?');" class="opacity-0 group-hover:opacity-100 transition-opacity no-print shrink-0">
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit" class="text-rose-400 hover:text-rose-600 font-bold text-xs leading-none p-0.5" title="Hapus jadwal">&times;</button>
@@ -1131,13 +1219,15 @@ thead .sticky-col-period {
         let countHours = 0;
         let targetEndId = currentCellEditingData ? String(currentCellEditingData.endPeriodId) : null;
         let selectedEndId = null;
+        let crossedBreak = false;
 
         for (let i = startIndex; i < periodsSortedArray.length; i++) {
             const p = periodsSortedArray[i];
 
-            // Jam istirahat membatasi rentang jam pelajaran bersambung
+            // Jam istirahat dilewati (tidak menghentikan rentang, tetapi tidak dihitung jam dan tidak dijadikan pilihan jam selesai)
             if (p.is_break) {
-                break;
+                crossedBreak = true;
+                continue;
             }
 
             // Jam yang terisi jadwal lain membatasi rentang
@@ -1153,9 +1243,13 @@ thead .sticky-col-period {
             opt.setAttribute('data-order', p.sort_order);
             opt.setAttribute('data-hours', countHours);
 
-            const durationInfo = countHours === 1 
-                ? '1 Jam Pelajaran' 
+            let durationInfo = countHours === 1 
+                ? '1 Jam Pelajaran (45 Menit)' 
                 : `${countHours} Jam Pelajaran (${countHours * 45} Menit)`;
+
+            if (crossedBreak) {
+                durationInfo += ' — Melewati Istirahat';
+            }
 
             opt.textContent = `Jam Ke-${p.period_number} (${formatTimeHM(p.start_time)} - ${formatTimeHM(p.end_time)}) — ${durationInfo}`;
             endSelect.appendChild(opt);
@@ -1213,7 +1307,11 @@ thead .sticky-col-period {
             const origStartIndex = periodsSortedArray.findIndex(p => String(p.id) === String(currentCellEditingData.startPeriodId));
             const origEndIndex = periodsSortedArray.findIndex(p => String(p.id) === String(currentCellEditingData.endPeriodId));
             if (origStartIndex !== -1 && origEndIndex !== -1) {
-                originalSlotHours = (origEndIndex - origStartIndex) + 1;
+                for (let k = origStartIndex; k <= origEndIndex; k++) {
+                    if (!periodsSortedArray[k].is_break) {
+                        originalSlotHours++;
+                    }
+                }
             }
         }
 
@@ -1511,23 +1609,85 @@ thead .sticky-col-period {
     }
 
     /**
+     * Edit Jam Pelajaran / Istirahat yang sudah ada dari master pill
+     */
+    function openEditPeriodModal(periodId, periodNumber, label, startTime, endTime, isBreak) {
+        currentEditingPeriodId = periodId;
+        document.getElementById('periodModalTitle').textContent = isBreak ? 'Edit Jam Istirahat' : 'Edit Jam Pelajaran';
+        document.getElementById('periodModalSubtitle').textContent = isBreak ? 'Ubah rentang waktu istirahat' : `Ubah rentang waktu Jam ke-${periodNumber}`;
+        document.getElementById('periodForm').action = `{{ url('/admin/academic/schedules/periods') }}/${periodId}`;
+        document.getElementById('periodHttpMethod').value = 'PUT';
+        document.getElementById('inputPeriodLabel').value = label || '';
+        document.getElementById('inputPeriodStartTime').value = startTime;
+        document.getElementById('inputPeriodEndTime').value = endTime;
+        document.getElementById('inputPeriodIsBreak').checked = Boolean(isBreak);
+        toggleBreakMode(Boolean(isBreak));
+        document.getElementById('periodModal').classList.remove('hidden');
+        validatePeriodTimeNoOverlap();
+    }
+
+    /**
      * Dropdown Export Jadwal (PDF / Excel)
      */
     function toggleExportDropdown(e) {
-        if (e) e.stopPropagation();
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         const menu = document.getElementById('exportScheduleDropdownMenu');
-        if (menu) {
-            menu.classList.toggle('hidden');
+        const chevron = document.getElementById('exportScheduleChevron');
+        if (!menu) return;
+
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            menu.classList.remove('hidden');
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+        } else {
+            menu.classList.add('hidden');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    function closeExportDropdown() {
+        const menu = document.getElementById('exportScheduleDropdownMenu');
+        const chevron = document.getElementById('exportScheduleChevron');
+        if (menu && !menu.classList.contains('hidden')) {
+            menu.classList.add('hidden');
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
         }
     }
 
     document.addEventListener('click', function(e) {
         const wrapper = document.getElementById('exportScheduleDropdownWrapper');
-        const menu = document.getElementById('exportScheduleDropdownMenu');
-        if (menu && wrapper && !wrapper.contains(e.target)) {
-            menu.classList.add('hidden');
+        if (wrapper && !wrapper.contains(e.target)) {
+            closeExportDropdown();
         }
     });
+
+    /**
+     * Otomatis sesuaikan tinggi kartu pelajaran dengan tinggi sel tabel
+     * sehingga kartu membentang penuh 100% tanpa celah di baris manapun.
+     */
+    function adjustScheduleCardHeights() {
+        requestAnimationFrame(() => {
+            document.querySelectorAll('td.score-cell-scheduled').forEach(td => {
+                const card = td.querySelector('.schedule-card-inner');
+                if (card) {
+                    const targetHeight = td.clientHeight - 12; // 12px for padding p-1.5
+                    if (targetHeight > 0) {
+                        card.style.height = `${targetHeight}px`;
+                        card.style.minHeight = `${targetHeight}px`;
+                    }
+                }
+            });
+        });
+    }
+
+    window.addEventListener('load', adjustScheduleCardHeights);
+    window.addEventListener('resize', adjustScheduleCardHeights);
+    document.addEventListener('DOMContentLoaded', adjustScheduleCardHeights);
+    setTimeout(adjustScheduleCardHeights, 100);
+    setTimeout(adjustScheduleCardHeights, 400);
 
     /**
      * Modal Kelola Kolom Hari (5 atau 6 Hari)
@@ -1545,8 +1705,7 @@ thead .sticky-col-period {
             closeCellEditorModal();
             closePeriodModal();
             closeColumnManagerModal();
-            const exportMenu = document.getElementById('exportScheduleDropdownMenu');
-            if (exportMenu) exportMenu.classList.add('hidden');
+            closeExportDropdown();
         }
 
         // Tekan Enter pada sel terpilih untuk langsung edit

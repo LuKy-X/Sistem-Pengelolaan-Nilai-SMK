@@ -22,6 +22,27 @@ trait HandlesDisciplinePoints
                 ->first();
     }
 
+    /**
+     * Tanggal dari query string yang aman dipakai sebagai filter; null bila kosong
+     * atau formatnya bukan Y-m-d yang valid.
+     */
+    protected function safeDateQuery(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if (! preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $matches)) {
+            return null;
+        }
+
+        return checkdate((int) $matches[2], (int) $matches[3], (int) $matches[1])
+            ? $value
+            : null;
+    }
+
     protected function disciplineSetting(?int $academicYearId): ?DisciplineSetting
     {
         if ($academicYearId === null) {

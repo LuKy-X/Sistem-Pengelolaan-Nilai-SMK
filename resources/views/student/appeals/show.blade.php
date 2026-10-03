@@ -63,7 +63,7 @@
   <div class="panel p-4 lg:p-5">
     <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-3">Alasan Banding Anda</h2>
     <div class="p-3.5 rounded-xl bg-bluelight/40 border border-bluelight">
-      <p class="text-sm text-bluedark/85 leading-relaxed">{{ $appeal->reason }}</p>
+      <p class="text-sm text-bluedark/85 leading-relaxed break-words">{{ $appeal->reason }}</p>
     </div>
   </div>
 

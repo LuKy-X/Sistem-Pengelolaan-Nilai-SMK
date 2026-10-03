@@ -209,7 +209,7 @@ class TeacherJournalFlowTest extends TestCase
             'start_period_id' => $this->period1->id,
             'end_period_id' => $this->period2->id,
             'material' => 'Materi Uji',
-            'notes' => 'Hadir: 35 | Sakit: 1 | Izin: 0 | Alpha: 0',
+            'notes' => 'Catatan kelas.',
             'created_by' => $this->teacherProfile->id,
         ]);
 
@@ -221,10 +221,45 @@ class TeacherJournalFlowTest extends TestCase
 
         $journal->load(['attendances', 'teachingAssignment.schoolClass']);
 
+        $activeCount = ClassEnrollment::where('class_id', $this->assignment->class_id)->where('status', 'ACTIVE')->count();
+
         $this->assertEquals(1, $journal->sakit_count);
         $this->assertEquals(0, $journal->izin_count);
         $this->assertEquals(0, $journal->alpha_count);
-        $this->assertEquals(35, $journal->hadir_count);
+        $this->assertEquals($activeCount - 1, $journal->hadir_count);
+    }
+
+    public function test_attendance_summary_ignores_stale_summary_written_in_notes(): void
+    {
+        ClassJournal::query()->delete();
+        JournalAttendance::query()->delete();
+
+        $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
+
+        // Ringkasan di notes sengaja dibuat basi: 35 siswa, padahal enrollment aktual berbeda.
+        $journal = ClassJournal::create([
+            'teaching_assignment_id' => $this->assignment->id,
+            'journal_date' => now()->subDay()->format('Y-m-d'),
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => 'Materi Uji',
+            'notes' => 'Hadir: 35 | Sakit: 1 | Izin: 0 | Alpha: 0',
+            'created_by' => $this->teacherProfile->id,
+        ]);
+
+        JournalAttendance::create([
+            'journal_id' => $journal->id,
+            'student_id' => $student->id,
+            'status' => AttendanceStatus::Absent,
+        ]);
+
+        $journal->load(['attendances', 'teachingAssignment.schoolClass']);
+
+        $activeCount = ClassEnrollment::where('class_id', $this->assignment->class_id)->where('status', 'ACTIVE')->count();
+
+        $this->assertSame(1, $journal->alpha_count);
+        $this->assertSame($activeCount - 1, $journal->hadir_count);
+        $this->assertNotSame(35, $journal->hadir_count);
     }
 
     public function test_teacher_can_update_their_own_journal_with_student_notes(): void

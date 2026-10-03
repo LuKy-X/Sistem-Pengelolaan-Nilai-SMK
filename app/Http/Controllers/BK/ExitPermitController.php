@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\BK\ApproveExitPermitRequest;
 use App\Http\Requests\BK\RejectExitPermitRequest;
 use App\Models\ExitPermit;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -52,7 +53,7 @@ class ExitPermitController extends Controller
             ->with(['student.currentEnrollment.schoolClass', 'reason'])
             ->whereIn('status', [ExitPermitStatus::Approved->value, ExitPermitStatus::Late->value])
             ->whereNull('actual_return_at')
-            ->orderBy('planned_return_at')
+            ->orderByRaw('COALESCE(approved_return_at, planned_return_at)')
             ->get();
 
         $academicYear = $this->activeAcademicYear();
@@ -106,26 +107,35 @@ class ExitPermitController extends Controller
         }
 
         $validated = $request->validated();
-        $studentName = $permit->loadMissing('student')->student?->full_name ?? 'siswa';
+        $permit->loadMissing('student');
+        $studentName = $permit->student?->full_name ?? 'siswa';
 
-        DB::transaction(function () use ($permit, $validated, $request) {
+        // BK boleh menetapkan jam keluar/kembali sendiri; bila kosong memakai rencana pengajuan siswa.
+        $approvedExitAt = $this->resolveApprovedAt($validated['approved_exit_at'] ?? null, $permit->planned_exit_at);
+        $approvedReturnAt = $this->resolveApprovedAt($validated['approved_return_at'] ?? null, $permit->planned_return_at);
+
+        DB::transaction(function () use ($permit, $approvedExitAt, $approvedReturnAt, $validated, $request) {
             $permit->update([
                 'status' => ExitPermitStatus::Approved,
                 'approved_at' => now(),
                 'approved_by' => $request->user()?->staffProfile?->id,
-                'actual_exit_at' => now(),
+                'approved_exit_at' => $approvedExitAt,
+                'approved_return_at' => $approvedReturnAt,
+                'actual_exit_at' => $approvedExitAt,
                 'approval_note' => $validated['approval_note'] ?? null,
             ]);
 
             $this->audit('EXIT_PERMIT_APPROVED', $permit, [
                 'status' => $permit->status->value,
                 'approval_note' => $permit->approval_note,
+                'approved_exit_at' => $permit->approved_exit_at?->toDateTimeString(),
+                'approved_return_at' => $permit->approved_return_at?->toDateTimeString(),
             ]);
         });
 
         return redirect()
             ->route('counselor.exit-permits.index')
-            ->with('success', "Izin {$studentName} disetujui. Timer kepulangan sudah aktif.");
+            ->with('success', "Izin {$studentName} disetujui. Timer kepulangan sudah aktif.".($permit->hasCustomApprovedTime() ? ' Jam keluar/kembali mengikuti keputusan BK.' : ''));
     }
 
     public function reject(RejectExitPermitRequest $request, ExitPermit $permit): RedirectResponse
@@ -165,8 +175,9 @@ class ExitPermitController extends Controller
             return back()->with('error', 'Izin ini tidak sedang aktif sehingga tidak dapat ditandai sudah kembali.');
         }
 
-        $isLate = $permit->planned_return_at->isPast();
-        $minutesLate = (int) $permit->planned_return_at->diffInMinutes(now());
+        $deadline = $permit->effectiveReturnAt();
+        $isLate = $deadline->isPast();
+        $minutesLate = (int) $deadline->diffInMinutes(now());
         $studentName = $permit->loadMissing('student')->student?->full_name ?? 'siswa';
 
         DB::transaction(function () use ($permit, $isLate) {
@@ -186,5 +197,17 @@ class ExitPermitController extends Controller
             ->with('success', $isLate
                 ? "Kepulangan {$studentName} dicatat sebagai terlambat {$minutesLate} menit. Siswa dapat mengajukan banding."
                 : "Kepulangan {$studentName} dicatat tepat waktu.");
+    }
+
+    /**
+     * Ubah input datetime-local dari form BK menjadi Carbon; fallback ke rencana pengajuan siswa.
+     */
+    protected function resolveApprovedAt(mixed $value, Carbon $fallback): Carbon
+    {
+        if ($value === null || $value === '') {
+            return $fallback->copy();
+        }
+
+        return Carbon::parse($value);
     }
 }

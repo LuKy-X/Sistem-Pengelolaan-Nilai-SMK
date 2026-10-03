@@ -104,7 +104,42 @@ class UserSeeder extends Seeder
             ]
         );
 
-        // 4. GURU BK DEWI
+        // 4. KEPALA SEKOLAH (Guru Non-Mengajar) - Sukidi, S.Pd., M.Pd.
+        $guruSukidi = User::firstOrCreate(
+            ['username' => 'kepsek.sukidi'],
+            [
+                'name' => 'Sukidi, S.Pd., M.Pd.',
+                'email' => 'sukidi@smk.test',
+                'password' => $defaultPassword,
+                'is_active' => true,
+            ]
+        );
+        $guruSukidi->roles()->syncWithoutDetaching([$teacherRole->id]);
+
+        $teacherSukidi = TeacherProfile::firstOrCreate(
+            ['user_id' => $guruSukidi->id],
+            [
+                'nip' => '19700310 199702 1 004',
+                'full_name' => 'Sukidi, S.Pd., M.Pd.',
+                'gender' => 'MALE',
+                'phone' => '0271-494549',
+                'status' => 'ACTIVE',
+            ]
+        );
+
+        TeacherGradeSetting::firstOrCreate(
+            ['teacher_id' => $teacherSukidi->id],
+            [
+                'default_late_enabled' => true,
+                'default_reduction_type' => 'FIXED_POINTS',
+                'default_reduction_value' => 10.00,
+                'default_interval' => 60,
+                'default_grace_minutes' => 15,
+                'default_min_max_score' => 60.00,
+            ]
+        );
+
+        // 5. GURU BK DEWI
         $bkDewi = User::firstOrCreate(
             ['username' => 'bk.dewi'],
             [

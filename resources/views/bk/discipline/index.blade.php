@@ -94,7 +94,7 @@
                   </td>
                   <td><x-bk.point-badge :standing="$row['standing']" :show-balance="false" /></td>
                   <td class="text-right">
-                    <a href="{{ route('counselor.discipline.index', ['student_id' => $row['student']->id]) }}" class="btn btn-outline btn-sm">Riwayat</a>
+                    <a href="{{ route('counselor.discipline.index', ['student_id' => $row['student']->id]) }}" class="btn btn-outline btn-sm" data-no-transition="true">Riwayat</a>
                   </td>
                 </tr>
               @empty
@@ -176,11 +176,11 @@
       </div>
       <div>
         <label class="f-label" for="date_from">Dari</label>
-        <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from']?->toDateString() }}" class="f-input">
+        <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from'] }}" class="f-input">
       </div>
       <div>
         <label class="f-label" for="date_to">Sampai</label>
-        <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to']?->toDateString() }}" class="f-input">
+        <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to'] }}" class="f-input">
       </div>
 
       <div class="sm:col-span-2 xl:col-span-6 flex gap-2">
@@ -296,17 +296,23 @@
         @endif
 
         <div>
+          <label class="f-label" for="record_student_search">Cari Siswa</label>
+          <input type="search" id="record_student_search" class="f-input mb-3"
+                 placeholder="Ketik nama atau NIS siswa" autocomplete="off">
+
           <label class="f-label" for="student_id_modal">Siswa <span class="text-red-500">*</span></label>
           <select id="student_id_modal" name="student_id" required class="f-select">
             <option value="">Pilih siswa</option>
             @foreach($students as $student)
               <option value="{{ $student->id }}"
                       data-class="{{ $student->currentEnrollment?->schoolClass?->id ?? '' }}"
+                      data-search="{{ $student->nis }} {{ $student->nisn }}"
                       @selected(old('student_id') == $student->id)>
                 {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
               </option>
             @endforeach
           </select>
+          <p class="text-[11px] text-bluedark/45 mt-1" id="record_student_count">Ketik nama atau NIS untuk menyaring daftar siswa.</p>
           @error('student_id')
             <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
           @enderror
@@ -367,31 +373,12 @@
 
 @push('scripts')
 <script>
-  (function () {
-    var classSelect = document.getElementById('record_class_id');
-    var studentSelect = document.getElementById('student_id_modal');
-
-    if (!classSelect || !studentSelect) return;
-
-    var allOptions = Array.prototype.slice.call(studentSelect.options).slice(1);
-
-    classSelect.addEventListener('change', function () {
-      var selectedClass = this.value;
-      var currentValue = studentSelect.value;
-
-      while (studentSelect.options.length > 1) {
-        studentSelect.remove(1);
-      }
-
-      allOptions.forEach(function (option) {
-        if (!selectedClass || option.dataset.class === selectedClass) {
-          studentSelect.add(option.cloneNode(true));
-        }
-      });
-
-      studentSelect.value = currentValue;
-    });
-  }());
+  initStudentPicker({
+    search: document.getElementById('record_student_search'),
+    select: document.getElementById('student_id_modal'),
+    classFilter: document.getElementById('record_class_id'),
+    feedback: document.getElementById('record_student_count')
+  });
 
   document.addEventListener('change', function (event) {
     var select = event.target.closest('#category_id_modal');
@@ -406,7 +393,7 @@
     }
   });
 
-  @if($errors->any())
+  @if($errors->any() || request()->boolean('record'))
     openModal('recordModal');
   @endif
 </script>

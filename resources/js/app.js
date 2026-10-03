@@ -104,7 +104,9 @@ function initPageTransition() {
     // On first load — sweep the bands away
     hideOverlay();
 
-    // On internal link click — sweep bands in, then navigate
+    // On internal link click — sweep bands in, then navigate.
+    // `data-no-transition="true"` (atau kelas `no-transition`) memberi jalan pintas
+    // tanpa animasi, sama seperti yang sudah dipakai loader.js.
     document.addEventListener('click', function (e) {
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
 
@@ -114,7 +116,10 @@ function initPageTransition() {
         var href = anchor.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
         if (anchor.target && anchor.target !== '_self') return;
+        if (anchor.target === '_blank') return;
         if (anchor.hasAttribute('download')) return;
+        if (anchor.getAttribute('data-no-transition') === 'true') return;
+        if (anchor.classList.contains('no-transition')) return;
 
         try {
             var url = new URL(href, window.location.href);

@@ -23,6 +23,7 @@ use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
 use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\JournalController as CounselorJournalController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
@@ -228,6 +229,8 @@ Route::middleware('auth')->group(function () {
         // Monitoring Buku Nilai
         Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
         Route::get('/grades/{gradebook}', [GradesController::class, 'show'])->name('grades.show');
+        Route::get('/grades/{gradebook}/export/excel', [GradesController::class, 'exportExcel'])->name('grades.export.excel');
+        Route::get('/grades/{gradebook}/export/pdf', [GradesController::class, 'exportPdf'])->name('grades.export.pdf');
 
         // Layanan BK & Kedisiplinan
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
@@ -249,6 +252,11 @@ Route::middleware('auth')->group(function () {
             Route::delete('/articles/{article}', [CmsController::class, 'destroyArticle'])->name('articles.destroy');
             Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
             Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
+
+            // Kategori Artikel
+            Route::post('/article-categories', [CmsController::class, 'storeArticleCategory'])->name('article-categories.store');
+            Route::put('/article-categories/{category}', [CmsController::class, 'updateArticleCategory'])->name('article-categories.update');
+            Route::delete('/article-categories/{category}', [CmsController::class, 'destroyArticleCategory'])->name('article-categories.destroy');
 
             // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
@@ -486,6 +494,19 @@ Route::middleware('auth')->group(function () {
         Route::prefix('students')->name('students.')->group(function () {
             Route::get('/', [CounselorStudentController::class, 'index'])->name('index');
             Route::get('/{student}', [CounselorStudentController::class, 'show'])->name('show');
+        });
+
+        // Absensi Kelas & Jurnal
+        Route::prefix('journals')->name('journals.')->group(function () {
+            Route::get('/', [CounselorJournalController::class, 'index'])->name('index');
+            // "lihat-absensi" dan "riwayat" didaftarkan sebelum "{journal}" agar tidak
+            // tertangkap sebagai parameter jurnal.
+            Route::get('/lihat-absensi', [CounselorJournalController::class, 'attendance'])->name('attendance');
+            Route::get('/riwayat', [CounselorJournalController::class, 'history'])->name('history');
+            Route::post('/', [CounselorJournalController::class, 'store'])->name('store');
+            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [CounselorJournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [CounselorJournalController::class, 'destroy'])->name('destroy');
         });
     });
 });

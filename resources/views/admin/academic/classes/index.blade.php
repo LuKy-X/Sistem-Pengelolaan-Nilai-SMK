@@ -383,45 +383,46 @@
 
                 <!-- OPSI PENENTUAN ROMBEL / KELULUSAN -->
                 <div id="promoteClassOptions" class="space-y-4">
-                    <label class="f-label text-xs mb-1">Pilihan Tindakan Kenaikan / Kelulusan Rombel</label>
+                    <!-- Radio Button Pilihan Tindakan (Hanya untuk Kelas X dan XI) -->
+                    <div id="promoteActionRadioContainer" class="space-y-1.5">
+                        <label class="f-label text-xs mb-1">Pilihan Tindakan Kenaikan Rombel</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Opsi 1: Otomatis Buat Kelas Baru -->
+                            <label id="labelOptCreateNew" class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-all flex items-start gap-2.5">
+                                <input type="radio" name="action_type" id="optActionCreateNew" value="create_new" checked class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('create_new')">
+                                <div>
+                                    <span class="font-heading font-bold text-xs text-bluedark block">Buat Kelas Baru</span>
+                                    <span class="text-[11px] text-bluedark/60 block mt-0.5">Sistem otomatis menyiapkan kelas tingkat berikutnya</span>
+                                </div>
+                            </label>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <!-- Opsi 1: Otomatis Buat Kelas Baru -->
-                        <label id="labelOptCreateNew" class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 cursor-pointer transition-all flex items-start gap-2.5">
-                            <input type="radio" name="action_type" id="optActionCreateNew" value="create_new" checked class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('create_new')">
-                            <div>
-                                <span class="font-heading font-bold text-xs text-bluedark block">Buat Kelas Baru</span>
-                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Sistem otomatis menyiapkan kelas tingkat berikutnya</span>
-                            </div>
-                        </label>
-
-                        <!-- Opsi 2: Pilih Kelas yang Sudah Ada -->
-                        <label id="labelOptExisting" class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition-all flex items-start gap-2.5">
-                            <input type="radio" name="action_type" id="optActionExisting" value="existing" class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('existing')">
-                            <div>
-                                <span class="font-heading font-bold text-xs text-bluedark block">Kelas yang Ada</span>
-                                <span class="text-[11px] text-bluedark/60 block mt-0.5">Pindahkan siswa ke rombel yang sudah ada</span>
-                            </div>
-                        </label>
-
-                        <!-- Opsi 3: Kelulusan Siswa (Tingkat Akhir) -->
-                        <label id="labelOptGraduate" class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-50 cursor-pointer transition-all flex items-start gap-2.5">
-                            <input type="radio" name="action_type" id="optActionGraduate" value="graduate" class="mt-0.5 text-amber-600 focus:ring-amber-500" onchange="toggleActionType('graduate')">
-                            <div>
-                                <span class="font-heading font-bold text-xs text-amber-900 block">Luluskan Siswa</span>
-                                <span class="text-[11px] text-amber-700/80 block mt-0.5">Tingkat akhir / alumni, selesaikan riwayat rombel</span>
-                            </div>
-                        </label>
+                            <!-- Opsi 2: Pilih Kelas yang Sudah Ada -->
+                            <label id="labelOptExisting" class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white cursor-pointer transition-all flex items-start gap-2.5">
+                                <input type="radio" name="action_type" id="optActionExisting" value="existing" class="mt-0.5 text-blueprim focus:ring-blueprim" onchange="toggleActionType('existing')">
+                                <div>
+                                    <span class="font-heading font-bold text-xs text-bluedark block">Gunakan Kelas yang Ada</span>
+                                    <span class="text-[11px] text-bluedark/60 block mt-0.5">Pindahkan siswa ke rombel yang sudah ada / kosong</span>
+                                </div>
+                            </label>
+                        </div>
                     </div>
 
-                    <!-- Panel Keterangan Kelulusan Siswa -->
-                    <div id="promoteGraduationNotice" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
-                        <div class="flex items-center gap-2 font-bold text-amber-800">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                            <span>Proses Kelulusan Siswa Resmi (Status: GRADUATED)</span>
+                    <!-- Hidden Radio untuk Kelulusan Kelas XII -->
+                    <input type="radio" name="action_type" id="optActionGraduate" value="graduate" class="hidden" onchange="toggleActionType('graduate')">
+
+                    <!-- Panel Keterangan Kelulusan Siswa (Tingkat XII / Akhir) -->
+                    <div id="promoteGraduationNotice" class="hidden p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-xs text-amber-950 space-y-2.5 shadow-2xs">
+                        <div class="flex items-center gap-2.5 font-bold text-amber-900 text-sm">
+                            <div class="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-800 flex items-center justify-center shrink-0">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="leading-tight font-heading font-bold">Mode Kelulusan Siswa Tingkat Akhir (Kelas XII)</h4>
+                                <span class="text-[11px] text-amber-700 font-normal">Kenaikan kelas untuk tingkat akhir langsung diproses sebagai kelulusan resmi</span>
+                            </div>
                         </div>
-                        <p class="leading-relaxed">
-                            Seluruh siswa yang dicentang akan <strong>dinyatakan Lulus Resmi (Status: GRADUATED)</strong>, riwayat kelas di rombel ini diselesaikan, dan otomatis terhubung dengan modul Tracer Study / Alumni sekolah. Rombel asal akan menjadi kosong setelah siswa diluluskan.
+                        <p class="leading-relaxed text-amber-900/90 pl-10">
+                            Seluruh siswa yang dicentang akan <strong>dinyatakan Lulus Resmi (Status: GRADUATED)</strong>, riwayat kelas di rombel ini diselesaikan, dan otomatis terhubung dengan modul Alumni sekolah. Rombel kelas XII ini akan tetap aktif dalam keadaan kosong (0 siswa) sehingga siap digunakan kembali oleh adik kelas yang naik tingkat.
                         </p>
                     </div>
 
@@ -465,7 +466,7 @@
                         <select name="target_class_id" id="promote_target_class_id" class="f-select text-xs w-full">
                             <option value="">-- Pilih Kelas Tujuan --</option>
                         </select>
-                        <p class="text-[11px] text-bluedark/50">Hanya menampilkan kelas dengan tingkat yang lebih tinggi dari rombel asal.</p>
+                        <p class="text-[11px] text-bluedark/50">Menampilkan rombel aktif pada tingkat berikutnya. Rombel bertanda <strong>[Kosong / Siap Digunakan]</strong> dapat langsung dipilih.</p>
                     </div>
                 </div>
 
@@ -477,7 +478,7 @@
                             <label for="promoteCheckAll" class="text-xs font-bold text-bluedark cursor-pointer">Pilih Semua Siswa</label>
                         </div>
                         <span class="text-xs text-bluedark/60 font-medium">
-                            <strong id="promoteSelectedCount" class="text-emerald-700">0</strong> dari <span id="promoteTotalCount">0</span> Siswa Akan Dipromosikan
+                            <strong id="promoteSelectedCount" class="text-emerald-700">0</strong> dari <span id="promoteTotalCount">0</span> Siswa <span id="promoteActionCountLabel">Akan Dipromosikan</span>
                         </span>
                     </div>
 
@@ -504,17 +505,20 @@
                 </div>
 
                 <!-- 3. Pengaturan Eksekusi -->
-                <div class="pt-2 border-t border-bluelight/70 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                <div class="pt-2 border-t border-bluelight/70 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
                     <div>
-                        <label class="f-label text-xs">Tanggal Efektif Kenaikan Kelas</label>
+                        <label class="f-label text-xs" id="promote_date_label">Tanggal Efektif Kenaikan Kelas</label>
                         <input type="date" name="promotion_date" id="promote_promotion_date" value="{{ date('Y-m-d') }}" class="f-input text-xs w-full">
                     </div>
 
-                    <div class="pt-4 flex items-center gap-2">
-                        <input type="checkbox" name="deactivate_source_class" id="promote_deactivate_source_class" value="1" checked class="rounded text-blueprim">
-                        <label for="promote_deactivate_source_class" class="text-xs font-medium text-bluedark cursor-pointer">
-                            Nonaktifkan rombel asal setelah selesai dipromosikan
+                    <div class="space-y-1">
+                        <label class="flex items-center gap-2 cursor-pointer mt-5">
+                            <input type="checkbox" name="deactivate_source_class" id="promote_deactivate_source_class" value="1" class="rounded text-blueprim">
+                            <span class="text-xs font-semibold text-bluedark">Nonaktifkan / Arsipkan rombel asal</span>
                         </label>
+                        <p id="promote_deactivate_help" class="text-[11px] text-bluedark/55 leading-relaxed">
+                            Secara default tidak dicentang: rombel asal tetap aktif dengan status kosong (0 siswa) agar dapat langsung digunakan oleh kelas tingkat di bawahnya.
+                        </p>
                     </div>
                 </div>
 
@@ -601,6 +605,8 @@
         document.getElementById('promoteLoading').classList.add('hidden');
         document.getElementById('promoteContent').classList.add('hidden');
         document.getElementById('promoteSubmitBtn').disabled = true;
+        const deactCb = document.getElementById('promote_deactivate_source_class');
+        if (deactCb) deactCb.checked = false;
         currentPromotionData = null;
     }
 
@@ -646,18 +652,27 @@
                 data.available_target_classes.forEach(tc => {
                     const opt = document.createElement('option');
                     opt.value = tc.id;
-                    opt.textContent = `${tc.name} (${tc.code}) &mdash; ${tc.academic_year || '-'}`;
+                    const count = tc.active_students_count ?? 0;
+                    const statusText = count === 0 ? '0 Siswa · Kosong / Siap Digunakan' : `${count} Siswa Terdaftar`;
+                    opt.textContent = `${tc.name} (${tc.code}) — [${statusText}] — ${tc.academic_year || '-'}`;
                     targetSelect.appendChild(opt);
                 });
             }
 
+            const actionRadioContainer = document.getElementById('promoteActionRadioContainer');
+            const dateLabel = document.getElementById('promote_date_label');
+
             if (data.is_graduation) {
-                // Tingkat XII -> Otomatis pilih Kelulusan
+                // Tingkat XII -> Otomatis sembunyikan radio pilihan tindakan, langsung mode kelulusan
+                if (actionRadioContainer) actionRadioContainer.classList.add('hidden');
                 document.getElementById('optActionGraduate').checked = true;
+                if (dateLabel) dateLabel.textContent = 'Tanggal Kelulusan Siswa';
                 toggleActionType('graduate');
             } else {
-                // Tingkat X / XI -> Default Buat Kelas Baru
+                // Tingkat X / XI -> Tampilkan radio pilihan tindakan
+                if (actionRadioContainer) actionRadioContainer.classList.remove('hidden');
                 document.getElementById('optActionCreateNew').checked = true;
+                if (dateLabel) dateLabel.textContent = 'Tanggal Efektif Kenaikan Kelas';
                 toggleActionType('create_new');
             }
 
@@ -679,6 +694,8 @@
         const codeInput = document.getElementById('promote_new_class_code');
         const targetSelect = document.getElementById('promote_target_class_id');
         const submitBtn = document.getElementById('promoteSubmitBtn');
+        const labelCreate = document.getElementById('labelOptCreateNew');
+        const labelExisting = document.getElementById('labelOptExisting');
 
         if (type === 'graduate') {
             panelCreate.classList.add('hidden');
@@ -690,7 +707,7 @@
 
             document.getElementById('promoteTargetBannerName').textContent = 'Kelulusan Siswa (Alumni)';
             document.getElementById('promoteTargetBannerMeta').textContent = 'Status: GRADUATED & Selesai';
-            submitBtn.querySelector('span').textContent = 'Proses Kelulusan Siswa';
+            submitBtn.querySelector('span').textContent = 'Proses Kelulusan Siswa & Kosongkan Rombel';
         } else if (type === 'create_new') {
             panelCreate.classList.remove('hidden');
             panelExisting.classList.add('hidden');
@@ -698,6 +715,15 @@
             nameInput.required = true;
             codeInput.required = true;
             targetSelect.required = false;
+
+            if (labelCreate) {
+                labelCreate.classList.add('border-blue-200', 'bg-blue-50/50');
+                labelCreate.classList.remove('border-slate-200', 'bg-slate-50');
+            }
+            if (labelExisting) {
+                labelExisting.classList.remove('border-blue-200', 'bg-blue-50/50');
+                labelExisting.classList.add('border-slate-200', 'bg-slate-50');
+            }
 
             if (currentPromotionData) {
                 document.getElementById('promoteTargetBannerName').textContent = nameInput.value || currentPromotionData.suggested_name;
@@ -712,12 +738,23 @@
             codeInput.required = false;
             targetSelect.required = true;
 
+            if (labelExisting) {
+                labelExisting.classList.add('border-blue-200', 'bg-blue-50/50');
+                labelExisting.classList.remove('border-slate-200', 'bg-slate-50');
+            }
+            if (labelCreate) {
+                labelCreate.classList.remove('border-blue-200', 'bg-blue-50/50');
+                labelCreate.classList.add('border-slate-200', 'bg-slate-50');
+            }
+
             targetSelect.onchange = function() {
                 const selectedText = targetSelect.options[targetSelect.selectedIndex]?.text || '-';
-                document.getElementById('promoteTargetBannerName').textContent = selectedText.split('(')[0] || selectedText;
+                document.getElementById('promoteTargetBannerName').textContent = selectedText.split('—')[0]?.trim() || selectedText;
+                document.getElementById('promoteTargetBannerMeta').textContent = 'Rombel Tujuan Terpilih';
             };
             const selectedText = targetSelect.options[targetSelect.selectedIndex]?.text || '-';
-            document.getElementById('promoteTargetBannerName').textContent = selectedText.split('(')[0] || selectedText;
+            document.getElementById('promoteTargetBannerName').textContent = selectedText.split('—')[0]?.trim() || selectedText;
+            document.getElementById('promoteTargetBannerMeta').textContent = 'Rombel Tujuan Terpilih';
             submitBtn.querySelector('span').textContent = 'Proses Kenaikan Kelas';
         }
     }
@@ -746,7 +783,7 @@
                 </td>
                 <td class="text-center font-mono text-slate-400 py-2.5">${st.gender === 'MALE' ? 'L' : 'P'}</td>
                 <td class="text-right py-2.5 pr-3">
-                    <span class="status-indicator badge badge-green text-[10px]">Akan Naik</span>
+                    <span class="status-indicator badge badge-green text-[10px]">${currentPromotionData?.is_graduation ? 'Lulus' : 'Akan Naik'}</span>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -767,6 +804,11 @@
         const checkboxes = document.querySelectorAll('.student-promote-cb');
         let selected = 0;
 
+        const countActionLabel = document.getElementById('promoteActionCountLabel');
+        if (countActionLabel) {
+            countActionLabel.textContent = currentPromotionData?.is_graduation ? 'Akan Dinyatakan Lulus' : 'Akan Dipromosikan';
+        }
+
         checkboxes.forEach(cb => {
             const row = cb.closest('tr');
             const badge = row.querySelector('.status-indicator');
@@ -776,7 +818,7 @@
                 badge.textContent = currentPromotionData?.is_graduation ? 'Lulus' : 'Akan Naik';
             } else {
                 badge.className = 'status-indicator badge badge-gray text-[10px]';
-                badge.textContent = 'Tetap (Tinggal)';
+                badge.textContent = currentPromotionData?.is_graduation ? 'Tidak Lulus / Tinggal' : 'Tetap (Tinggal)';
             }
         });
 

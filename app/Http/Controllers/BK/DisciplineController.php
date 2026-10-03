@@ -40,8 +40,8 @@ class DisciplineController extends Controller
             'category_id' => $request->integer('category_id') ?: null,
             'type' => $request->query('type'),
             'source_type' => $request->query('source_type'),
-            'date_from' => $request->date('date_from'),
-            'date_to' => $request->date('date_to'),
+            'date_from' => $this->safeDateQuery($request->query('date_from')),
+            'date_to' => $this->safeDateQuery($request->query('date_to')),
             'q' => trim((string) $request->query('q', '')),
         ];
 
@@ -183,6 +183,10 @@ class DisciplineController extends Controller
     public function destroy(DisciplineRecord $record): RedirectResponse
     {
         Gate::authorize('delete', $record);
+        $this->authorizeCounselorStudent(
+            $record->student_id,
+            'Anda tidak memiliki akses ke catatan kedisiplinan siswa ini.'
+        );
 
         $studentId = $record->student_id;
         $description = $record->description;

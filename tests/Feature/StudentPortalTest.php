@@ -6,14 +6,19 @@ use App\Enums\AppealDecision;
 use App\Enums\AssessmentStatus;
 use App\Enums\ExitPermitStatus;
 use App\Enums\SubmissionStatus;
+use App\Http\Controllers\Student\ScheduleController;
 use App\Models\Assessment;
 use App\Models\AssessmentSubmission;
 use App\Models\ExitPermit;
 use App\Models\ExitPermitAppeal;
 use App\Models\ExitPermitReason;
 use App\Models\Gradebook;
+use App\Models\LessonPeriod;
 use App\Models\SchoolClass;
+use App\Models\Semester;
 use App\Models\StudentProfile;
+use App\Models\Subject;
+use App\Models\TeacherProfile;
 use App\Models\TeachingAssignment;
 use App\Models\TeachingSchedule;
 use App\Models\User;
@@ -304,8 +309,8 @@ class StudentPortalTest extends TestCase
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => ExitPermitReason::where('is_active', true)->firstOrFail()->id,
                 'reason_detail' => 'Keperluan yang perlu tercatat pada jejak audit.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(4)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $this->periodPair()[0],
+                'return_period_id' => $this->periodPair()[1],
             ])
             ->assertSessionHas('success');
 
@@ -464,29 +469,43 @@ class StudentPortalTest extends TestCase
     public function test_student_can_request_exit_permit_and_cannot_have_two_open(): void
     {
         $reason = ExitPermitReason::where('is_active', true)->firstOrFail();
+        [$exitPeriodId, $returnPeriodId] = $this->periodPair();
 
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => $reason->id,
                 'reason_detail' => 'Keperluan keluarga mendadak bersama orang tua.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(3)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('exit_permits', [
-            'student_id' => $this->student->id,
-            'status' => ExitPermitStatus::Pending->value,
-        ]);
+        // Jam keluar dan jam kembali harus ikut tersimpan sebagai rujukan.
+        $permit = ExitPermit::where('student_id', $this->student->id)
+            ->where('status', ExitPermitStatus::Pending->value)
+            ->firstOrFail();
+
+        $this->assertSame($exitPeriodId, $permit->exit_period_id);
+        $this->assertSame($returnPeriodId, $permit->return_period_id);
+
+        // Waktu rencana harus diturunkan dari jam mulai jam pelajaran pilihan.
+        $this->assertTrue(
+            $permit->planned_exit_at->equalTo(now()->setTimeFromTimeString(LessonPeriod::find($exitPeriodId)->start_time)),
+            'planned_exit_at harus sama dengan jam mulai jam pelajaran keluar.'
+        );
+        $this->assertTrue(
+            $permit->planned_return_at->equalTo(now()->setTimeFromTimeString(LessonPeriod::find($returnPeriodId)->start_time)),
+            'planned_return_at harus sama dengan jam mulai jam pelajaran kembali.'
+        );
 
         // Pengajuan kedua saat masih PENDING harus ditolak.
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => $reason->id,
                 'reason_detail' => 'Pengajuan kedua yang harus ditolak.',
-                'planned_exit_at' => now()->addHour()->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHours(2)->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
             ->assertSessionHas('error');
 
@@ -499,14 +518,16 @@ class StudentPortalTest extends TestCase
 
     public function test_exit_permit_requires_valid_reason_and_schedule(): void
     {
+        [$exitPeriodId, $returnPeriodId] = $this->reversedPeriodPair();
+
         $this->actingAs($this->studentUser)
             ->post(route('student.exit-permits.store'), [
                 'reason_id' => 99999,
                 'reason_detail' => 'singkat',
-                'planned_exit_at' => now()->addHours(3)->format('Y-m-d\TH:i'),
-                'planned_return_at' => now()->addHour()->format('Y-m-d\TH:i'),
+                'exit_period_id' => $exitPeriodId,
+                'return_period_id' => $returnPeriodId,
             ])
-            ->assertSessionHasErrors(['reason_id', 'reason_detail', 'planned_return_at']);
+            ->assertSessionHasErrors(['reason_id', 'reason_detail', 'return_period_id']);
     }
 
     public function test_student_cannot_view_other_students_permit(): void
@@ -616,6 +637,156 @@ class StudentPortalTest extends TestCase
             'login' => 'siswa.ahmad',
             'password' => 'sandiBaru99',
         ])->assertRedirect(route('student.dashboard'));
+    }
+
+    public function test_schedule_page_shows_only_the_selected_day(): void
+    {
+        // Halaman hanya menampilkan satu hari pada satu waktu. Kalau nanti
+        // kembali ke pola semua hari sekaligus, test ini harus gagal.
+        $enrollment = $this->student->currentEnrollment()->firstOrFail();
+
+        // Seeder tidak menjamin jadwal tersebar di beberapa hari, jadi test
+        // membuat sendiri dua hari yang pasti berbeda: Senin 3 pelajaran,
+        // Selasa 1 pelajaran. Ini yang membuat pengujian bermakna.
+        $this->seedKnownWeek($this->student, 1, 3);
+        $this->seedKnownWeek($this->student, 2, 1);
+
+        $perDay = TeachingSchedule::query()
+            ->whereHas('teachingAssignment', fn ($query) => $query
+                ->where('class_id', $enrollment->class_id)
+                ->where('is_active', true))
+            ->with('teachingAssignment.subject')
+            ->get()
+            ->groupBy('day_of_week');
+
+        $counts = $perDay->map(fn ($group) => $group->count());
+
+        $busiestDay = $counts->sortDesc()->keys()->first();
+        $quietestDay = $counts->sort()->keys()->first();
+
+        $this->assertSame(1, $busiestDay);
+        $this->assertSame(2, $quietestDay);
+
+        $response = $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.index', ['day' => $busiestDay]));
+
+        $response->assertOk();
+
+        foreach ($perDay->get($busiestDay) as $schedule) {
+            $response->assertSee($schedule->teachingAssignment->subject->name);
+        }
+
+        // Jadwal hari lain tidak boleh bocor ke halaman hari terpilih. Nama mapel
+        // hanya boleh disyakinkan tidak tampil kalau mapel itu benar-benar unik
+        // milik satu hari, sebab mapel yang sama bisa muncul di beberapa hari.
+        $everySubjectName = $perDay->flatten()
+            ->map(fn ($schedule) => $schedule->teachingAssignment->subject->name);
+
+        foreach ($perDay as $day => $group) {
+            if ($day === $busiestDay) {
+                continue;
+            }
+
+            foreach ($group as $schedule) {
+                $name = $schedule->teachingAssignment->subject->name;
+
+                if ($everySubjectName->filter(fn ($other) => $other === $name)->count() === 1) {
+                    $response->assertDontSee($name);
+                }
+            }
+        }
+
+        // Ringkasan jumlah pelajaran harus tetap menampilkan semua 7 hari,
+        // termasuk hari tanpa jadwal, supaya siswa bisa membandingkan hari
+        // tanpa harus membuka tiap hari.
+        foreach (ScheduleController::DAY_NAMES as $number => $name) {
+            $response->assertSee(ScheduleController::DAY_SHORT_NAMES[$number]);
+        }
+    }
+
+    /**
+     * Buat jadwal dengan jumlah pelajaran yang pasti untuk satu hari.
+     *
+     * Seeder tidak menjamin jadwal tersebar merata di semua hari, jadi test
+     * yang butuh pola minggu yang spesifik harus membangunnya sendiri.
+     * Mapel dibuat per jadwal agar setiap jadwal punya nama mapel unik,
+     * sehingga test bisa memastikan jadwal tidak bocor antar halaman.
+     */
+    private function seedKnownWeek(StudentProfile $student, int $dayOfWeek, int $lessonCount): void
+    {
+        $classId = $student->currentEnrollment()->firstOrFail()->class_id;
+
+        $semester = Semester::query()->firstOrFail();
+
+        $periods = LessonPeriod::regular()->orderBy('period_number')->get();
+
+        for ($index = 0; $index < $lessonCount; $index++) {
+            $period = $periods[$index % $periods->count()];
+
+            $subject = Subject::create([
+                'name' => 'Mapel Uji '.$dayOfWeek.'-'.($index + 1),
+                'code' => 'U'.$dayOfWeek.$index,
+                'category' => 'TEORI',
+            ]);
+
+            $teacherUser = User::factory()->create();
+
+            $teacher = TeacherProfile::create([
+                'user_id' => $teacherUser->getKey(),
+                'nip' => (string) TeacherProfile::max('id').random_int(100, 999),
+                'full_name' => 'Guru Uji '.$dayOfWeek.'-'.($index + 1),
+                'status' => 'ACTIVE',
+            ]);
+
+            $assignment = TeachingAssignment::create([
+                'teacher_id' => $teacher->getKey(),
+                'subject_id' => $subject->getKey(),
+                'class_id' => $classId,
+                'semester_id' => $semester->getKey(),
+                'weekly_hours' => 2,
+                'is_active' => true,
+            ]);
+
+            TeachingSchedule::create([
+                'teaching_assignment_id' => $assignment->getKey(),
+                'day_of_week' => $dayOfWeek,
+                'start_period_id' => $period->getKey(),
+                'end_period_id' => $period->getKey(),
+                'room' => 'R'.$dayOfWeek.$index,
+            ]);
+        }
+    }
+
+    public function test_schedule_day_picker_handles_out_of_range_and_defaults_to_today(): void
+    {
+        // Tautan rusak atau input manual tidak boleh membuat halaman error.
+        foreach ([0, 8, -1, 99, 'abc', ''] as $day) {
+            $this->actingAs($this->studentUser)
+                ->get(route('student.schedules.index', ['day' => $day]))
+                ->assertOk();
+        }
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.index'))
+            ->assertOk()
+            ->assertSee('Hari ini');
+    }
+
+    public function test_schedule_previous_and_next_day_wrap_around(): void
+    {
+        // Senin punya sebelumnya Minggu, Jumat punya berikutnya Sabtu. Tanpa
+        // wrap, tombol panah mati di ujung minggu dan siswa harus scroll strip.
+        $monday = $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.index', ['day' => 1]));
+
+        $monday->assertOk();
+        $monday->assertSee('?day=7', escape: false);
+
+        $friday = $this->actingAs($this->studentUser)
+            ->get(route('student.schedules.index', ['day' => 5]));
+
+        $friday->assertOk();
+        $friday->assertSee('?day=6', escape: false);
     }
 
     public function test_student_pages_render_expected_heading(): void
@@ -807,5 +978,119 @@ class StudentPortalTest extends TestCase
         }
 
         return $assessment;
+    }
+
+    /**
+     * Dua id jam pelajaran untuk pengajuan izin: jam keluar dan jam kembali.
+     *
+     * Jam LessonPeriod::create memakai start_time mentah, sedangkan
+     * StoreExitPermitRequest membandingkan against now() pada kerangka waktu
+     * aplikasi. Karena itu jam yang dipilih harus benar-benar belum lewat,
+     * bukan sekadar "yang pertama di daftar".
+     *
+     * Kalau seluruh jam hari ini sudah lewat, test memalsukan waktu ke pagi
+     * hari agar tetap ada sepasang jam yang valid. Tanpa itu, test izin akan
+     * gagal hanya karena dijalankan sore hari, bukan karena ada bug.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function periodPair(): array
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        $upcoming = $periods->filter(
+            fn (LessonPeriod $period) => now()->setTimeFromTimeString($period->start_time)->isFuture()
+        );
+
+        if ($upcoming->count() >= 2) {
+            return [$upcoming->values()[0]->getKey(), $upcoming->values()[1]->getKey()];
+        }
+
+        $this->travelTo(now()->setTime(7, 0));
+
+        return [$periods->values()[0]->getKey(), $periods->values()[1]->getKey()];
+    }
+
+    /**
+     * Sepasang jam pelajaran terbalik untuk menguji validasi gagal.
+     *
+     * @return array{0: int, 1: int}
+     */
+    private function reversedPeriodPair(): array
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        return [$periods->last()->getKey(), $periods->first()->getKey()];
+    }
+
+    public function test_application_timezone_is_west_indonesian_time(): void
+    {
+        $this->assertSame('Asia/Jakarta', config('app.timezone'));
+
+        // now() harus WIB, bukan UTC. Nilai ini dibandingkan dengan jam dinding
+        // pada lesson_periods, jadi selisih 7 jam akan membuat seluruh hitungan
+        // timer dan keterlambatan salah.
+        $this->assertSame(
+            now()->setTimezone('Asia/Jakarta')->format('H:i'),
+            now()->format('H:i')
+        );
+    }
+
+    public function test_only_regular_periods_are_offered_and_past_ones_are_marked(): void
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        $this->assertNotEmpty($periods);
+        $this->assertSame(0, LessonPeriod::where('is_break', true)->count());
+        $this->assertNull($periods->firstWhere(fn (LessonPeriod $p) => $p->period_number === null));
+
+        // Jam istirahat tidak boleh muncul sebagai pilihan siswa meski datanya ada.
+        $break = LessonPeriod::create([
+            'label' => 'Istirahat',
+            'start_time' => '12:00',
+            'end_time' => '12:30',
+            'is_break' => true,
+        ]);
+
+        $this->assertFalse(
+            LessonPeriod::regular()->get()->contains('id', $break->getKey())
+        );
+        $this->assertFalse($break->hasAlreadyStarted());
+        $break->delete();
+
+        // Jam yang sudah lewat ditandai, jam yang belum lewat tidak.
+        $morning = LessonPeriod::create([
+            'label' => 'Jam Ke-1',
+            'period_number' => 1,
+            'start_time' => '00:05',
+            'end_time' => '00:50',
+            'is_break' => false,
+        ]);
+
+        $this->assertTrue($morning->hasAlreadyStarted());
+        $morning->delete();
+
+        foreach ($periods as $period) {
+            $expected = now()->setTimeFromTimeString($period->start_time)->isPast();
+            $this->assertSame($expected, $period->hasAlreadyStarted(), $period->displayLabel());
+        }
+    }
+
+    public function test_exit_period_options_are_disabled_once_they_have_passed(): void
+    {
+        $past = LessonPeriod::create([
+            'label' => 'Jam Ke-1',
+            'period_number' => 1,
+            'start_time' => '00:05',
+            'end_time' => '00:50',
+            'is_break' => false,
+        ]);
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.exit-permits.create'))
+            ->assertOk()
+            ->assertSee('sudah lewat');
+
+        $past->delete();
     }
 }

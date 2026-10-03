@@ -6,6 +6,7 @@ use App\Enums\AppealDecision;
 use App\Enums\DisciplineCategoryType;
 use App\Http\Controllers\BK\Concerns\HandlesDisciplinePoints;
 use App\Http\Controllers\BK\Concerns\RecordsAuditTrail;
+use App\Http\Controllers\BK\Concerns\ResolvesCounselorClasses;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BK\DecideAppealRequest;
 use App\Models\AcademicYear;
@@ -20,7 +21,7 @@ use Illuminate\View\View;
 
 class AppealController extends Controller
 {
-    use HandlesDisciplinePoints, RecordsAuditTrail;
+    use HandlesDisciplinePoints, RecordsAuditTrail, ResolvesCounselorClasses;
 
     public function index(Request $request): View
     {
@@ -78,7 +79,22 @@ class AppealController extends Controller
             ? DisciplineCategory::find($validated['sanction_category_id'])
             : null;
         $sanctionPoints = $request->resolvedSanctionPoints($category);
-        $recordSanction = $request->boolean('record_sanction') && $category !== null;
+
+        // Sanksi hanya sah bila banding ditolak, kategori benar-benar jenis
+        // pelanggaran, dan siswa berada di kelas yang diampu BK.
+        $recordSanction = $decision === AppealDecision::Rejected
+            && $request->boolean('record_sanction')
+            && $category !== null
+            && $category->type === DisciplineCategoryType::Violation
+            && $this->counselorManagesStudent($permit->student_id);
+
+        if ($request->boolean('record_sanction') && $decision !== AppealDecision::Rejected) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'record_sanction' => 'Sanksi hanya dapat dicatat bila banding ditolak.',
+                ]);
+        }
         $academicYearId = null;
 
         if ($recordSanction) {
