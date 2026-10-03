@@ -208,6 +208,7 @@ class GradebookController extends Controller
             'teachingAssignment.semester.academicYear',
             'columns.sourceColumns',
             'columns' => fn ($q) => $q->orderBy('sort_order'),
+            'students.student.user',
         ]);
 
         return view('teacher.gradebooks.edit', compact('gradebook'));

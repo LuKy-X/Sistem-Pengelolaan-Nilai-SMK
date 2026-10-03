@@ -19,6 +19,7 @@ class GradeNoteController extends Controller
 
         $assignments = TeachingAssignment::with([
             'schoolClass.gradeLevel',
+            'schoolClass.department',
             'subject',
             'semester.academicYear',
         ])
