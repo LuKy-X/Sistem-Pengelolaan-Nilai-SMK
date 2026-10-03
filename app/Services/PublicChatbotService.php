@@ -423,17 +423,7 @@ class PublicChatbotService
                 $lines[] = 'Syarat berkas: '.$this->bulletList($open->requirements->pluck('title')->all());
             }
 
-            $fees = $open->feeItems
-                ->reject(fn ($item): bool => (bool) $item->is_free)
-                ->map(fn ($item): string => $item->name.' Rp '.number_format((float) $item->amount, 0, ',', '.'))
-                ->all();
-
-            if ($fees !== []) {
-                $lines[] = 'Biaya: '.$this->bulletList($fees)
-                    .'. Total '.$this->formatNumber(
-                        (float) $open->feeItems->reject(fn ($item): bool => (bool) $item->is_free)->sum('amount'),
-                    ).'.';
-            }
+            $lines[] = 'Biaya pendaftaran: Gratis / Bebas biaya (Sekolah Negeri).';
 
             if ($open->scheduleItems->isNotEmpty()) {
                 $lines[] = 'Tahapan: '.$this->bulletList($open->scheduleItems->pluck('title')->all(), 4);
@@ -445,7 +435,7 @@ class PublicChatbotService
             implode("\n", $lines),
             $detail
                 ? ['Ada jalur lain yang dibuka?', 'Lowongan PKL sekarang?']
-                : ['Syarat PPDB apa saja?', 'Berapa biaya daftar?', 'Jadwal PPDB lengkap'],
+                : ['Syarat PPDB apa saja?', 'Jalur PPDB apa saja?', 'Jadwal PPDB lengkap'],
             [['label' => 'Detail PPDB', 'url' => route('public.ppdb.index')]],
         );
     }

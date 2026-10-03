@@ -149,13 +149,6 @@
             <span>Persyaratan</span>
             <span class="badge-count px-1.5 py-0.5 rounded-md text-[10px] {{ ($tab ?? 'period') === 'requirements' ? 'bg-white/20 text-white' : 'bg-bluelight text-bluedark' }}">{{ $period->requirements->count() }}</span>
         </button>
-
-        <button type="button" onclick="handleTabClick('fees')" id="tab-btn-fees"
-            class="tab-trigger px-4 py-2.5 rounded-xl font-heading font-semibold text-xs transition-all flex items-center gap-2 shrink-0 {{ ($tab ?? 'period') === 'fees' ? 'bg-bluedark text-white shadow-xs' : 'text-bluedark/70 hover:bg-bluelight/40' }}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-            <span>Biaya Pendaftaran</span>
-            <span class="badge-count px-1.5 py-0.5 rounded-md text-[10px] {{ ($tab ?? 'period') === 'fees' ? 'bg-white/20 text-white' : 'bg-bluelight text-bluedark' }}">{{ $period->feeItems->count() }}</span>
-        </button>
     </div>
 
     <!-- TAB 1: INFORMASI GELOMBANG -->
@@ -517,98 +510,6 @@
                     <button type="submit" class="btn btn-primary btn-sm flex items-center gap-2">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         <span>Simpan Seluruh Persyaratan</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- TAB 5: BIAYA PENDAFTARAN (REPEATER TAMBAH DI BAWAH) -->
-    <div id="tab-content-fees" class="tab-pane {{ ($tab ?? 'period') === 'fees' ? '' : 'hidden' }}">
-        <div class="panel p-0 overflow-hidden">
-            <div class="p-5 border-b border-bluelight bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                    <h2 class="font-heading font-semibold text-bluedark text-base flex items-center gap-2">
-                        <span>Rincian Biaya Pendaftaran</span>
-                        <span class="badge badge-blue text-[11px]" id="fee-count-badge">{{ $period->feeItems->count() }} Komponen</span>
-                    </h2>
-                    <p class="text-xs text-bluedark/50 mt-0.5">Kelola komponen biaya atau centang opsi <strong>Gratis</strong> jika tidak dipungut biaya. Tambah di bawahnya.</p>
-                </div>
-
-                <button type="button" onclick="addFeeRow()" class="btn btn-primary btn-sm flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    <span>Tambah Biaya di Bawah</span>
-                </button>
-            </div>
-
-            <form action="{{ route('admin.cms.ppdb.periods.fees.update', $period) }}" method="POST" id="feesForm" autocomplete="off" class="track-form-changes p-5 sm:p-6 space-y-4">
-                @csrf
-                @method('PUT')
-
-                <div id="fees-container" class="space-y-3.5">
-                    @forelse($period->feeItems as $index => $fee)
-                        <div class="fee-item-row p-4 rounded-2xl border border-bluelight bg-[#FBFDFF] hover:border-blueprim/40 transition-all duration-200" data-index="{{ $index }}">
-                            <input type="hidden" name="fees[{{ $index }}][id]" value="{{ $fee->id }}">
-
-                            <div class="flex flex-col sm:flex-row items-start gap-4">
-                                <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 font-heading font-bold text-xs grid place-items-center shrink-0 fee-number">
-                                    {{ $index + 1 }}
-                                </div>
-
-                                <div class="flex-1 w-full space-y-3">
-                                    <div class="grid sm:grid-cols-12 gap-3">
-                                        <div class="sm:col-span-6">
-                                            <label class="f-label text-[11px]">Nama Komponen Biaya <span class="text-red-500">*</span></label>
-                                            <input type="text" name="fees[{{ $index }}][name]" value="{{ $fee->name }}" required placeholder="Contoh: Biaya Seragam &amp; Atribut" class="f-input text-xs fee-name">
-                                        </div>
-
-                                        <div class="sm:col-span-3">
-                                            <label class="f-label text-[11px]">Nominal (Rp)</label>
-                                            <input type="number" min="0" step="1000" name="fees[{{ $index }}][amount]" value="{{ (int) $fee->amount }}" placeholder="Cth: 500000" class="f-input text-xs fee-amount" {{ $fee->is_free ? 'disabled' : '' }}>
-                                        </div>
-
-                                        <div class="sm:col-span-3 flex items-center pt-6">
-                                            <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-bluedark">
-                                                <input type="checkbox" name="fees[{{ $index }}][is_free]" value="1" onchange="toggleFeeFree(this)" {{ $fee->is_free ? 'checked' : '' }} class="w-4 h-4 rounded text-emerald-600 border-bluelight fee-free-checkbox">
-                                                <span class="text-emerald-700">Gratis (Bebas Biaya)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="f-label text-[11px]">Keterangan Pembayaran (Opsional)</label>
-                                        <input type="text" name="fees[{{ $index }}][description]" value="{{ $fee->description }}" placeholder="Keterangan rincian biaya..." class="f-input text-xs">
-                                    </div>
-                                </div>
-
-                                <button type="button" onclick="removeFeeRow(this)" class="p-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors shrink-0 self-end sm:self-center" title="Hapus Biaya Ini">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    @empty
-                        <div id="fee-empty-state" class="p-8 text-center border-2 border-dashed border-bluelight rounded-2xl space-y-3">
-                            <div class="w-12 h-12 rounded-full bg-bluelight/70 text-purple-600 grid place-items-center mx-auto">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-                            </div>
-                            <p class="text-xs text-bluedark/60">Belum ada rincian biaya pendaftaran untuk gelombang ini.</p>
-                            <button type="button" onclick="addFeeRow()" class="btn btn-outline btn-sm inline-flex items-center gap-1.5">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                <span>Tambah Biaya Pertama</span>
-                            </button>
-                        </div>
-                    @endforelse
-                </div>
-
-                <div class="pt-4 border-t border-bluelight flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <button type="button" onclick="addFeeRow()" class="btn btn-outline btn-sm flex items-center gap-2 self-start">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        <span>Tambah Baris Biaya di Bawah</span>
-                    </button>
-
-                    <button type="submit" class="btn btn-primary btn-sm flex items-center gap-2">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        <span>Simpan Seluruh Rincian Biaya</span>
                     </button>
                 </div>
             </form>
@@ -1255,129 +1156,11 @@
         }
     }
 
-    /* =========================================================================
-       TAB 5: BIAYA PENDAFTARAN (REPEATER TAMBAH DI BAWAH)
-       ========================================================================= */
-    function reindexFees() {
-        const rows = document.querySelectorAll('#fees-container .fee-item-row');
-        const emptyState = document.getElementById('fee-empty-state');
-        const badge = document.getElementById('fee-count-badge');
-        if (badge) badge.textContent = rows.length + ' Komponen';
-
-        if (rows.length === 0 && emptyState) {
-            emptyState.classList.remove('hidden');
-        } else if (emptyState) {
-            emptyState.classList.add('hidden');
-        }
-
-        rows.forEach((row, i) => {
-            row.setAttribute('data-index', i);
-            const num = row.querySelector('.fee-number');
-            if (num) num.textContent = i + 1;
-
-            row.querySelectorAll('input, textarea, select').forEach(input => {
-                const name = input.getAttribute('name');
-                if (name && name.startsWith('fees[')) {
-                    input.setAttribute('name', name.replace(/fees\[\d+\]/, `fees[${i}]`));
-                }
-            });
-        });
-    }
-
-    function toggleFeeFree(checkbox) {
-        const row = checkbox.closest('.fee-item-row');
-        const amountInput = row.querySelector('.fee-amount');
-        if (amountInput) {
-            if (checkbox.checked) {
-                amountInput.value = '0';
-                amountInput.disabled = true;
-            } else {
-                amountInput.disabled = false;
-                if (amountInput.value === '0') {
-                    amountInput.value = '';
-                }
-            }
-        }
-        markUnsavedChanges();
-    }
-
-    function addFeeRow() {
-        const container = document.getElementById('fees-container');
-        const emptyState = document.getElementById('fee-empty-state');
-        if (emptyState) emptyState.classList.add('hidden');
-
-        const rows = container.querySelectorAll('.fee-item-row');
-        const nextIndex = rows.length;
-        const nextNum = nextIndex + 1;
-
-        const rowHtml = `
-            <div class="fee-item-row p-4 rounded-2xl border border-bluelight bg-[#FBFDFF] hover:border-blueprim/40 transition-all duration-200 animate-in fade-in duration-200" data-index="${nextIndex}">
-                <input type="hidden" name="fees[${nextIndex}][id]" value="">
-
-                <div class="flex flex-col sm:flex-row items-start gap-4">
-                    <div class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 font-heading font-bold text-xs grid place-items-center shrink-0 fee-number">
-                        ${nextNum}
-                    </div>
-
-                    <div class="flex-1 w-full space-y-3">
-                        <div class="grid sm:grid-cols-12 gap-3">
-                            <div class="sm:col-span-6">
-                                <label class="f-label text-[11px]">Nama Komponen Biaya <span class="text-red-500">*</span></label>
-                                <input type="text" name="fees[${nextIndex}][name]" required placeholder="Contoh: Biaya Seragam &amp; Atribut" class="f-input text-xs fee-name">
-                            </div>
-
-                            <div class="sm:col-span-3">
-                                <label class="f-label text-[11px]">Nominal (Rp)</label>
-                                <input type="number" min="0" step="1000" name="fees[${nextIndex}][amount]" placeholder="Cth: 500000" class="f-input text-xs fee-amount">
-                            </div>
-
-                            <div class="sm:col-span-3 flex items-center pt-6">
-                                <label class="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-bluedark">
-                                    <input type="checkbox" name="fees[${nextIndex}][is_free]" value="1" onchange="toggleFeeFree(this)" class="w-4 h-4 rounded text-emerald-600 border-bluelight fee-free-checkbox">
-                                    <span class="text-emerald-700">Gratis (Bebas Biaya)</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="f-label text-[11px]">Keterangan Pembayaran (Opsional)</label>
-                            <input type="text" name="fees[${nextIndex}][description]" placeholder="Keterangan rincian biaya..." class="f-input text-xs">
-                        </div>
-                    </div>
-
-                    <button type="button" onclick="removeFeeRow(this)" class="p-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors shrink-0 self-end sm:self-center" title="Hapus Biaya Ini">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    </button>
-                </div>
-            </div>
-        `;
-
-        container.insertAdjacentHTML('beforeend', rowHtml);
-        reindexFees();
-        markUnsavedChanges();
-
-        const newlyAdded = container.lastElementChild;
-        if (newlyAdded) {
-            const inputName = newlyAdded.querySelector('.fee-name');
-            if (inputName) inputName.focus();
-        }
-    }
-
-    function removeFeeRow(btn) {
-        const row = btn.closest('.fee-item-row');
-        if (confirm('Hapus rincian biaya ini?')) {
-            row.remove();
-            reindexFees();
-            markUnsavedChanges();
-        }
-    }
-
     // Initialize initial states on page load
     document.addEventListener('DOMContentLoaded', function() {
         reindexSchedules();
         reindexPaths();
         reindexRequirements();
-        reindexFees();
 
         // Check URL hash if tab not provided in query
         const urlParams = new URLSearchParams(window.location.search);

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreStudentRequest;
 use App\Http\Requests\Admin\UpdateStudentRequest;
 use App\Models\ClassEnrollment;
+use App\Models\Department;
+use App\Models\GradeLevel;
 use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\StudentProfile;
@@ -22,18 +24,23 @@ class StudentsController extends Controller
     {
         $search = $request->query('search');
         $classId = $request->query('class_id');
+        $departmentId = $request->query('department_id');
+        $gradeLevelId = $request->query('grade_level_id');
+        $gender = $request->query('gender');
+        $status = $request->query('status');
 
         $students = StudentProfile::with([
             'user',
             'classEnrollments' => function ($q) {
-                $q->where('status', 'ACTIVE')->with('schoolClass');
+                $q->where('status', 'ACTIVE')->with('schoolClass.department', 'schoolClass.gradeLevel');
             },
         ])
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('full_name', 'like', "%{$search}%")
                         ->orWhere('nis', 'like', "%{$search}%")
-                        ->orWhere('nisn', 'like', "%{$search}%");
+                        ->orWhere('nisn', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($uq) => $uq->where('email', 'like', "%{$search}%"));
                 });
             })
             ->when($classId, function ($query, $classId) {
@@ -41,13 +48,52 @@ class StudentsController extends Controller
                     $q->where('class_id', $classId)->where('status', 'ACTIVE');
                 });
             })
+            ->when($departmentId, function ($query, $departmentId) {
+                $query->whereHas('classEnrollments', function ($q) use ($departmentId) {
+                    $q->where('status', 'ACTIVE')
+                        ->whereHas('schoolClass', fn ($cq) => $cq->where('department_id', $departmentId));
+                });
+            })
+            ->when($gradeLevelId, function ($query, $gradeLevelId) {
+                $query->whereHas('classEnrollments', function ($q) use ($gradeLevelId) {
+                    $q->where('status', 'ACTIVE')
+                        ->whereHas('schoolClass', fn ($cq) => $cq->where('grade_level_id', $gradeLevelId));
+                });
+            })
+            ->when($gender, function ($query, $gender) {
+                $query->where('gender', $gender);
+            })
+            ->when($status, function ($query, $status) {
+                $query->where('status', $status);
+            })
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
+        $departments = Department::where('is_active', true)->orderBy('name')->get();
+        $gradeLevels = GradeLevel::orderBy('name')->get();
 
-        return view('admin.academic.students.index', compact('students', 'classes', 'search', 'classId'));
+        $stats = [
+            'total' => StudentProfile::count(),
+            'active' => StudentProfile::where('status', 'ACTIVE')->count(),
+            'graduated' => StudentProfile::where('status', 'GRADUATED')->count(),
+            'enrolled' => StudentProfile::whereHas('classEnrollments', fn ($q) => $q->where('status', 'ACTIVE'))->count(),
+        ];
+
+        return view('admin.academic.students.index', compact(
+            'students',
+            'classes',
+            'departments',
+            'gradeLevels',
+            'search',
+            'classId',
+            'departmentId',
+            'gradeLevelId',
+            'gender',
+            'status',
+            'stats'
+        ));
     }
 
     public function store(StoreStudentRequest $request): RedirectResponse

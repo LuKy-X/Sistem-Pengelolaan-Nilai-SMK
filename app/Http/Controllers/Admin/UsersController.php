@@ -19,6 +19,7 @@ class UsersController extends Controller
     public function index(Request $request): View
     {
         $roleId = $request->query('role_id');
+        $status = $request->query('status');
         $search = $request->query('search');
 
         $users = User::with('roles')
@@ -26,6 +27,9 @@ class UsersController extends Controller
                 $query->whereHas('roles', function ($q) use ($roleId) {
                     $q->where('roles.id', $roleId);
                 });
+            })
+            ->when($status !== null && $status !== '', function ($query) use ($status) {
+                $query->where('is_active', $status === '1');
             })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -40,7 +44,14 @@ class UsersController extends Controller
 
         $roles = Role::all();
 
-        return view('admin.users.index', compact('users', 'roles', 'roleId', 'search'));
+        $stats = [
+            'total' => User::count(),
+            'active' => User::where('is_active', true)->count(),
+            'inactive' => User::where('is_active', false)->count(),
+            'admin' => User::whereHas('roles', fn ($q) => $q->where('code', 'admin'))->count(),
+        ];
+
+        return view('admin.users.index', compact('users', 'roles', 'roleId', 'status', 'search', 'stats'));
     }
 
     public function store(StoreUserRequest $request): RedirectResponse
