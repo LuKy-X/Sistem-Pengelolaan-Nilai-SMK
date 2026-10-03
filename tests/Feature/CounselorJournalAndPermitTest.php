@@ -11,7 +11,12 @@ use App\Models\ExitPermitReason;
 use App\Models\JournalAttendance;
 use App\Models\LessonPeriod;
 use App\Models\SchoolClass;
+use App\Models\Semester;
 use App\Models\StudentProfile;
+use App\Models\Subject;
+use App\Models\TeacherProfile;
+use App\Models\TeachingAssignment;
+use App\Models\TeachingSchedule;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,9 +28,21 @@ class CounselorJournalAndPermitTest extends TestCase
 
     protected User $counselor;
 
+    protected TeacherProfile $counselorTeacher;
+
     protected SchoolClass $counseledClass;
 
     protected SchoolClass $foreignClass;
+
+    /**
+     * Penugasan mengajar milik Guru BK pada kelas binaannya.
+     */
+    protected TeachingAssignment $counselorAssignment;
+
+    /**
+     * Jadwal mengajar Guru BK, dibuat pada hari agar absensi hari ini diizinkan.
+     */
+    protected TeachingSchedule $counselorSchedule;
 
     protected LessonPeriod $period1;
 
@@ -42,6 +59,10 @@ class CounselorJournalAndPermitTest extends TestCase
 
         $this->counselor = User::where('username', 'bk.dewi')->firstOrFail();
 
+        // Akun BK harus memiliki profil guru agar bisa punya penugasan mengajar & jadwal.
+        TeacherProfile::ensureCounselorProfiles();
+        $this->counselorTeacher = $this->counselor->teacherProfile()->firstOrFail();
+
         // Kelas assayed: satu yang diampu, satu yang bukan (harus punya penugasan mengajar aktif).
         $classesWithAssignments = SchoolClass::query()
             ->where('is_active', true)
@@ -57,6 +78,24 @@ class CounselorJournalAndPermitTest extends TestCase
         $this->period2 = LessonPeriod::where('period_number', 2)->firstOrFail();
         $this->period5 = LessonPeriod::where('period_number', 5)->firstOrFail();
         $this->breakPeriod = LessonPeriod::where('is_break', true)->firstOrFail();
+
+        // Guru BK harus punya penugasan mengajar + jadwal, sama seperti Guru pengajar.
+        $this->counselorAssignment = TeachingAssignment::create([
+            'teacher_id' => $this->counselorTeacher->id,
+            'subject_id' => Subject::where('code', 'BIN')->firstOrFail()->id,
+            'class_id' => $this->counseledClass->id,
+            'semester_id' => Semester::where('is_active', true)->firstOrFail()->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->counselorSchedule = TeachingSchedule::create([
+            'teaching_assignment_id' => $this->counselorAssignment->id,
+            'day_of_week' => now()->dayOfWeekIso,
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'room' => 'Ruang BK',
+        ]);
     }
 
     protected function tearDown(): void
@@ -75,16 +114,81 @@ class CounselorJournalAndPermitTest extends TestCase
             ->assertSee('Absensi Kelas');
     }
 
-    public function test_counselor_sees_class_selection_page_for_absensi(): void
+    public function test_counselor_sees_own_teaching_classes_like_a_teacher(): void
     {
         $this->actingAs($this->counselor)
             ->get(route('counselor.journals.index'))
             ->assertOk()
-            ->assertSee('Daftar Kelas Binaan')
-            ->assertSee($this->counseledClass->name);
+            ->assertSee('Daftar Kelas')
+            ->assertSee($this->counseledClass->name)
+            ->assertSee(route('counselor.journals.attendance'), escape: false)
+            ->assertSee(route('counselor.journals.history'), escape: false);
     }
 
-    public function test_counselor_can_store_journal_for_counseled_class(): void
+    public function test_journal_tabs_skip_the_page_transition_animation(): void
+    {
+        // Ketiga tab harus memakai data-no-transition agar pindah halaman langsung,
+        // tanpa animasi slide dari loader.js / app.js.
+        foreach ([
+            route('counselor.journals.index'),
+            route('counselor.journals.attendance'),
+            route('counselor.journals.history'),
+        ] as $url) {
+            $this->actingAs($this->counselor)
+                ->get($url)
+                ->assertOk()
+                ->assertSee('data-no-transition="true"', escape: false);
+        }
+    }
+
+    public function test_index_renders_when_an_assignment_has_no_schedule_yet(): void
+    {
+        // Penugasan tanpa jadwal memicu ringkasan "Belum Ada Jadwal" pada kartu kelas.
+        TeachingAssignment::create([
+            'teacher_id' => $this->counselorTeacher->id,
+            'subject_id' => Subject::where('code', 'MTK')->firstOrFail()->id,
+            'class_id' => $this->foreignClass->id,
+            'semester_id' => Semester::where('is_active', true)->firstOrFail()->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.index'))
+            ->assertOk()
+            ->assertSee('Belum Ada Jadwal')
+            ->assertSee($this->foreignClass->name);
+    }
+
+    public function test_counselor_form_is_blocked_on_a_day_outside_own_schedule(): void
+    {
+        $offScheduleDate = now()->subDay()->format('Y-m-d');
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.index', [
+                'assignment_id' => $this->counselorAssignment->id,
+                'date' => $offScheduleDate,
+            ]))
+            ->assertOk()
+            ->assertSee('Di Luar Jadwal Mengajar')
+            ->assertSee('Belum Dapat Diisi')
+            ->assertSee('Terkunci');
+    }
+
+    public function test_counselor_form_is_available_on_a_scheduled_day(): void
+    {
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.index', [
+                'assignment_id' => $this->counselorAssignment->id,
+                'date' => now()->format('Y-m-d'),
+            ]))
+            ->assertOk()
+            ->assertSee('Manajemen Absensi')
+            ->assertDontSee('Di Luar Jadwal Mengajar')
+            ->assertDontSee('Belum Dapat Diisi');
+    }
+
+    public function test_counselor_can_store_journal_on_a_scheduled_day(): void
     {
         ClassJournal::query()->delete();
         $student = $this->enrolledStudent($this->counseledClass);
@@ -92,11 +196,11 @@ class CounselorJournalAndPermitTest extends TestCase
 
         $this->actingAs($this->counselor)
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->counseledClass->id,
+                'teaching_assignment_id' => $this->counselorAssignment->id,
                 'journal_date' => $today,
                 'start_period_id' => $this->period1->id,
                 'end_period_id' => $this->period2->id,
-                'material' => 'BimbinganKarir dan Konseling Kelompok',
+                'material' => 'Bimbingan Karier dan Konseling Kelompok',
                 'hadir_count' => 20,
                 'sakit_count' => 1,
                 'izin_count' => 0,
@@ -106,13 +210,16 @@ class CounselorJournalAndPermitTest extends TestCase
                 ],
             ])
             ->assertRedirect(route('counselor.journals.index', [
-                'class_id' => $this->counseledClass->id,
+                'assignment_id' => $this->counselorAssignment->id,
                 'date' => $today,
             ]))
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('class_journals', [
-            'material' => 'BimbinganKarir dan Konseling Kelompok',
+            'teaching_assignment_id' => $this->counselorAssignment->id,
+            'schedule_id' => $this->counselorSchedule->id,
+            'created_by' => $this->counselorTeacher->id,
+            'material' => 'Bimbingan Karier dan Konseling Kelompok',
         ]);
 
         $this->assertDatabaseHas('journal_attendances', [
@@ -122,22 +229,46 @@ class CounselorJournalAndPermitTest extends TestCase
         ]);
     }
 
-    public function test_counselor_cannot_store_journal_for_a_class_outside_counseling(): void
+    public function test_counselor_cannot_store_journal_outside_own_schedule(): void
     {
         ClassJournal::query()->delete();
+        $offScheduleDate = now()->subDay()->format('Y-m-d');
+
+        $this->actingAs($this->counselor)
+            ->from(route('counselor.journals.index', [
+                'assignment_id' => $this->counselorAssignment->id,
+                'date' => $offScheduleDate,
+            ]))
+            ->post(route('counselor.journals.store'), [
+                'teaching_assignment_id' => $this->counselorAssignment->id,
+                'journal_date' => $offScheduleDate,
+                'start_period_id' => $this->period1->id,
+                'end_period_id' => $this->period2->id,
+                'material' => 'Absensi di luar jadwal',
+                'hadir_count' => 10,
+            ])
+            ->assertSessionHasErrors('journal_date');
+
+        $this->assertDatabaseMissing('class_journals', ['material' => 'Absensi di luar jadwal']);
+    }
+
+    public function test_counselor_cannot_store_journal_for_another_teachers_assignment(): void
+    {
+        ClassJournal::query()->delete();
+        $foreignAssignment = $this->foreignClass->teachingAssignments()->where('is_active', true)->firstOrFail();
 
         $this->actingAs($this->counselor)
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->foreignClass->id,
+                'teaching_assignment_id' => $foreignAssignment->id,
                 'journal_date' => now()->format('Y-m-d'),
                 'start_period_id' => $this->period1->id,
                 'end_period_id' => $this->period2->id,
-                'material' => 'Jurnal di luar kelas binaan',
+                'material' => 'Jurnal milik guru lain',
                 'hadir_count' => 10,
             ])
             ->assertForbidden();
 
-        $this->assertDatabaseMissing('class_journals', ['material' => 'Jurnal di luar kelas binaan']);
+        $this->assertDatabaseMissing('class_journals', ['material' => 'Jurnal milik guru lain']);
     }
 
     public function test_counselor_cannot_use_a_break_period_for_journal(): void
@@ -145,9 +276,9 @@ class CounselorJournalAndPermitTest extends TestCase
         ClassJournal::query()->delete();
 
         $this->actingAs($this->counselor)
-            ->from(route('counselor.journals.index', ['class_id' => $this->counseledClass->id]))
+            ->from(route('counselor.journals.index', ['assignment_id' => $this->counselorAssignment->id]))
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->counseledClass->id,
+                'teaching_assignment_id' => $this->counselorAssignment->id,
                 'journal_date' => now()->format('Y-m-d'),
                 'start_period_id' => $this->period1->id,
                 'end_period_id' => $this->breakPeriod->id,
@@ -165,18 +296,18 @@ class CounselorJournalAndPermitTest extends TestCase
         $today = now()->format('Y-m-d');
 
         ClassJournal::create([
-            'teaching_assignment_id' => $this->counseledClass->teachingAssignments()->value('id'),
+            'teaching_assignment_id' => $this->counselorAssignment->id,
             'journal_date' => $today,
             'start_period_id' => $this->period1->id,
             'end_period_id' => $this->period2->id,
             'material' => 'Jurnal bentrok',
-            'created_by' => $this->counseledClass->teachingAssignments()->value('teacher_id'),
+            'created_by' => $this->counselorTeacher->id,
         ]);
 
         $this->actingAs($this->counselor)
-            ->from(route('counselor.journals.index', ['class_id' => $this->counseledClass->id]))
+            ->from(route('counselor.journals.index', ['assignment_id' => $this->counselorAssignment->id]))
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->counseledClass->id,
+                'teaching_assignment_id' => $this->counselorAssignment->id,
                 'journal_date' => $today,
                 'start_period_id' => $this->period2->id,
                 'end_period_id' => $this->period5->id,
@@ -193,9 +324,9 @@ class CounselorJournalAndPermitTest extends TestCase
         ClassJournal::query()->delete();
 
         $this->actingAs($this->counselor)
-            ->from(route('counselor.journals.index', ['class_id' => $this->counseledClass->id]))
+            ->from(route('counselor.journals.index', ['assignment_id' => $this->counselorAssignment->id]))
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->counseledClass->id,
+                'teaching_assignment_id' => $this->counselorAssignment->id,
                 'journal_date' => now()->addWeek()->format('Y-m-d'),
                 'start_period_id' => $this->period1->id,
                 'end_period_id' => $this->period2->id,
@@ -217,9 +348,9 @@ class CounselorJournalAndPermitTest extends TestCase
             ->firstOrFail();
 
         $this->actingAs($this->counselor)
-            ->from(route('counselor.journals.index', ['class_id' => $this->counseledClass->id]))
+            ->from(route('counselor.journals.index', ['assignment_id' => $this->counselorAssignment->id]))
             ->post(route('counselor.journals.store'), [
-                'class_id' => $this->counseledClass->id,
+                'teaching_assignment_id' => $this->counselorAssignment->id,
                 'journal_date' => now()->format('Y-m-d'),
                 'start_period_id' => $this->period1->id,
                 'end_period_id' => $this->period2->id,
@@ -232,6 +363,100 @@ class CounselorJournalAndPermitTest extends TestCase
             ->assertSessionHasErrors('absences');
 
         $this->assertDatabaseMissing('class_journals', ['material' => 'Absensi lintas kelas']);
+    }
+
+    public function test_counselor_can_update_and_delete_own_journal(): void
+    {
+        ClassJournal::query()->delete();
+        $journal = $this->createCounselorJournal('Jurnal Milik Sendiri', now());
+
+        $this->actingAs($this->counselor)
+            ->put(route('counselor.journals.update', $journal), [
+                'start_period_id' => $this->period1->id,
+                'end_period_id' => $this->period2->id,
+                'material' => 'Jurnal Milik Sendiri (Direvisi)',
+                'hadir_count' => 30,
+            ])
+            ->assertRedirect(route('counselor.journals.index', [
+                'assignment_id' => $this->counselorAssignment->id,
+                'date' => now()->format('Y-m-d'),
+            ]));
+
+        $this->assertDatabaseHas('class_journals', [
+            'id' => $journal->id,
+            'material' => 'Jurnal Milik Sendiri (Direvisi)',
+        ]);
+
+        $this->actingAs($this->counselor)
+            ->delete(route('counselor.journals.destroy', $journal));
+
+        $this->assertDatabaseMissing('class_journals', ['id' => $journal->id]);
+    }
+
+    public function test_counselor_cannot_modify_journal_of_another_teacher(): void
+    {
+        ClassJournal::query()->delete();
+        $journal = $this->createJournal($this->counseledClass, 'Jurnal Guru Pengajar', now());
+
+        $this->actingAs($this->counselor)
+            ->put(route('counselor.journals.update', $journal), [
+                'start_period_id' => $this->period1->id,
+                'end_period_id' => $this->period2->id,
+                'material' => 'Diubah oleh BK',
+                'hadir_count' => 5,
+            ])
+            ->assertForbidden();
+
+        $this->actingAs($this->counselor)
+            ->delete(route('counselor.journals.destroy', $journal))
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('class_journals', [
+            'id' => $journal->id,
+            'material' => 'Jurnal Guru Pengajar',
+        ]);
+    }
+
+    public function test_counselor_can_read_attendance_of_counseled_class(): void
+    {
+        ClassJournal::query()->delete();
+        $student = $this->enrolledStudent($this->counseledClass);
+        $journal = $this->createJournal($this->counseledClass, 'Materi Matematika Kelas Binaan', now());
+
+        JournalAttendance::create([
+            'journal_id' => $journal->id,
+            'student_id' => $student->id,
+            'status' => AttendanceStatus::Absent,
+        ]);
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.attendance', [
+                'class_id' => $this->counseledClass->id,
+                'date' => now()->format('Y-m-d'),
+            ]))
+            ->assertOk()
+            ->assertSee('Lihat Absensi Kelas Binaan')
+            ->assertSee('Mode lihat saja')
+            ->assertSee('Materi Matematika Kelas Binaan')
+            ->assertSee($student->full_name)
+            // Halaman read-only tidak boleh menyediakan formulir absensi.
+            ->assertDontSee('Manajemen Absensi')
+            ->assertDontSee('formManajemenAbsensi', escape: false)
+            ->assertDontSee('name="teaching_assignment_id"', escape: false);
+    }
+
+    public function test_counselor_cannot_read_attendance_of_uncounseled_class(): void
+    {
+        ClassJournal::query()->delete();
+        $this->createJournal($this->foreignClass, 'Materi Rahasia Kelas Luar', now());
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.attendance', [
+                'class_id' => $this->foreignClass->id,
+                'date' => now()->format('Y-m-d'),
+            ]))
+            ->assertOk()
+            ->assertDontSee('Materi Rahasia Kelas Luar');
     }
 
     public function test_attendance_summary_is_derived_from_real_enrollment_not_stale_notes(): void
@@ -491,6 +716,20 @@ class CounselorJournalAndPermitTest extends TestCase
             'material' => $material,
             'notes' => 'Hadir: 30 | Sakit: 0 | Izin: 0 | Alpha: 0',
             'created_by' => $assignment->teacher_id,
+        ]);
+    }
+
+    protected function createCounselorJournal(string $material, Carbon $date): ClassJournal
+    {
+        return ClassJournal::create([
+            'teaching_assignment_id' => $this->counselorAssignment->id,
+            'schedule_id' => $this->counselorSchedule->id,
+            'journal_date' => $date->format('Y-m-d'),
+            'start_period_id' => $this->period1->id,
+            'end_period_id' => $this->period2->id,
+            'material' => $material,
+            'notes' => 'Hadir: 30 | Sakit: 0 | Izin: 0 | Alpha: 0',
+            'created_by' => $this->counselorTeacher->id,
         ]);
     }
 

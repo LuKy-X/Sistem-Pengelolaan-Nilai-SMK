@@ -5,8 +5,11 @@
 @section('content')
 <div class="space-y-5">
 
+  @include('partials.journals.bk-tabs', ['tabQuery' => ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]])
+
   <p class="text-sm text-bluedark/60">
-    <a href="{{ route('counselor.journals.index') }}" class="font-semibold text-blueprim hover:underline">Absensi Kelas</a>
+    <a href="{{ route('counselor.journals.attendance', ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]) }}"
+       class="font-semibold text-blueprim hover:underline" data-no-transition="true">Lihat Absensi</a>
     /
     <a href="{{ route('counselor.journals.history') }}" class="font-semibold text-blueprim hover:underline">Riwayat Jurnal</a>
     /
@@ -26,9 +29,9 @@
           &middot; Pengajar: {{ $journal->creator?->user?->name ?? $journal->creator?->full_name ?? 'Guru' }}
         </p>
       </div>
-      <a href="{{ route('counselor.journals.index', ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]) }}"
+      <a href="{{ route('counselor.journals.attendance', ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]) }}"
          class="btn btn-outline btn-sm" data-no-transition="true">
-        Buka di Absensi Kelas
+        Buka di Lihat Absensi
       </a>
     </div>
 

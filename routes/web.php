@@ -495,9 +495,14 @@ Route::middleware('auth')->group(function () {
         // Absensi Kelas & Jurnal
         Route::prefix('journals')->name('journals.')->group(function () {
             Route::get('/', [CounselorJournalController::class, 'index'])->name('index');
+            // "lihat-absensi" dan "riwayat" didaftarkan sebelum "{journal}" agar tidak
+            // tertangkap sebagai parameter jurnal.
+            Route::get('/lihat-absensi', [CounselorJournalController::class, 'attendance'])->name('attendance');
             Route::get('/riwayat', [CounselorJournalController::class, 'history'])->name('history');
-            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
             Route::post('/', [CounselorJournalController::class, 'store'])->name('store');
+            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [CounselorJournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [CounselorJournalController::class, 'destroy'])->name('destroy');
         });
     });
 });

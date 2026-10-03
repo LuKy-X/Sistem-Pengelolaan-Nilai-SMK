@@ -176,11 +176,11 @@
       </div>
       <div>
         <label class="f-label" for="date_from">Dari</label>
-        <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from']?->toDateString() }}" class="f-input">
+        <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from'] }}" class="f-input">
       </div>
       <div>
         <label class="f-label" for="date_to">Sampai</label>
-        <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to']?->toDateString() }}" class="f-input">
+        <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to'] }}" class="f-input">
       </div>
 
       <div class="sm:col-span-2 xl:col-span-6 flex gap-2">

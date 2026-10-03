@@ -5,8 +5,10 @@
 @section('content')
 <div class="space-y-5">
 
+  @include('partials.journals.bk-tabs', ['tabQuery' => ['class_id' => $selectedClass?->id]])
+
   <p class="text-sm text-bluedark/60">
-    <a href="{{ route('counselor.journals.index') }}" class="font-semibold text-blueprim hover:underline">Absensi Kelas</a>
+    <a href="{{ route('counselor.journals.attendance') }}" class="font-semibold text-blueprim hover:underline" data-no-transition="true">Lihat Absensi</a>
     /
     <span class="font-semibold text-bluedark">Riwayat Semua Jurnal</span>
   </p>
@@ -77,7 +79,7 @@
         <input type="date" id="date_to" name="date_to" value="{{ $dateTo }}" class="f-input">
       </div>
       <button type="submit" class="btn btn-primary">Terapkan</button>
-      @if($search !== '' || $selectedClass || $dateFrom !== '' || $dateTo !== '')
+      @if($search !== '' || $selectedClass || $dateFrom || $dateTo)
         <a href="{{ route('counselor.journals.history') }}" class="btn btn-outline">Reset</a>
       @endif
     </form>

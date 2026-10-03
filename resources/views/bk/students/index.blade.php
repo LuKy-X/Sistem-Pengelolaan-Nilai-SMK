@@ -28,6 +28,7 @@
 
   <div class="grid grid-cols-2 xl:grid-cols-4 gap-4">
     <a href="{{ route('counselor.students.index', ['scope' => 'all']) }}"
+       data-no-transition="true"
        class="kpi-card {{ $scope === 'all' ? 'ring-2 ring-blueprim/30' : '' }}">
       <div class="kpi-icon bg-bluelight text-bluedark">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
@@ -39,6 +40,7 @@
     </a>
 
     <a href="{{ route('counselor.students.index', ['scope' => 'attention']) }}"
+       data-no-transition="true"
        class="kpi-card {{ $scope === 'attention' ? 'ring-2 ring-amber-400/40' : '' }}">
       <div class="kpi-icon bg-amber-100 text-amber-600">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -51,7 +53,9 @@
       </div>
     </a>
 
-    <div class="kpi-card">
+    <a href="{{ route('counselor.students.index', ['scope' => 'sp1']) }}"
+       data-no-transition="true"
+       class="kpi-card {{ $scope === 'sp1' ? 'ring-2 ring-red-400/40' : '' }}">
       <div class="kpi-icon bg-red-100 text-red-600">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>
       </div>
@@ -59,9 +63,11 @@
         <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ $thresholdCounts['sp1'] ?? 0 }}</div>
         <div class="text-[11px] text-bluedark/55 mt-1">Mencapai Ambang SP1</div>
       </div>
-    </div>
+    </a>
 
-    <div class="kpi-card">
+    <a href="{{ route('counselor.students.index', ['scope' => 'sp23']) }}"
+       data-no-transition="true"
+       class="kpi-card {{ $scope === 'sp23' ? 'ring-2 ring-red-500/40' : '' }}">
       <div class="kpi-icon bg-red-200 text-red-800">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
       </div>
@@ -69,7 +75,7 @@
         <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ ($thresholdCounts['sp2'] ?? 0) + ($thresholdCounts['sp3'] ?? 0) }}</div>
         <div class="text-[11px] text-bluedark/55 mt-1">Mencapai Ambang SP2&ndash;SP3</div>
       </div>
-    </div>
+    </a>
   </div>
 
   <div class="panel p-5">
@@ -83,6 +89,8 @@
         <select id="scope" name="scope" class="f-select">
           <option value="all" @selected($scope === 'all')>Semua Siswa Aktif</option>
           <option value="attention" @selected($scope === 'attention')>Perlu Perhatian / Ambang SP</option>
+          <option value="sp1" @selected($scope === 'sp1')>Mencapai Ambang SP1</option>
+          <option value="sp23" @selected($scope === 'sp23')>Mencapai Ambang SP2&ndash;SP3</option>
         </select>
       </div>
       <button type="submit" class="btn btn-primary">Terapkan</button>
@@ -95,6 +103,7 @@
       @forelse($students as $student)
         @php($studentStanding = $standings[$student->id] ?? ['label' => 'Aman', 'badge' => 'badge-green', 'tone' => 'safe'])
         <a href="{{ route('counselor.students.show', $student) }}"
+           data-no-transition="true"
            class="rounded-2xl border border-bluelight p-4 hover:border-blueprim/40 hover:shadow-sm transition-all">
           <div class="flex items-start gap-3">
             <div class="avatar-circle">{{ strtoupper(substr($student->full_name, 0, 2)) }}</div>
