@@ -74,7 +74,7 @@
 
                         <div>
                             <label class="f-label text-xs">Nama Lengkap Kepala Sekolah (Beserta Gelar)</label>
-                            <input type="text" name="principal_name" id="inpPrincipal" value="{{ old('principal_name', $profile->principal_name) }}" placeholder="Drs. H. Sukardi, M.Pd." class="f-input text-xs w-full" oninput="syncLivePreview()">
+                            <input type="text" name="principal_name" id="inpPrincipal" value="{{ old('principal_name', $profile->principal_name) }}" placeholder="Sukidi, S.Pd., M.Pd." class="f-input text-xs w-full" oninput="syncLivePreview()">
                         </div>
                     </div>
                 </div>

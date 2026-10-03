@@ -41,7 +41,7 @@ class CmsController extends Controller
         $profile = SchoolProfile::first() ?? new SchoolProfile([
             'school_name' => 'SMK Negeri 2 Karanganyar',
             'npsn' => '20312345',
-            'principal_name' => 'Drs. H. Sukardi, M.Pd.',
+            'principal_name' => 'Sukidi, S.Pd., M.Pd.',
             'phone' => '(0271) 495123',
             'email' => 'info@smkn2-kra.sch.id',
             'website' => 'https://smkn2-kra.sch.id',

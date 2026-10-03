@@ -32,7 +32,7 @@ class AdminSchoolProfileTest extends TestCase
         SchoolProfile::create([
             'school_name' => 'SMK Negeri 2 Karanganyar',
             'npsn' => '20312345',
-            'principal_name' => 'Drs. H. Sukardi, M.Pd.',
+            'principal_name' => 'Sukidi, S.Pd., M.Pd.',
             'phone' => '(0271) 495123',
             'email' => 'info@smkn2-kra.sch.id',
             'website' => 'https://smkn2-kra.sch.id',
@@ -106,7 +106,7 @@ class AdminSchoolProfileTest extends TestCase
         $payload = [
             'school_name' => 'SMK Negeri 2 Karanganyar Berkarakter',
             'npsn' => '20312345',
-            'principal_name' => 'Drs. H. Sukardi, M.Pd.',
+            'principal_name' => 'Sukidi, S.Pd., M.Pd.',
         ];
 
         $response = $this->actingAs($this->adminUser)->post(route('admin.cms.profile.update'), $payload);

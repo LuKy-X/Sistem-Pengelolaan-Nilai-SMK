@@ -2,8 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\SchoolProfile;
+use App\Models\TeacherGradeSetting;
+use App\Models\TeacherProfile;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class SchoolProfileSeeder extends Seeder
 {
@@ -29,6 +34,44 @@ class SchoolProfileSeeder extends Seeder
             $profile->update($data);
         } else {
             SchoolProfile::create($data);
+        }
+
+        // Kepala sekolah didaftarkan sebagai Guru (posisi non-mengajar) agar memiliki NIP untuk keperluan laporan/ekspor
+        $teacherRole = Role::where('code', 'TEACHER')->first();
+        if ($teacherRole) {
+            $userSukidi = User::firstOrCreate(
+                ['username' => 'kepsek.sukidi'],
+                [
+                    'name' => 'Sukidi, S.Pd., M.Pd.',
+                    'email' => 'sukidi@smk.test',
+                    'password' => Hash::make('password123'),
+                    'is_active' => true,
+                ]
+            );
+            $userSukidi->roles()->syncWithoutDetaching([$teacherRole->id]);
+
+            $teacherSukidi = TeacherProfile::updateOrCreate(
+                ['user_id' => $userSukidi->id],
+                [
+                    'nip' => '19700310 199702 1 004',
+                    'full_name' => 'Sukidi, S.Pd., M.Pd.',
+                    'gender' => 'MALE',
+                    'phone' => '0271-494549',
+                    'status' => 'ACTIVE',
+                ]
+            );
+
+            TeacherGradeSetting::firstOrCreate(
+                ['teacher_id' => $teacherSukidi->id],
+                [
+                    'default_late_enabled' => true,
+                    'default_reduction_type' => 'FIXED_POINTS',
+                    'default_reduction_value' => 10.00,
+                    'default_interval' => 60,
+                    'default_grace_minutes' => 15,
+                    'default_min_max_score' => 60.00,
+                ]
+            );
         }
     }
 }

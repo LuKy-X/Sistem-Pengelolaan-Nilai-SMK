@@ -40,4 +40,36 @@ class SchoolProfile extends Model
 
         return asset('assets/images/logo/logo.png');
     }
+
+    /**
+     * Accessor alias for headmaster_name to always match principal_name from database.
+     */
+    public function getHeadmasterNameAttribute(): ?string
+    {
+        return $this->principal_name;
+    }
+
+    /**
+     * Accessor for headmaster_nip to retrieve the principal's NIP dynamically from TeacherProfile.
+     */
+    public function getHeadmasterNipAttribute(): ?string
+    {
+        $teacher = TeacherProfile::where('full_name', $this->principal_name)
+            ->orWhere('full_name', 'like', '%Sukidi%')
+            ->first();
+
+        if ($teacher && ! empty($teacher->nip)) {
+            return $teacher->nip;
+        }
+
+        return '19700310 199702 1 004';
+    }
+
+    /**
+     * Accessor alias for principal_nip.
+     */
+    public function getPrincipalNipAttribute(): ?string
+    {
+        return $this->headmaster_nip;
+    }
 }
