@@ -421,11 +421,6 @@
                     <tr class="bg-amber-50/70 border-y-2 border-amber-200/80 hover:bg-amber-50 transition-colors">
                       <td colspan="11" class="py-2.5 px-4 text-center">
                         <div class="inline-flex items-center justify-center gap-2 text-amber-950 font-bold text-xs tracking-wide">
-                          @if(str_contains(strtolower($period->name), '2') || str_contains(strtolower($period->name), 'ii') || substr($period->start_time, 0, 2) >= '11')
-                            <span class="text-base leading-none">🕌</span>
-                          @else
-                            <span class="text-base leading-none">☕</span>
-                          @endif
                           <span class="uppercase tracking-wider font-extrabold text-amber-900">{{ strtoupper($period->name) }}</span>
                           <span class="px-2 py-0.5 rounded-full bg-amber-200/70 text-amber-900 font-mono text-[11px] font-semibold">
                             {{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }}
