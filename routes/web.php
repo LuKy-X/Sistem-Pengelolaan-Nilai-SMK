@@ -35,6 +35,15 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
+use App\Http\Controllers\Student\AppealController as StudentAppealController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
+use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
+use App\Http\Controllers\Student\GradeController as StudentGradeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -55,11 +64,6 @@ use Illuminate\Support\Facades\Route;
 // ==========================================
 // 0. ROOT DISPATCHER
 // ==========================================
-// The root path is never a page of its own: it sends guests to the login form
-// and authenticated users to the dashboard that matches their role. Keeping the
-// dispatcher at "/" is also what the "guest" middleware redirects to, so an
-// authenticated user who opens /login is forwarded here instead of being shown
-// the welcome page.
 Route::get('/', function (Request $request) {
     if (! $request->user()) {
         return redirect()->route('login');
@@ -222,6 +226,8 @@ Route::middleware('auth')->group(function () {
         // Monitoring Buku Nilai
         Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
         Route::get('/grades/{gradebook}', [GradesController::class, 'show'])->name('grades.show');
+        Route::get('/grades/{gradebook}/export/excel', [GradesController::class, 'exportExcel'])->name('grades.export.excel');
+        Route::get('/grades/{gradebook}/export/pdf', [GradesController::class, 'exportPdf'])->name('grades.export.pdf');
 
         // Layanan BK & Kedisiplinan
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
@@ -243,6 +249,11 @@ Route::middleware('auth')->group(function () {
             Route::delete('/articles/{article}', [CmsController::class, 'destroyArticle'])->name('articles.destroy');
             Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
             Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
+
+            // Kategori Artikel
+            Route::post('/article-categories', [CmsController::class, 'storeArticleCategory'])->name('article-categories.store');
+            Route::put('/article-categories/{category}', [CmsController::class, 'updateArticleCategory'])->name('article-categories.update');
+            Route::delete('/article-categories/{category}', [CmsController::class, 'destroyArticleCategory'])->name('article-categories.destroy');
 
             // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
@@ -380,56 +391,56 @@ Route::middleware('auth')->group(function () {
     // 5. STUDENT / SISWA ROUTES (role:student)
     // ==========================================
     Route::middleware('role:student')->prefix('siswa')->name('student.')->group(function () {
-        Route::get('/dashboard', function () {
-            return 'Student Dashboard';
-        })->name('dashboard');
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
 
-        Route::get('/jadwal', function () {
-            return 'Jadwal Pelajaran Siswa';
-        })->name('schedules.index');
+        Route::get('/jadwal', [StudentScheduleController::class, 'index'])->name('schedules.index');
+        Route::get('/jadwal/{schedule}', [StudentScheduleController::class, 'show'])->name('schedules.show');
 
-        Route::get('/nilai', function () {
-            return 'Rekap Nilai Siswa';
-        })->name('grades.index');
+        // Nilai & Buku Nilai
+        Route::prefix('nilai')->name('grades.')->group(function () {
+            Route::get('/', [StudentGradeController::class, 'index'])->name('index');
+            // "rekap" harus didaftarkan sebelum "{gradebook}" agar tidak tertangkap
+            // sebagai parameter buku nilai.
+            Route::get('/rekap', [StudentGradeController::class, 'recap'])->name('recap');
+            Route::get('/{gradebook}', [StudentGradeController::class, 'show'])->name('show');
+        });
 
         // Tugas & Pengumpulan
         Route::prefix('assignments')->name('assignments.')->group(function () {
-            Route::get('/', function () {
-                return 'Daftar Tugas Siswa';
-            })->name('index');
-
-            Route::get('/{assessment}', function () {
-                return 'Detail Tugas';
-            })->name('show');
-
-            Route::post('/{assessment}/submit', function () {
-                return 'Kirim Jawaban Tugas';
-            })->name('submit');
+            Route::get('/', [StudentAssignmentController::class, 'index'])->name('index');
+            Route::get('/{assessment}', [StudentAssignmentController::class, 'show'])->name('show');
+            Route::post('/{assessment}/submit', [StudentAssignmentController::class, 'submit'])->name('submit');
         });
 
         // Izin Keluar Sekolah
         Route::prefix('exit-permits')->name('exit-permits.')->group(function () {
-            Route::get('/', function () {
-                return 'Riwayat Izin Keluar Siswa';
-            })->name('index');
-
-            Route::get('/create', function () {
-                return 'Form Pengajuan Izin Keluar';
-            })->name('create');
-
-            Route::get('/{permit}', function () {
-                return 'Detail & Timer Izin Keluar';
-            })->name('show');
-
-            Route::post('/{permit}/appeal', function () {
-                return 'Ajukan Banding Keterlambatan';
-            })->name('appeal');
+            Route::get('/', [StudentExitPermitController::class, 'index'])->name('index');
+            Route::get('/create', [StudentExitPermitController::class, 'create'])->name('create');
+            Route::post('/', [StudentExitPermitController::class, 'store'])->name('store');
+            Route::get('/{permit}', [StudentExitPermitController::class, 'show'])->name('show');
+            Route::post('/{permit}/appeal', [StudentExitPermitController::class, 'appeal'])->name('appeal');
         });
 
-        // Disiplin Siswa
-        Route::get('/disiplin', function () {
-            return 'Informasi Poin Disiplin Siswa';
-        })->name('discipline.index');
+        // Banding Keterlambatan
+        Route::get('/banding', [StudentAppealController::class, 'index'])->name('appeals.index');
+        Route::get('/banding/{appeal}', [StudentAppealController::class, 'show'])->name('appeals.show');
+
+        // Buku Saku (Poin Disiplin)
+        Route::get('/disiplin', [StudentDisciplineController::class, 'index'])->name('discipline.index');
+
+        // Notifikasi
+        Route::prefix('notifikasi')->name('notifications.')->group(function () {
+            Route::get('/', [StudentNotificationController::class, 'index'])->name('index');
+            Route::get('/{notification}', [StudentNotificationController::class, 'read'])->name('read');
+            Route::post('/baca-semua', [StudentNotificationController::class, 'markAllRead'])->name('read-all');
+        });
+
+        // Profil & Pengaturan Akun
+        Route::prefix('profil')->name('profile.')->group(function () {
+            Route::get('/', [StudentProfileController::class, 'index'])->name('index');
+            Route::put('/', [StudentProfileController::class, 'update'])->name('update');
+            Route::put('/password', [StudentProfileController::class, 'updatePassword'])->name('password');
+        });
     });
 
     // ==========================================

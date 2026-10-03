@@ -540,6 +540,8 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                             @php
                                 $mediaService = app(\App\Services\PublicMediaService::class);
                                 $logoUrl = $mediaService->forModel($comp, 'logo');
+                                $companyEditData = $comp->toArray();
+                                $companyEditData['logo_url'] = $logoUrl;
                             @endphp
                             <tr class="hover:bg-slate-50/70 transition-colors" id="comp-row-{{ $comp->id }}">
                                 <td class="py-3.5 px-3 text-bluedark/60 font-mono">{{ $companies->firstItem() + $idx }}</td>
@@ -613,7 +615,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                                     <div class="inline-flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-bluelight/70 shadow-2xs">
                                         <!-- Edit -->
                                         <button type="button" 
-                                                onclick="openEditCompModal({{ json_encode($comp) }})" 
+                                                onclick="openEditCompModal(@js($companyEditData))"
                                                 class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-600 hover:text-blue-700 hover:bg-white hover:shadow-xs transition-all" 
                                                 title="Edit Mitra">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1656,8 +1658,8 @@ function openEditCompModal(comp) {
     // Current logo
     const curWrapper = document.getElementById('editCompCurrentLogoWrapper');
     const curImg = document.getElementById('editCompCurrentLogoImg');
-    if (comp.logo) {
-        curImg.src = '{{ asset('storage') }}/' + comp.logo;
+    if (comp.logo_url) {
+        curImg.src = comp.logo_url;
         curWrapper.style.display = 'flex';
     } else {
         curWrapper.style.display = 'none';

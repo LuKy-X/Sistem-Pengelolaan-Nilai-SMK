@@ -23,7 +23,24 @@ Dokumen pelacak pekerjaan antar pengembang dan AI Agent untuk mencegah tumpang t
 | MOD-04 | Teacher Assessment & Rubrik | Manajemen tugas, aturan potongan telat, rubrik penskoran multi-kriteria, & koreksi submission | Senior Developer | `app/Http/Controllers/Teacher/AssessmentController.php`, `RubricController.php`, `resources/views/teacher/assessments/*.blade.php` | DONE |
 | MOD-06 | Teacher Journal & Presensi | Jurnal harian mengajar, jam ke- sd ke-, presensi Hadir/S/I/A, dan pencatatan siswa | Senior Developer | `app/Http/Controllers/Teacher/JournalController.php`, `resources/views/teacher/journals/*.blade.php` | DONE |
 | MOD-14 | Catatan Nilai & Profil | Catatan evaluasi/remedial siswa per rombel dan pengelolaan data profil/keamanan guru | Senior Developer | `app/Http/Controllers/Teacher/GradeNoteController.php`, `ProfileController.php`, `tests/Feature/TeacherPortalTest.php` | DONE |
+<<<<<<< HEAD
+| MOD-15 | Portal Siswa | Dashboard, tugas, nilai, jadwal, izin keluar, banding, buku saku, profil, rekap nilai, status akademik, notifikasi | Student Team | `app/Http/Controllers/Student/*`, `resources/views/student/**`, `tests/Feature/StudentPortalTest.php`, `tests/Feature/StudentNotificationTest.php` | DONE |
+| FIX-01 | Test suite MySQL | Test dipindahkan dari SQLite in-memory ke MySQL (`sistem_nilai_test`) karena SQLite tidak menegakkan foreign key dan AUTO_INCREMENT-nya di-rollback | Student Team | `phpunit.xml` | DONE |
+| FIX-02 | Seeder hardcoded ID | 20 id angka di `SampleBkDataSeeder` diganti resolusi berbasis identitas (NIS, nama kategori) | Student Team | `database/seeders/SampleBkDataSeeder.php` | DONE |
+
+---
+
+## UTANG TEKNIS (di luar cakupan modul siswa)
+
+| ID | Modul | Masalah | Dampak | Catatan |
+|---|---|---|---|---|
+| DEBT-01 | Guru — `Teacher\AssessmentController::gradeSubmission` (sekitar baris 300-315) | Menulis `status => 'GRADED'` yang **bukan nilai enum valid** (`SubmissionStatus` hanya punya `DRAFT`/`SUBMITTED`/`REVIEWED`), menulis `score`/`feedback`/`graded_by`/`graded_at` yang **tidak ada di `#[Fillable]`** sehingga dibuang diam-diam, dan membaca `$submission->is_late` yang tidak pernah ada | Setiap kali Guru menilai tugas lewat `POST /guru/assessments/{a}/submissions/{s}/grade` berakhir **HTTP 500**. Notifikasi `SubmissionGraded` juga tidak terkirim untuk jalur ini | Sengaja tidak diperbaiki dari modul siswa. Perbaikan: ganti `'GRADED'` menjadi `SubmissionStatus::Reviewed`, gunakan kolom `teacher_feedback`/`reviewed_by`/`reviewed_at`, dan baca `late_minutes` (bukan `is_late`) lalu terapkan `latePolicy` |
+| DEBT-02 | Guru — `Teacher\JournalController::store` (sekitar baris 142) | Memakai `AttendanceStatus::Permitted`, sedangkan enum hanya punya `Present`/`Sick`/`Permit`/`Absent` | `Error: Undefined constant` (HTTP 500) bila `absences[]` pernah dikirim | Form jurnal guru juga belum punya input per-siswa, jadi `journal_attendances` praktis tidak pernah terisi |
+| DEBT-03 | Guru — `resources/views/teacher/journals/index.blade.php` (sekitar baris 115-118) | Membaca `$j->hadir_count`, `$sakit_count`, `$izin_count`, `$alpha_count` yang tidak menjadi kolom di `class_journals` (angkanya disimpan sebagai teks di `notes`) | Empat kotak ringkasan absensi selalu kosong | Akan ikut benar setelah DEBT-02 dan form jurnal diperbaiki |
+| DEBT-04 | Test — `CounselorModuleTest::test_deleting_a_discipline_record_restores_the_point_balance` | Ekspektasi saldo disiplin mengasumsikan saldo awal 100, padahal `SampleBkDataSeeder` sudah membuat catatan untuk siswa tersebut sehingga saldo sebenarnya lebih rendah | 1 test gagal di suite | Diperbaiki sementara di branch modul siswa pada commit `f72949d`, lalu **dikembalikan** ke kondisi semula karena `CounselorModuleTest` berada di luar cakupan. Perlu dikerjakan oleh pemilik modul BK |
+=======
 | MOD-02 | Admin Portal & Akademik | Dashboard admin, Tahun Ajaran, Semester, Jurusan, Rombel/Kelas, Mapel, Teaching Assignments, Jadwal KBM, Siswa, Guru, Users, Presensi & Export CSV, Monitoring Nilai & BK, serta Pengelolaan Konten CMS Sekolah | AI Agent | `app/Http/Controllers/Admin/*.php`, `app/Http/Requests/Admin/*.php`, `resources/views/admin/**/*.blade.php`, `resources/views/layouts/admin.blade.php`, `tests/Feature/AdminPortalTest.php` | DONE |
+>>>>>>> 32b7cb5769f4561866ad6fffc2eb532c14286bfc
 
 ---
 

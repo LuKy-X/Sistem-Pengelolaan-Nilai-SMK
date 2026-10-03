@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\PublicMediaService;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,11 +34,8 @@ class SchoolProfile extends Model
     public function getLogoUrlAttribute(): string
     {
         if (! empty($this->logo)) {
-            if (str_starts_with($this->logo, 'http')) {
-                return $this->logo;
-            }
-
-            return asset('storage/'.$this->logo);
+            return app(PublicMediaService::class)->url($this->logo, 'public')
+                ?? asset('assets/images/logo/logo.png');
         }
 
         return asset('assets/images/logo/logo.png');

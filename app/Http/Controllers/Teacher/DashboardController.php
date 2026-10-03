@@ -70,7 +70,12 @@ class DashboardController extends Controller
             $q->whereIn('teaching_assignment_id', $assignmentIds);
         })
             ->where('status', 'SUBMITTED')
-            ->with(['assessment.teachingAssignment.schoolClass', 'assessment.teachingAssignment.subject', 'student'])
+            ->with([
+                'assessment.teachingAssignment.schoolClass',
+                'assessment.teachingAssignment.subject',
+                'assessment.gradebookColumn',
+                'student',
+            ])
             ->latest('submitted_at')
             ->take(5)
             ->get();

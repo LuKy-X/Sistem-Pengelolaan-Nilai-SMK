@@ -23,30 +23,99 @@
         </div>
     </div>
 
-    <!-- Filter & Pencarian -->
-    <div class="panel p-4 flex flex-col md:flex-row items-center justify-between gap-3">
-        <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <input type="text" name="search" value="{{ $search }}" placeholder="Cari Nama, Username, atau Email..." class="f-input text-xs py-1.5 w-64">
+    <!-- KPI Metric Cards Row (Sesuai Style Dashboard Admin) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="kpi-card">
+            <div class="kpi-icon bg-bluelight text-blueprim">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ number_format($stats['total'] ?? 0) }}</div>
+                <div class="text-[11px] text-bluedark/55 mt-1">Total Akun Terdaftar</div>
+            </div>
+        </div>
 
-            <select name="role_id" class="f-select text-xs py-1.5 w-44">
-                <option value="">-- Semua Role --</option>
-                @foreach($roles as $r)
-                    <option value="{{ $r->id }}" {{ $roleId == $r->id ? 'selected' : '' }}>{{ ucfirst($r->name) }}</option>
-                @endforeach
-            </select>
+        <div class="kpi-card">
+            <div class="kpi-icon bg-emerald-100 text-emerald-600">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+                <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ number_format($stats['active'] ?? 0) }}</div>
+                <div class="text-[11px] text-bluedark/55 mt-1">Akun Status Aktif</div>
+            </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary btn-sm text-xs py-1.5">
-                Filter
-            </button>
+        <div class="kpi-card">
+            <div class="kpi-icon bg-rose-100 text-rose-600">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+            </div>
+            <div>
+                <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ number_format($stats['inactive'] ?? 0) }}</div>
+                <div class="text-[11px] text-bluedark/55 mt-1">Akun Nonaktif</div>
+            </div>
+        </div>
 
-            @if($search || $roleId)
-                <a href="{{ route('admin.users.index') }}" class="text-xs text-rose-600 hover:underline">
-                    Reset
-                </a>
-            @endif
+        <div class="kpi-card">
+            <div class="kpi-icon bg-amber-100 text-amber-600">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div>
+                <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ number_format($stats['admin'] ?? 0) }}</div>
+                <div class="text-[11px] text-bluedark/55 mt-1">Hak Akses Admin</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter & Pencarian Toolbar -->
+    <div class="panel p-4 space-y-3">
+        <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-wrap items-center gap-3">
+            <div class="relative flex-1 min-w-[220px]">
+                <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-bluedark/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Cari Nama, Username, atau Email..." class="f-input text-xs py-2 pl-9 pr-3 w-full">
+            </div>
+
+            <div class="w-full sm:w-auto min-w-[160px]">
+                <select name="role_id" class="f-select text-xs py-2 w-full">
+                    <option value="">-- Semua Role --</option>
+                    @foreach($roles as $r)
+                        <option value="{{ $r->id }}" {{ $roleId == $r->id ? 'selected' : '' }}>{{ ucfirst($r->name) }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="w-full sm:w-auto min-w-[140px]">
+                <select name="status" class="f-select text-xs py-2 w-full">
+                    <option value="">-- Status Akun --</option>
+                    <option value="1" {{ ($status ?? '') === '1' ? 'selected' : '' }}>Aktif</option>
+                    <option value="0" {{ ($status ?? '') === '0' ? 'selected' : '' }}>Nonaktif</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button type="submit" class="btn btn-primary btn-sm text-xs py-2 px-4 flex items-center gap-1.5 shadow-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                    <span>Terapkan</span>
+                </button>
+
+                @if($search || $roleId || ($status !== null && $status !== ''))
+                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline btn-sm text-xs py-2 px-3 text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700">
+                        Reset
+                    </a>
+                @endif
+            </div>
         </form>
 
-        <span class="text-xs text-bluedark/50">Total Akun: <strong>{{ $users->total() }}</strong></span>
+        <div class="flex items-center justify-between text-xs text-bluedark/50 pt-2 border-t border-slate-100">
+            <div>
+                Menampilkan <strong>{{ $users->count() }}</strong> dari <strong>{{ $users->total() }}</strong> akun
+            </div>
+            @if($search || $roleId || ($status !== null && $status !== ''))
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-blueprim">
+                    <span class="w-2 h-2 rounded-full bg-blueprim animate-pulse"></span>
+                    Filter aktif
+                </span>
+            @endif
+        </div>
     </div>
 
     <!-- Table Pengguna matching template/admin/pengguna.html -->
@@ -99,7 +168,7 @@
                             <td>
                                 <form action="{{ route('admin.users.toggle-status', $u) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="badge {{ $u->is_active ? 'badge-green' : 'badge-gray' }} hover:scale-105 transition-transform text-[10px] cursor-pointer">
+                                    <button type="submit" class="badge {{ $u->is_active ? 'badge-green' : 'badge-gray' }} hover:scale-105 transition-transform text-[10px] cursor-pointer" title="Klik untuk ubah status">
                                         {{ $u->is_active ? 'Aktif' : 'Non-Aktif' }}
                                     </button>
                                 </form>
@@ -123,8 +192,21 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-8 text-xs text-bluedark/40">
-                                Tidak ada data pengguna yang ditemukan.
+                            <td colspan="7" class="text-center py-12">
+                                <div class="max-w-xs mx-auto text-center space-y-2">
+                                    <div class="w-12 h-12 mx-auto rounded-full bg-slate-100 text-bluedark/40 flex items-center justify-center">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    </div>
+                                    <p class="text-sm font-semibold text-bluedark">Data Pengguna Tidak Ditemukan</p>
+                                    <p class="text-xs text-bluedark/50">Tidak ada pengguna yang cocok dengan kriteria pencarian atau filter yang dipilih.</p>
+                                    @if($search || $roleId || ($status !== null && $status !== ''))
+                                        <div class="pt-2">
+                                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline btn-sm text-xs py-1 px-3">
+                                                Reset Filter
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforelse

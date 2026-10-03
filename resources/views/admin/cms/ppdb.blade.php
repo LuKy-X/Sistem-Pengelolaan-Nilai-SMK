@@ -57,7 +57,7 @@
                 <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Penerimaan Peserta Didik Baru (PPDB)</h1>
                 <span class="badge badge-blue text-xs font-semibold">{{ $periods->count() }} Gelombang</span>
             </div>
-            <p class="text-sm text-bluedark/60 mt-1">Pilih salah satu gelombang di bawah ini untuk mengatur jadwal, jalur pendaftaran, persyaratan, dan rincian biaya.</p>
+            <p class="text-sm text-bluedark/60 mt-1">Pilih salah satu gelombang di bawah ini untuk mengatur jadwal pelaksanaan, jalur seleksi, dan persyaratan berkas pendaftaran.</p>
         </div>
 
         <div class="flex items-center gap-2.5 flex-wrap">
@@ -161,7 +161,7 @@
         </svg>
         <div class="space-y-1">
             <p class="font-semibold text-bluedark text-sm">Petunjuk Pengelolaan PPDB</p>
-            <p class="leading-relaxed">Setiap gelombang PPDB memiliki konfigurasi tersendiri untuk <strong>Jadwal Pelaksanaan</strong>, <strong>Jalur Pendaftaran</strong>, <strong>Persyaratan Berkas</strong>, dan <strong>Rincian Biaya</strong>. Silakan klik tombol <strong>"Kelola Gelombang"</strong> pada salah satu gelombang di bawah ini untuk mulai mengisi atau mengedit datanya.</p>
+            <p class="leading-relaxed">Setiap gelombang PPDB memiliki konfigurasi tersendiri untuk <strong>Jadwal Pelaksanaan</strong>, <strong>Jalur Pendaftaran</strong>, dan <strong>Persyaratan Berkas</strong>. Sebagai sekolah negeri, PPDB tidak dipungut biaya pendaftaran (Gratis). Silakan klik tombol <strong>"Kelola Gelombang"</strong> pada salah satu gelombang di bawah ini untuk mulai mengisi atau mengedit datanya.</p>
         </div>
     </div>
 
@@ -261,7 +261,7 @@
                             </svg>
                         </button>
 
-                        <form method="POST" action="{{ route('admin.cms.ppdb.periods.destroy', $period) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus gelombang {{ $period->title }} ini? Seluruh data jadwal, jalur, persyaratan, dan biaya pada gelombang ini akan terhapus.');">
+                        <form method="POST" action="{{ route('admin.cms.ppdb.periods.destroy', $period) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus gelombang {{ $period->title }} ini? Seluruh data jadwal, jalur, dan persyaratan pada gelombang ini akan terhapus.');">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="p-2 rounded-xl border border-red-200 hover:bg-red-50 text-red-600 transition-colors" title="Hapus Gelombang">
@@ -274,8 +274,8 @@
                     </div>
                 </div>
 
-                <!-- 4 Sub-tables status pill summary -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-3 border-t border-bluelight/80">
+                <!-- 3 Sub-tables status pill summary -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3 border-t border-bluelight/80">
                     <a href="{{ route('admin.cms.ppdb.periods.manage', ['period' => $period, 'tab' => 'schedules']) }}"
                         class="p-2.5 rounded-xl border border-bluelight/80 bg-bluelight/10 hover:bg-bluelight/30 hover:border-blueprim/30 transition-all flex items-center gap-2.5">
                         <span class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 grid place-items-center text-xs font-bold shrink-0">
@@ -308,17 +308,6 @@
                             <p class="font-heading font-semibold text-xs text-bluedark truncate">Dokumen & Berkas</p>
                         </div>
                     </a>
-
-                    <a href="{{ route('admin.cms.ppdb.periods.manage', ['period' => $period, 'tab' => 'fees']) }}"
-                        class="p-2.5 rounded-xl border border-bluelight/80 bg-bluelight/10 hover:bg-bluelight/30 hover:border-blueprim/30 transition-all flex items-center gap-2.5">
-                        <span class="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 grid place-items-center text-xs font-bold shrink-0">
-                            {{ $period->fee_items_count ?? $period->feeItems->count() }}
-                        </span>
-                        <div class="min-w-0">
-                            <p class="text-[11px] text-bluedark/50">Rincian Biaya</p>
-                            <p class="font-heading font-semibold text-xs text-bluedark truncate">Komponen Biaya</p>
-                        </div>
-                    </a>
                 </div>
             </div>
         @empty
@@ -333,7 +322,7 @@
                 </div>
                 <div>
                     <h3 class="font-heading font-bold text-base text-bluedark">Belum Ada Gelombang PPDB</h3>
-                    <p class="text-xs text-bluedark/60 max-w-md mx-auto mt-1">Buat gelombang pendaftaran baru untuk mulai mengelola jadwal tahapan, jalur seleksi, syarat, dan rincian biaya.</p>
+                    <p class="text-xs text-bluedark/60 max-w-md mx-auto mt-1">Buat gelombang pendaftaran baru untuk mulai mengelola jadwal tahapan, jalur seleksi, dan persyaratan berkas.</p>
                 </div>
                 <button type="button" onclick="openPpdbModal()" class="btn btn-primary btn-sm inline-flex items-center gap-2">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>

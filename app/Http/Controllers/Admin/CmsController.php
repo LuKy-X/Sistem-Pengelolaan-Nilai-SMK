@@ -107,7 +107,7 @@ class CmsController extends Controller
 
         $articles = $articlesQuery->paginate(10)->withQueryString();
 
-        $categories = ArticleCategory::orderBy('name')->get();
+        $categories = ArticleCategory::withCount('articles')->orderBy('name')->get();
 
         $stats = [
             'total' => Article::count(),
@@ -131,8 +131,10 @@ class CmsController extends Controller
         $validated = $request->validate([
             'category_id' => ['required', 'exists:article_categories,id'],
             'title' => ['required', 'string', 'max:255'],
+            'excerpt' => ['nullable', 'string', 'max:250'],
             'content' => ['required', 'string'],
             'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'original_thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8192'],
             'status' => ['required', 'in:DRAFT,PUBLISHED'],
         ]);
 
@@ -149,9 +151,8 @@ class CmsController extends Controller
         }
         $validated['slug'] = $slug;
 
-        // Ringkasan otomatis diambil dari beberapa karakter konten (160 char)
-        $plainText = trim(preg_replace('/\s+/', ' ', strip_tags($validated['content'])));
-        $validated['excerpt'] = Str::limit($plainText, 160);
+        // Ringkasan manual dari inputan pengguna (maksimal 250 karakter)
+        $validated['excerpt'] = filled($validated['excerpt'] ?? null) ? trim((string) $validated['excerpt']) : null;
 
         // Upload Thumbnail
         if ($request->hasFile('thumbnail')) {
@@ -168,7 +169,22 @@ class CmsController extends Controller
         // Jumlah views default 0
         $validated['views'] = 0;
 
-        Article::create($validated);
+        $article = Article::create($validated);
+
+        // Simpan foto asli (full resolution tanpa crop) ke koleksi media agar bisa diubah frame-nya di kemudian hari
+        if ($request->hasFile('original_thumbnail')) {
+            $origFile = $request->file('original_thumbnail');
+            $origPath = $origFile->store('articles/originals', 'public');
+            $article->media()->create([
+                'collection' => 'original_thumbnail',
+                'disk' => 'public',
+                'path' => $origPath,
+                'original_name' => $origFile->getClientOriginalName(),
+                'mime_type' => $origFile->getClientMimeType(),
+                'size' => $origFile->getSize(),
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
 
         return redirect()->route('admin.cms.articles')->with('success', 'Artikel baru berhasil dibuat dan disimpan.');
     }
@@ -185,8 +201,10 @@ class CmsController extends Controller
         $validated = $request->validate([
             'category_id' => ['required', 'exists:article_categories,id'],
             'title' => ['required', 'string', 'max:255'],
+            'excerpt' => ['nullable', 'string', 'max:250'],
             'content' => ['required', 'string'],
             'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'original_thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:8192'],
             'remove_thumbnail' => ['nullable', 'boolean'],
             'status' => ['required', 'in:DRAFT,PUBLISHED'],
         ]);
@@ -203,9 +221,8 @@ class CmsController extends Controller
             $validated['slug'] = $slug;
         }
 
-        // Ringkasan otomatis diambil dari beberapa karakter konten (160 char)
-        $plainText = trim(preg_replace('/\s+/', ' ', strip_tags($validated['content'])));
-        $validated['excerpt'] = Str::limit($plainText, 160);
+        // Ringkasan manual dari inputan pengguna (maksimal 250 karakter)
+        $validated['excerpt'] = filled($validated['excerpt'] ?? null) ? trim((string) $validated['excerpt']) : null;
 
         // Thumbnail handling
         if ($request->boolean('remove_thumbnail')) {
@@ -213,11 +230,38 @@ class CmsController extends Controller
                 Storage::disk('public')->delete($article->thumbnail);
             }
             $validated['thumbnail'] = null;
+
+            // Hapus juga media original jika ada
+            $origMedia = $article->media()->where('collection', 'original_thumbnail')->get();
+            foreach ($origMedia as $m) {
+                Storage::disk($m->disk)->delete($m->path);
+                $m->delete();
+            }
         } elseif ($request->hasFile('thumbnail')) {
             if ($article->thumbnail) {
                 Storage::disk('public')->delete($article->thumbnail);
             }
             $validated['thumbnail'] = $request->file('thumbnail')->store('articles', 'public');
+
+            // Simpan foto asli baru jika diunggah
+            if ($request->hasFile('original_thumbnail')) {
+                $origMedia = $article->media()->where('collection', 'original_thumbnail')->get();
+                foreach ($origMedia as $m) {
+                    Storage::disk($m->disk)->delete($m->path);
+                    $m->delete();
+                }
+                $origFile = $request->file('original_thumbnail');
+                $origPath = $origFile->store('articles/originals', 'public');
+                $article->media()->create([
+                    'collection' => 'original_thumbnail',
+                    'disk' => 'public',
+                    'path' => $origPath,
+                    'original_name' => $origFile->getClientOriginalName(),
+                    'mime_type' => $origFile->getClientMimeType(),
+                    'size' => $origFile->getSize(),
+                    'uploaded_by' => auth()->id(),
+                ]);
+            }
         } else {
             unset($validated['thumbnail']);
         }
@@ -237,6 +281,11 @@ class CmsController extends Controller
         $title = $article->title;
         if ($article->thumbnail) {
             Storage::disk('public')->delete($article->thumbnail);
+        }
+        $origMedia = $article->media()->where('collection', 'original_thumbnail')->get();
+        foreach ($origMedia as $m) {
+            Storage::disk($m->disk)->delete($m->path);
+            $m->delete();
         }
         $article->delete();
 
@@ -295,6 +344,97 @@ class CmsController extends Controller
         ]);
     }
 
+    public function storeArticleCategory(Request $request): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:article_categories,name'],
+        ]);
+
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug ?: 'kategori-'.Str::random(5);
+        $counter = 1;
+        while (ArticleCategory::where('slug', $slug)->exists()) {
+            $slug = $baseSlug.'-'.$counter;
+            $counter++;
+        }
+
+        $category = ArticleCategory::create([
+            'name' => $validated['name'],
+            'slug' => $slug,
+        ]);
+        $category->loadCount('articles');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori "'.$category->name.'" berhasil ditambahkan.',
+                'category' => $category,
+            ]);
+        }
+
+        return redirect()->route('admin.cms.articles')->with('success', 'Kategori "'.$category->name.'" berhasil ditambahkan.');
+    }
+
+    public function updateArticleCategory(Request $request, ArticleCategory $category): JsonResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:100', 'unique:article_categories,name,'.$category->id],
+        ]);
+
+        $baseSlug = Str::slug($validated['name']);
+        $slug = $baseSlug ?: 'kategori-'.Str::random(5);
+        $counter = 1;
+        while (ArticleCategory::where('slug', $slug)->where('id', '!=', $category->id)->exists()) {
+            $slug = $baseSlug.'-'.$counter;
+            $counter++;
+        }
+
+        $category->update([
+            'name' => $validated['name'],
+            'slug' => $slug,
+        ]);
+        $category->loadCount('articles');
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Kategori "'.$category->name.'" berhasil diperbarui.',
+                'category' => $category,
+            ]);
+        }
+
+        return redirect()->route('admin.cms.articles')->with('success', 'Kategori "'.$category->name.'" berhasil diperbarui.');
+    }
+
+    public function destroyArticleCategory(Request $request, ArticleCategory $category): JsonResponse|RedirectResponse
+    {
+        if ($category->articles()->exists()) {
+            $count = $category->articles()->count();
+            $message = "Kategori \"{$category->name}\" tidak dapat dihapus karena masih digunakan oleh {$count} artikel. Silakan pindahkan atau hapus artikel terkait terlebih dahulu.";
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->route('admin.cms.articles')->with('error', $message);
+        }
+
+        $name = $category->name;
+        $category->delete();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Kategori \"{$name}\" berhasil dihapus.",
+            ]);
+        }
+
+        return redirect()->route('admin.cms.articles')->with('success', "Kategori \"{$name}\" berhasil dihapus.");
+    }
+
     public function ppdb(): View
     {
         $stats = [
@@ -330,7 +470,7 @@ class CmsController extends Controller
         $period = AdmissionPeriod::create($validated);
 
         return redirect()->route('admin.cms.ppdb.periods.manage', $period)
-            ->with('success', "Gelombang '{$period->title}' berhasil dibuat. Silakan atur jadwal, jalur seleksi, persyaratan, dan biaya di bawah ini.");
+            ->with('success', "Gelombang '{$period->title}' berhasil dibuat. Silakan atur jadwal, jalur seleksi, dan persyaratan berkas di bawah ini.");
     }
 
     public function manageAdmissionPeriod(AdmissionPeriod $period, Request $request): View
@@ -345,6 +485,9 @@ class CmsController extends Controller
 
         $academicYears = AcademicYear::latest('start_date')->get();
         $tab = $request->query('tab', 'period');
+        if (! in_array($tab, ['period', 'schedules', 'paths', 'requirements'])) {
+            $tab = 'period';
+        }
 
         return view('admin.cms.ppdb.manage', compact('period', 'academicYears', 'tab'));
     }
@@ -372,7 +515,7 @@ class CmsController extends Controller
         $period->delete();
 
         return redirect()->route('admin.cms.ppdb')
-            ->with('success', "Gelombang '{$title}' beserta seluruh data jadwal, jalur, persyaratan, dan biaya berhasil dihapus.");
+            ->with('success', "Gelombang '{$title}' beserta seluruh data jadwal, jalur, dan persyaratan berkas berhasil dihapus.");
     }
 
     public function togglePeriodStatus(Request $request, AdmissionPeriod $period): JsonResponse|RedirectResponse

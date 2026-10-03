@@ -6,6 +6,8 @@ use App\Enums\CareerOpportunityStatus;
 use App\Enums\CareerOpportunityType;
 use App\Enums\ContentStatus;
 use App\Models\AcademicYear;
+use App\Models\Achievement;
+use App\Models\AchievementCategory;
 use App\Models\AdmissionPeriod;
 use App\Models\Article;
 use App\Models\ArticleCategory;
@@ -18,11 +20,13 @@ use App\Models\SchoolProfile;
 use App\Models\SiteStatistic;
 use App\Models\StudentProduct;
 use App\Models\User;
+use App\Services\PublicMediaService;
 use Database\Seeders\DepartmentSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\SchoolProfileSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PublicSitePagesTest extends TestCase
@@ -361,6 +365,108 @@ class PublicSitePagesTest extends TestCase
             ->assertOk()
             ->assertSee($available->name)
             ->assertDontSee('Produk Terjual');
+    }
+
+    public function test_public_cards_render_uploaded_images_from_all_supported_sources(): void
+    {
+        Storage::fake('public');
+        Storage::fake('local');
+        Storage::disk('public')->put('products/karya-siswa.jpg', 'image');
+        Storage::disk('public')->put('news/berita.jpg', 'image');
+        Storage::disk('public')->put('achievements/juara.jpg', 'image');
+        Storage::disk('public')->put('partners/logo-mitra.jpg', 'image');
+
+        $articleCategory = ArticleCategory::create(['name' => 'Kegiatan', 'slug' => 'kegiatan']);
+        $article = Article::create([
+            'category_id' => $articleCategory->id,
+            'author_id' => $this->author->id,
+            'title' => 'Berita Dengan Foto',
+            'slug' => 'berita-dengan-foto',
+            'content' => 'Isi berita.',
+            'thumbnail' => 'public/news/berita.jpg',
+            'status' => ContentStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        $productCategory = ProductCategory::create(['name' => 'Karya Siswa']);
+        $product = StudentProduct::create([
+            'category_id' => $productCategory->id,
+            'name' => 'Produk Dengan Foto',
+            'slug' => 'produk-dengan-foto',
+            'status' => 'AVAILABLE',
+        ]);
+        $product->media()->create([
+            'collection' => 'default',
+            'disk' => 'local',
+            'path' => 'public/storage/products/karya-siswa.jpg',
+            'original_name' => 'karya-siswa.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 5,
+        ]);
+
+        $achievementCategory = AchievementCategory::create([
+            'name' => 'Akademik',
+            'slug' => 'akademik',
+        ]);
+        $achievement = Achievement::create([
+            'achievement_category_id' => $achievementCategory->id,
+            'title' => 'Prestasi Dengan Foto',
+            'scope' => 'Kabupaten',
+            'level' => 'Siswa',
+            'achievement_date' => '2026-09-01',
+        ]);
+        $achievement->media()->create([
+            'collection' => 'default',
+            'disk' => 'public',
+            'path' => 'achievements/juara.jpg',
+            'original_name' => 'juara.jpg',
+            'mime_type' => 'image/jpeg',
+            'size' => 5,
+        ]);
+
+        $company = CareerCompany::create([
+            'name' => 'Mitra Dengan Logo',
+            'logo' => 'storage/partners/logo-mitra.jpg',
+        ]);
+        CareerOpportunity::create([
+            'company_id' => $company->id,
+            'type' => CareerOpportunityType::Internship,
+            'title' => 'Magang Dengan Logo Mitra',
+            'status' => CareerOpportunityStatus::Open,
+        ]);
+
+        $this->assertStringEndsWith(
+            '/storage/news/berita.jpg',
+            app(PublicMediaService::class)->url($article->thumbnail),
+        );
+
+        config([
+            'app.url' => 'http://stale-app-url.test',
+            'filesystems.disks.public.url' => 'http://stale-app-url.test/storage',
+        ]);
+
+        $this->get('http://school.test/')
+            ->assertOk()
+            ->assertSee('http://school.test/storage/products/karya-siswa.jpg')
+            ->assertSee('/storage/news/berita.jpg')
+            ->assertSee('/storage/partners/logo-mitra.jpg');
+
+        $this->get('/produk-siswa')
+            ->assertOk()
+            ->assertSee('/storage/products/karya-siswa.jpg');
+
+        $this->get('/berita')
+            ->assertOk()
+            ->assertSee('/storage/news/berita.jpg');
+
+        $this->get('/prestasi')
+            ->assertOk()
+            ->assertSee('/storage/achievements/juara.jpg');
+
+        $this->get('/karier')
+            ->assertOk()
+            ->assertSee('/storage/partners/logo-mitra.jpg')
+            ->assertSee('Magang Dengan Logo Mitra');
     }
 
     public function test_career_page_lists_active_services(): void

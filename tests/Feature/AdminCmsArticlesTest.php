@@ -6,6 +6,7 @@ use App\Enums\ContentStatus;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\User;
+use App\Services\PublicMediaService;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -122,5 +123,177 @@ class AdminCmsArticlesTest extends TestCase
         $article->refresh();
         $this->assertEquals(ContentStatus::Published, $article->status);
         $this->assertNotNull($article->published_at);
+    }
+
+    public function test_public_media_service_resolves_thumbnail_path_without_type_error(): void
+    {
+        $service = app(PublicMediaService::class);
+
+        // Test normal relative storage path
+        $url = $service->url('articles/sample.jpg');
+        $this->assertNotNull($url);
+        $this->assertStringContainsString('storage/articles/sample.jpg', $url);
+
+        // Test full URL passes through untouched
+        $urlFull = $service->url('https://example.com/sample.jpg');
+        $this->assertEquals('https://example.com/sample.jpg', $urlFull);
+    }
+
+    public function test_admin_can_create_article_with_manual_excerpt(): void
+    {
+        $admin = $this->getAdminUser();
+        $category = ArticleCategory::create(['name' => 'Prestasi', 'slug' => 'prestasi']);
+
+        $manualExcerpt = 'Ini adalah ringkasan berita pilihan yang diketik secara manual oleh admin.';
+        $fullContent = '<p>Paragraf pertama berita yang sangat panjang dan berbeda sekali dengan ringkasan manual di atas.</p>';
+
+        $response = $this->actingAs($admin)->post(route('admin.cms.articles.store'), [
+            'category_id' => $category->id,
+            'title' => 'Prestasi Siswa Juara LKS',
+            'excerpt' => $manualExcerpt,
+            'content' => $fullContent,
+            'status' => 'PUBLISHED',
+        ]);
+
+        $response->assertRedirect(route('admin.cms.articles'));
+        $this->assertDatabaseHas('articles', [
+            'title' => 'Prestasi Siswa Juara LKS',
+            'excerpt' => $manualExcerpt,
+        ]);
+
+        $article = Article::where('title', 'Prestasi Siswa Juara LKS')->first();
+        $this->assertEquals($manualExcerpt, $article->excerpt);
+    }
+
+    public function test_admin_excerpt_validation_rejects_over_250_chars(): void
+    {
+        $admin = $this->getAdminUser();
+        $category = ArticleCategory::create(['name' => 'Prestasi', 'slug' => 'prestasi']);
+
+        $tooLongExcerpt = str_repeat('A', 251);
+
+        $response = $this->actingAs($admin)->post(route('admin.cms.articles.store'), [
+            'category_id' => $category->id,
+            'title' => 'Prestasi Siswa Juara',
+            'excerpt' => $tooLongExcerpt,
+            'content' => '<p>Konten artikel</p>',
+            'status' => 'PUBLISHED',
+        ]);
+
+        $response->assertSessionHasErrors('excerpt');
+    }
+
+    public function test_admin_can_crud_article_categories_via_ajax(): void
+    {
+        $admin = $this->getAdminUser();
+
+        // 1. Create Category
+        $resStore = $this->actingAs($admin)->postJson(route('admin.cms.article-categories.store'), [
+            'name' => 'Inovasi & Teknologi',
+        ]);
+        $resStore->assertOk();
+        $resStore->assertJson(['success' => true]);
+        $this->assertDatabaseHas('article_categories', ['name' => 'Inovasi & Teknologi', 'slug' => 'inovasi-teknologi']);
+
+        $category = ArticleCategory::where('slug', 'inovasi-teknologi')->first();
+
+        // 2. Update Category
+        $resUpdate = $this->actingAs($admin)->putJson(route('admin.cms.article-categories.update', $category), [
+            'name' => 'Inovasi Teknologi Terapan',
+        ]);
+        $resUpdate->assertOk();
+        $resUpdate->assertJson(['success' => true]);
+        $this->assertDatabaseHas('article_categories', ['name' => 'Inovasi Teknologi Terapan', 'slug' => 'inovasi-teknologi-terapan']);
+
+        $category->refresh();
+
+        // 3. Delete Category (empty)
+        $resDelete = $this->actingAs($admin)->deleteJson(route('admin.cms.article-categories.destroy', $category));
+        $resDelete->assertOk();
+        $resDelete->assertJson(['success' => true]);
+        $this->assertDatabaseMissing('article_categories', ['id' => $category->id]);
+    }
+
+    public function test_admin_cannot_delete_category_that_has_articles(): void
+    {
+        $admin = $this->getAdminUser();
+        $category = ArticleCategory::create(['name' => 'Akademik', 'slug' => 'akademik']);
+
+        Article::create([
+            'category_id' => $category->id,
+            'author_id' => $admin->id,
+            'title' => 'Ujian Akhir Semester',
+            'slug' => 'ujian-akhir-semester',
+            'excerpt' => 'Jadwal UAS',
+            'content' => 'Konten lengkap jadwal UAS',
+            'status' => ContentStatus::Published,
+        ]);
+
+        $resDelete = $this->actingAs($admin)->deleteJson(route('admin.cms.article-categories.destroy', $category));
+        $resDelete->assertStatus(422);
+        $resDelete->assertJson(['success' => false]);
+        $this->assertDatabaseHas('article_categories', ['id' => $category->id]);
+    }
+
+    public function test_admin_article_index_renders_category_crud_modal_and_button(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.cms.articles'));
+
+        $response->assertOk();
+        $response->assertSee('Kelola Kategori');
+        $response->assertSee('id="categoryCrudModal"', false);
+        $response->assertSee('Tambah Kategori Baru');
+    }
+
+    public function test_admin_article_create_view_renders_quill_manual_excerpt_and_cancellation_modal(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.cms.articles.create'));
+
+        $response->assertOk();
+        $response->assertSee('quill.snow.css');
+        $response->assertSee('quill.js');
+        $response->assertSee('cropper.min.css');
+        $response->assertSee('cropper.min.js');
+        $response->assertSee('id="imageCropModal"', false);
+        $response->assertSee('id="quillEditor"', false);
+        $response->assertSee('Ringkasan Singkat (Lead / Excerpt)');
+        $response->assertSee('maxlength="250"', false);
+        $response->assertSee('id="cancelConfirmModal"', false);
+        $response->assertSee('Apakah Anda yakin ingin membatalkan perubahan? Data atau tulisan yang telah Anda masukkan belum disimpan dan seluruh perubahan akan dibatalkan.');
+    }
+
+    public function test_admin_article_edit_view_renders_quill_manual_excerpt_and_cancellation_modal(): void
+    {
+        $admin = $this->getAdminUser();
+        $category = ArticleCategory::create(['name' => 'Prestasi', 'slug' => 'prestasi']);
+
+        $article = Article::create([
+            'category_id' => $category->id,
+            'author_id' => $admin->id,
+            'title' => 'Judul Artikel Edit Uji Coba',
+            'slug' => 'judul-artikel-edit-uji-coba',
+            'excerpt' => 'Ringkasan singkat yang sudah tersimpan',
+            'content' => '<p>Konten artikel yang sudah tersimpan</p>',
+            'status' => ContentStatus::Draft,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.cms.articles.edit', $article));
+
+        $response->assertOk();
+        $response->assertSee('quill.snow.css');
+        $response->assertSee('quill.js');
+        $response->assertSee('cropper.min.css');
+        $response->assertSee('cropper.min.js');
+        $response->assertSee('id="imageCropModal"', false);
+        $response->assertSee('id="quillEditor"', false);
+        $response->assertSee('Ringkasan Singkat (Lead / Excerpt)');
+        $response->assertSee('Ringkasan singkat yang sudah tersimpan');
+        $response->assertSee('maxlength="250"', false);
+        $response->assertSee('id="cancelConfirmModal"', false);
+        $response->assertSee('Apakah Anda yakin ingin membatalkan perubahan? Data atau tulisan yang telah Anda masukkan belum disimpan dan seluruh perubahan akan dibatalkan.');
     }
 }

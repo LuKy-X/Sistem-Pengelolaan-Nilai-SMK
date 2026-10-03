@@ -17,6 +17,7 @@ class SubjectSeeder extends Seeder
             ['code' => 'MTK', 'name' => 'Matematika', 'category' => 'MUATAN_NASIONAL', 'department_id' => null],
             ['code' => 'BIN', 'name' => 'Bahasa Indonesia', 'category' => 'MUATAN_NASIONAL', 'department_id' => null],
             ['code' => 'BIG', 'name' => 'Bahasa Inggris', 'category' => 'MUATAN_NASIONAL', 'department_id' => null],
+            ['code' => 'BK', 'name' => 'Bimbingan dan Konseling', 'category' => 'BIMBINGAN_KONSELING', 'department_id' => null],
         ];
 
         foreach ($subjects as $subject) {

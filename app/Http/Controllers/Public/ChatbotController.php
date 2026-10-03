@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\ChatbotMessageRequest;
-use App\Services\PublicChatbotService;
+use App\Services\AiChatbotService;
 use Illuminate\Http\JsonResponse;
 
 class ChatbotController extends Controller
 {
-    public function __construct(private readonly PublicChatbotService $chatbot) {}
+    public function __construct(private readonly AiChatbotService $chatbot) {}
 
     /**
      * Opening message used when the chat panel mounts or is reset.
@@ -20,13 +20,18 @@ class ChatbotController extends Controller
     }
 
     /**
-     * Answer a visitor question from live CMS data.
+     * Answer a visitor question via the Gemini-powered SchoolAssistant agent.
      *
      * Validation failures are returned as HTTP 422 with the first message so the
      * widget can surface it instead of showing a generic network error.
      */
     public function reply(ChatbotMessageRequest $request): JsonResponse
     {
-        return response()->json($this->chatbot->answer($request->question()));
+        $answer = $this->chatbot->answer(
+            question: $request->question(),
+            conversationId: $request->conversationId(),
+        );
+
+        return response()->json($answer);
     }
 }

@@ -320,8 +320,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                 <tbody class="divide-y divide-bluelight/40 text-xs">
                     @forelse($achievements as $idx => $ach)
                         @php
-                            $mediaItem = $ach->media->first();
-                            $photoUrl = $mediaItem ? asset('storage/'.$mediaItem->path) : null;
+                            $photoUrl = app(\App\Services\PublicMediaService::class)->forModel($ach);
                         @endphp
                         <tr class="hover:bg-slate-50/70 transition-colors group" id="achRow-{{ $ach->id }}">
                             <!-- No -->
