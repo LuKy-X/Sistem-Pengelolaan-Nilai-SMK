@@ -221,10 +221,15 @@ class TeacherJournalFlowTest extends TestCase
 
         $journal->load(['attendances', 'teachingAssignment.schoolClass']);
 
+        $activeEnrollmentsCount = ClassEnrollment::where('class_id', $this->assignment->class_id)
+            ->where('status', 'ACTIVE')
+            ->count();
+        $expectedHadir = max(0, $activeEnrollmentsCount - 1);
+
         $this->assertEquals(1, $journal->sakit_count);
         $this->assertEquals(0, $journal->izin_count);
         $this->assertEquals(0, $journal->alpha_count);
-        $this->assertEquals(35, $journal->hadir_count);
+        $this->assertEquals($expectedHadir, $journal->hadir_count);
     }
 
     public function test_teacher_can_update_their_own_journal_with_student_notes(): void

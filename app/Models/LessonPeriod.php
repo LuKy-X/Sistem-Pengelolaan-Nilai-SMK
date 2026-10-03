@@ -48,6 +48,16 @@ class LessonPeriod extends Model
         return $this->hasMany(TeachingSchedule::class, 'end_period_id');
     }
 
+    public function getFormattedStartTimeAttribute(): string
+    {
+        return $this->start_time ? substr((string) $this->start_time, 0, 5) : '';
+    }
+
+    public function getFormattedEndTimeAttribute(): string
+    {
+        return $this->end_time ? substr((string) $this->end_time, 0, 5) : '';
+    }
+
     public function getNameAttribute(): string
     {
         if (! empty($this->attributes['name'] ?? null)) {

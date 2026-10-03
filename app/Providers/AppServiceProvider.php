@@ -10,7 +10,9 @@ use App\Observers\ExitPermitObserver;
 use App\Observers\GradebookScoreObserver;
 use App\View\Composers\PublicSiteComposer;
 use App\View\Composers\StudentNotificationCount;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +31,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Model::preventLazyLoading(! $this->app->isProduction());
+        Model::automaticallyEagerLoadRelationships();
+
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation) {
+            Log::warning(sprintf(
+                'N+1 Lazy loading detected on model [%s] relation [%s]',
+                get_class($model),
+                $relation
+            ));
+        });
+
         Paginator::useTailwind();
         $this->composePublicViews();
         $this->composeStudentViews();

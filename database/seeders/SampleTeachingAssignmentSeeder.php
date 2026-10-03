@@ -359,7 +359,7 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 ],
                 [
                     'material' => 'Menganalisis Kaidah Kebahasaan dan Struktur Teks Editorial',
-                    'notes' => "Diskusi kelompok aktif. Materi tuntas disampaikan.\nHadir: 34 | Sakit: 1 | Izin: 1 | Alpha: 0",
+                    'notes' => 'Diskusi kelompok aktif. Materi tuntas disampaikan.',
                     'created_by' => $teacherBudi->id,
                 ]
             );
@@ -393,7 +393,7 @@ class SampleTeachingAssignmentSeeder extends Seeder
                 ],
                 [
                     'material' => 'Sistem Persamaan Linear Dua Variabel (SPLDV) dan Matriks',
-                    'notes' => "Latihan soal mandiri berjalan tertib.\nHadir: 35 | Sakit: 0 | Izin: 1 | Alpha: 0",
+                    'notes' => 'Latihan soal mandiri berjalan tertib.',
                     'created_by' => $teacherAgus->id,
                 ]
             );

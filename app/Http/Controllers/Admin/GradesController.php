@@ -41,7 +41,7 @@ class GradesController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $classes = SchoolClass::where('is_active', true)->orderBy('name')->get();
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
         $semesters = Semester::with('academicYear')->latest('start_date')->get();
 
         return view('admin.grades.index', compact('gradebooks', 'classes', 'semesters', 'classId', 'semesterId'));

@@ -46,17 +46,25 @@ class DashboardController extends Controller
             ->get();
 
         // Berita sekolah terbaru
-        $recentArticles = Article::latest()->take(3)->get();
+        $recentArticles = Article::with('category')->latest()->take(3)->get();
 
         // Statistik per jurusan untuk chart
         $departments = Department::where('is_active', true)->get();
+        $departmentIds = $departments->pluck('id');
+
+        $enrollmentCounts = ClassEnrollment::query()
+            ->join('classes', 'class_enrollments.class_id', '=', 'classes.id')
+            ->where('class_enrollments.status', 'ACTIVE')
+            ->whereIn('classes.department_id', $departmentIds)
+            ->selectRaw('classes.department_id, COUNT(DISTINCT class_enrollments.student_id) as total')
+            ->groupBy('classes.department_id')
+            ->pluck('total', 'classes.department_id');
+
         $chartLabels = [];
         $chartData = [];
         foreach ($departments as $dept) {
             $chartLabels[] = $dept->short_name ?: $dept->code;
-            $chartData[] = ClassEnrollment::where('status', 'ACTIVE')
-                ->whereHas('schoolClass', fn ($q) => $q->where('department_id', $dept->id))
-                ->count();
+            $chartData[] = (int) ($enrollmentCounts->get($dept->id) ?? 0);
         }
 
         return view('admin.dashboard', compact(

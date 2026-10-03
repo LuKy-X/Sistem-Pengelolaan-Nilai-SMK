@@ -34,6 +34,7 @@ class JournalController extends Controller
         $assignments = TeachingAssignment::with([
             'schoolClass.gradeLevel',
             'schoolClass.department',
+            'schoolClass.enrollments',
             'subject',
             'semester.academicYear',
             'schedules.startPeriod',
