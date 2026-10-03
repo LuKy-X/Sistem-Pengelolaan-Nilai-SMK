@@ -80,8 +80,8 @@
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>
       <div class="relative flex-1 max-w-xs hidden sm:block">
-        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-bluesoft" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search here ..." class="w-full bg-bluelight/60 border border-bluelight rounded-lg pl-8.5 pr-3 py-1.5 text-xs sm:text-sm outline-none focus:border-blueprim">
+        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 text-bluesoft" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search here ..." class="w-full bg-bluelight/60 border border-bluelight rounded-md pl-8 pr-2.5 py-1 text-xs outline-none focus:border-blueprim">
       </div>
       <div class="ml-auto flex items-center gap-2.5">
         <button class="relative w-8 h-8 rounded-lg bg-bluelight/70 flex items-center justify-center text-bluedark" title="Notifikasi">
@@ -163,6 +163,7 @@
 <script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 
+@stack('modals')
 @stack('scripts')
 </body>
 </html>

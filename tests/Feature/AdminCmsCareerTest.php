@@ -70,6 +70,27 @@ class AdminCmsCareerTest extends TestCase
         $resServ->assertSee('Bimbingan Karir &amp; Konseling', false);
     }
 
+    public function test_admin_company_logo_and_edit_preview_use_resolved_media_url(): void
+    {
+        Storage::fake('public');
+
+        $admin = $this->getAdminUser();
+        $path = 'career/companies/legacy-logo.png';
+        Storage::disk('public')->put($path, 'image');
+
+        CareerCompany::create([
+            'name' => 'PT Mitra Berlogo',
+            'logo' => 'public/storage/'.$path,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.cms.career', ['tab' => 'companies']));
+
+        $response->assertOk()
+            ->assertSee('/storage/'.$path)
+            ->assertSee('comp.logo_url', false);
+    }
+
     public function test_admin_can_store_and_update_career_opportunity(): void
     {
         $admin = $this->getAdminUser();

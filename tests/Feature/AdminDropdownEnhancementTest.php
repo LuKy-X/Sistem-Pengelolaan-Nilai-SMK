@@ -132,4 +132,27 @@ class AdminDropdownEnhancementTest extends TestCase
         $response->assertSee('name="class_id"', false);
         $response->assertSee('name="semester_id"', false);
     }
+
+    public function test_admin_schedules_page_renders_with_floating_export_dropdown(): void
+    {
+        $response = $this->actingAs($this->adminUser)->get(route('admin.academic.schedules.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="exportScheduleDropdownMenu"', false);
+        $response->assertSee('id="exportScheduleBtn"', false);
+        $response->assertSee('fixed z-[99999]', false);
+        $response->assertSee('Export ke PDF');
+        $response->assertSee('Export ke Excel');
+    }
+
+    public function test_admin_students_page_renders_with_widened_modal_and_no_scrollbar(): void
+    {
+        $response = $this->actingAs($this->adminUser)->get(route('admin.academic.students.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('id="studentModal"', false);
+        $response->assertSee('max-w-2xl', false);
+        $response->assertSee('no-scrollbar', false);
+        $response->assertSee('Pendaftaran Siswa Baru');
+    }
 }

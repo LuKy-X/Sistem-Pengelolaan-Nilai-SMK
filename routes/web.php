@@ -24,15 +24,6 @@ use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
-use App\Http\Controllers\Student\AppealController as StudentAppealController;
-use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
-use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
-use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
-use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
-use App\Http\Controllers\Student\GradeController as StudentGradeController;
-use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
-use App\Http\Controllers\Student\ProfileController as StudentProfileController;
-use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -43,6 +34,15 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
+use App\Http\Controllers\Student\AppealController as StudentAppealController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
+use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
+use App\Http\Controllers\Student\GradeController as StudentGradeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -225,6 +225,8 @@ Route::middleware('auth')->group(function () {
         // Monitoring Buku Nilai
         Route::get('/grades', [GradesController::class, 'index'])->name('grades.index');
         Route::get('/grades/{gradebook}', [GradesController::class, 'show'])->name('grades.show');
+        Route::get('/grades/{gradebook}/export/excel', [GradesController::class, 'exportExcel'])->name('grades.export.excel');
+        Route::get('/grades/{gradebook}/export/pdf', [GradesController::class, 'exportPdf'])->name('grades.export.pdf');
 
         // Layanan BK & Kedisiplinan
         Route::get('/guidance', [GuidanceController::class, 'index'])->name('guidance.index');
@@ -246,6 +248,11 @@ Route::middleware('auth')->group(function () {
             Route::delete('/articles/{article}', [CmsController::class, 'destroyArticle'])->name('articles.destroy');
             Route::patch('/articles/{article}/toggle-status', [CmsController::class, 'toggleArticleStatus'])->name('articles.toggle-status');
             Route::get('/articles/{article}/preview', [CmsController::class, 'previewArticle'])->name('articles.preview');
+
+            // Kategori Artikel
+            Route::post('/article-categories', [CmsController::class, 'storeArticleCategory'])->name('article-categories.store');
+            Route::put('/article-categories/{category}', [CmsController::class, 'updateArticleCategory'])->name('article-categories.update');
+            Route::delete('/article-categories/{category}', [CmsController::class, 'destroyArticleCategory'])->name('article-categories.destroy');
 
             // PPDB
             Route::get('/ppdb', [CmsController::class, 'ppdb'])->name('ppdb');
@@ -363,8 +370,12 @@ Route::middleware('auth')->group(function () {
         Route::prefix('journals')->name('journals.')->group(function () {
             Route::get('/', [JournalController::class, 'index'])->name('index');
             Route::get('/create', [JournalController::class, 'create'])->name('create');
+            Route::get('/export/pdf', [JournalController::class, 'exportPdf'])->name('export.pdf');
+            Route::get('/export/excel', [JournalController::class, 'exportExcel'])->name('export.excel');
             Route::post('/', [JournalController::class, 'store'])->name('store');
             Route::get('/{journal}', [JournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [JournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [JournalController::class, 'destroy'])->name('destroy');
         });
 
         // Profil & Pengaturan Guru

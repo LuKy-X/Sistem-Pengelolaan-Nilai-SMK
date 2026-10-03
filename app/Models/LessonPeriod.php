@@ -49,6 +49,31 @@ class LessonPeriod extends Model
         return $this->hasMany(TeachingSchedule::class, 'end_period_id');
     }
 
+    public function getFormattedStartTimeAttribute(): string
+    {
+        return $this->start_time ? substr((string) $this->start_time, 0, 5) : '';
+    }
+
+    public function getFormattedEndTimeAttribute(): string
+    {
+        return $this->end_time ? substr((string) $this->end_time, 0, 5) : '';
+    }
+
+    public function getNameAttribute(): string
+    {
+        if (! empty($this->attributes['name'] ?? null)) {
+            return $this->attributes['name'];
+        }
+
+        if ($this->is_break) {
+            $cleaned = preg_replace('/\s*\(.*\)/', '', $this->label ?? '');
+
+            return ! empty($cleaned) ? trim($cleaned) : 'Istirahat';
+        }
+
+        return "Jam Ke-{$this->period_number}";
+    }
+
     /**
      * Jam pelajaran reguler saja, tanpa jam istirahat, urut dari jam pertama.
      * Dipakai di mana pun siswa memilih jam, misalnya pengajuan izin keluar.

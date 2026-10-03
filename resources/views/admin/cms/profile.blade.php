@@ -35,10 +35,6 @@
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-            <a href="{{ route('public.profile') }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm flex items-center gap-2 text-xs font-semibold">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                <span>Lihat di Web</span>
-            </a>
             <button type="button" onclick="document.getElementById('profileForm').submit()" class="btn btn-primary btn-sm flex items-center gap-2 text-xs font-bold shadow-md hover:shadow-lg">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 <span>Simpan Perubahan</span>
@@ -47,13 +43,8 @@
     </div>
 
     <!-- Form Utama -->
-    <form id="profileForm" action="{{ route('admin.cms.profile.update') }}" method="POST">
+    <form id="profileForm" action="{{ route('admin.cms.profile.update') }}" method="POST" class="max-w-4xl mx-auto space-y-5">
         @csrf
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-            <!-- LEFT 2 COLUMNS: Form Fields -->
-            <div class="lg:col-span-2 space-y-5">
 
                 <!-- CARD 1: Identitas Pokok & Kepala Sekolah -->
                 <div class="panel p-0 overflow-hidden border border-bluelight shadow-xs">
@@ -172,130 +163,23 @@
                     </div>
                 </div>
 
+        <!-- Bottom Action Bar -->
+        <div class="panel p-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 border border-bluelight rounded-2xl">
+            <div class="text-xs text-bluedark/60 text-center sm:text-left">
+                Pastikan data identitas sekolah sudah valid sebelum disimpan.
             </div>
-
-            <!-- RIGHT 1 COLUMN: Live Preview Card & Sticky Actions -->
-            <div class="space-y-5">
-
-                <!-- LIVE PREVIEW CARD -->
-                <div class="panel p-0 overflow-hidden border border-bluelight shadow-xs sticky top-4">
-                    <div class="px-4 py-3 bg-slate-50 border-b border-bluelight flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="font-heading font-bold text-xs text-bluedark">Pratinjau Kartu Publik</span>
-                        </div>
-                        <span class="text-[10px] text-bluedark/50">Update Real-time</span>
-                    </div>
-
-                    <!-- Miniatur Kartu -->
-                    <div class="p-4 bg-white space-y-4">
-                        <!-- Mini Hero Header -->
-                        <div class="w-full h-24 rounded-xl overflow-hidden relative border border-slate-200 bg-bluedark p-3 text-white flex flex-col justify-end">
-                            <div class="leading-tight drop-shadow-xs">
-                                <div id="liveCardName" class="font-heading font-bold text-xs line-clamp-1">{{ $profile->school_name ?? 'SMK Negeri 2 Karanganyar' }}</div>
-                                <div class="text-[10px] text-blue-200 font-medium">NPSN: <span id="liveCardNpsn">{{ $profile->npsn ?? '20312071' }}</span></div>
-                            </div>
-                        </div>
-
-                        <!-- Data Singkat Lembaga -->
-                        <div class="space-y-2 text-xs">
-                            <div class="flex items-start gap-2 text-bluedark/80">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blueprim shrink-0 mt-0.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] text-bluedark/50">Kepala Sekolah</div>
-                                    <div id="liveCardPrincipal" class="font-semibold text-bluedark">{{ $profile->principal_name ?: '-' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-2 text-bluedark/80">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blueprim shrink-0 mt-0.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] text-bluedark/50">Kontak Telepon</div>
-                                    <div id="liveCardPhone" class="font-medium text-bluedark">{{ $profile->phone ?: '-' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-2 text-bluedark/80">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blueprim shrink-0 mt-0.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] text-bluedark/50">Email Lembaga</div>
-                                    <div id="liveCardEmail" class="font-medium text-bluedark break-all">{{ $profile->email ?: '-' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-2 text-bluedark/80">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blueprim shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] text-bluedark/50">Website Resmi</div>
-                                    <div id="liveCardWebsite" class="font-medium text-bluedark truncate">{{ $profile->website ?: '-' }}</div>
-                                </div>
-                            </div>
-
-                            <div class="flex items-start gap-2 text-bluedark/80">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-blueprim shrink-0 mt-0.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                <div class="min-w-0">
-                                    <div class="text-[10px] text-bluedark/50">Alamat</div>
-                                    <div id="liveCardAddress" class="text-[11px] text-bluedark/70 leading-snug line-clamp-2">{{ $profile->address ?: '-' }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Aksi Simpan -->
-                        <div class="pt-3 border-t border-bluelight space-y-2">
-                            <button type="submit" class="btn btn-primary w-full py-2.5 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                <span>Simpan Konfigurasi Profil</span>
-                            </button>
-                            <button type="button" onclick="location.reload()" class="btn btn-outline w-full py-2 text-xs font-medium text-bluedark/60 hover:text-bluedark">
-                                Reset Perubahan
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button type="button" onclick="location.reload()" class="btn btn-outline btn-sm text-xs">
+                    Reset
+                </button>
+                <button type="submit" class="btn btn-primary btn-sm text-xs font-bold flex items-center gap-1.5 shadow-xs">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    <span>Simpan Perubahan</span>
+                </button>
             </div>
-
         </div>
+
     </form>
 
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    /**
-     * Sinkronisasi Real-time Nilai Input ke Kartu Pratinjau
-     */
-    function syncLivePreview() {
-        const nameVal = document.getElementById('inpSchoolName')?.value?.trim();
-        const npsnVal = document.getElementById('inpNpsn')?.value?.trim();
-        const princVal = document.getElementById('inpPrincipal')?.value?.trim();
-        const phoneVal = document.getElementById('inpPhone')?.value?.trim();
-        const emailVal = document.getElementById('inpEmail')?.value?.trim();
-        const webVal = document.getElementById('inpWebsite')?.value?.trim();
-        const addrVal = document.getElementById('inpAddress')?.value?.trim();
-
-        if (document.getElementById('liveCardName')) {
-            document.getElementById('liveCardName').textContent = nameVal || 'SMK Negeri 2 Karanganyar';
-        }
-        if (document.getElementById('liveCardNpsn')) {
-            document.getElementById('liveCardNpsn').textContent = npsnVal || '-';
-        }
-        if (document.getElementById('liveCardPrincipal')) {
-            document.getElementById('liveCardPrincipal').textContent = princVal || '-';
-        }
-        if (document.getElementById('liveCardPhone')) {
-            document.getElementById('liveCardPhone').textContent = phoneVal || '-';
-        }
-        if (document.getElementById('liveCardEmail')) {
-            document.getElementById('liveCardEmail').textContent = emailVal || '-';
-        }
-        if (document.getElementById('liveCardWebsite')) {
-            document.getElementById('liveCardWebsite').textContent = webVal || '-';
-        }
-        if (document.getElementById('liveCardAddress')) {
-            document.getElementById('liveCardAddress').textContent = addrVal || '-';
-        }
-    }
-</script>
-@endpush
