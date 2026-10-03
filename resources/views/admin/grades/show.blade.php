@@ -44,12 +44,27 @@
             </p>
         </div>
 
-        <!-- Tombol Aksi Admin: Cetak / Navigasi (Hanya Lihat / Read-Only) -->
+        <!-- Tombol Aksi Admin: Export (PDF / Excel) & Navigasi -->
         <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-bluelight text-xs font-semibold text-bluedark/80 hover:text-blueprim hover:bg-bluelight/40 transition-colors shadow-2xs" title="Cetak lembar nilai (Print)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                <span>Cetak Rekap</span>
-            </button>
+            <!-- Dropdown Export Nilai (PDF / Excel) -->
+            <div class="relative inline-block text-left" id="exportGradeDropdownWrapper">
+                <button type="button" onclick="toggleExportGradeDropdown(event)" class="btn btn-outline btn-sm flex items-center gap-1.5 shadow-2xs hover:bg-slate-50 transition-colors" title="Export Rekap Nilai Siswa">
+                    <svg class="w-3.5 h-3.5 shrink-0 text-bluedark/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    <span>Export Nilai</span>
+                    <svg class="w-3 h-3 text-bluedark/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div id="exportGradeDropdownMenu" class="hidden absolute right-0 mt-1.5 w-44 rounded-xl bg-white shadow-xl border border-bluelight py-1 z-50">
+                    <a href="{{ route('admin.grades.export.pdf', $gradebook) }}" target="_blank" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-bluedark hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                        <svg class="w-4 h-4 text-rose-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        <span>Export ke PDF</span>
+                    </a>
+                    <a href="{{ route('admin.grades.export.excel', $gradebook) }}" class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-bluedark hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="17"/><line x1="8" y1="17" x2="16" y2="13"/></svg>
+                        <span>Export ke Excel</span>
+                    </a>
+                </div>
+            </div>
+
             <a href="{{ route('admin.grades.index') }}" class="btn btn-outline btn-sm text-xs font-semibold gap-1.5" title="Kembali ke daftar monitoring buku nilai">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                 <span>Daftar Buku Nilai</span>
@@ -221,3 +236,24 @@
 
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function toggleExportGradeDropdown(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('exportGradeDropdownMenu');
+        if (menu) {
+            menu.classList.toggle('hidden');
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('exportGradeDropdownWrapper');
+        const menu = document.getElementById('exportGradeDropdownMenu');
+        if (wrapper && menu && !wrapper.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+</script>
+@endpush
+

@@ -19,18 +19,50 @@ class TeachersController extends Controller
     public function index(Request $request): View
     {
         $search = $request->query('search');
+        $status = $request->query('status');
+        $gender = $request->query('gender');
+        $isHomeroom = $request->query('is_homeroom');
 
         $teachers = TeacherProfile::with(['user', 'homeroomClasses'])
             ->withCount('teachingAssignments')
             ->when($search, function ($query, $search) {
-                $query->where('full_name', 'like', "%{$search}%")
-                    ->orWhere('nip', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('nip', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($uq) => $uq->where('email', 'like', "%{$search}%"));
+                });
+            })
+            ->when($status, function ($query, $status) {
+                $query->where('status', $status);
+            })
+            ->when($gender, function ($query, $gender) {
+                $query->where('gender', $gender);
+            })
+            ->when($isHomeroom !== null && $isHomeroom !== '', function ($query) use ($isHomeroom) {
+                if ($isHomeroom === '1') {
+                    $query->has('homeroomClasses');
+                } elseif ($isHomeroom === '0') {
+                    $query->doesntHave('homeroomClasses');
+                }
             })
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.users.teachers.index', compact('teachers', 'search'));
+        $stats = [
+            'total' => TeacherProfile::count(),
+            'active' => TeacherProfile::where('status', 'ACTIVE')->count(),
+            'homeroom' => TeacherProfile::has('homeroomClasses')->count(),
+        ];
+
+        return view('admin.users.teachers.index', compact(
+            'teachers',
+            'search',
+            'status',
+            'gender',
+            'isHomeroom',
+            'stats'
+        ));
     }
 
     public function store(StoreTeacherRequest $request): RedirectResponse

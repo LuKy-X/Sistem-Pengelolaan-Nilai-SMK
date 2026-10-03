@@ -5,7 +5,6 @@ namespace App\Services;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Throwable;
 
 /**
  * Resolves stored media paths into publicly reachable URLs for the public site.
