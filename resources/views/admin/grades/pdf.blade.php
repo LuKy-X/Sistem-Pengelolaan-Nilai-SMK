@@ -387,8 +387,8 @@
                 <p>Mengetahui,</p>
                 <p>Kepala SMK Negeri 2 Karanganyar</p>
                 <div class="signature-space"></div>
-                <p class="signature-name">{{ $schoolProfile?->headmaster_name ?? 'Drs. Sukadi, M.Pd.' }}</p>
-                <p class="signature-nip">NIP. {{ $schoolProfile?->headmaster_nip ?? '19680512 199403 1 005' }}</p>
+                <p class="signature-name">{{ $schoolProfile?->principal_name ?? $schoolProfile?->headmaster_name ?? 'Sukidi, S.Pd., M.Pd.' }}</p>
+                <p class="signature-nip">NIP. {{ $schoolProfile?->headmaster_nip ?? '-' }}</p>
             </div>
 
             <div class="signature-col">

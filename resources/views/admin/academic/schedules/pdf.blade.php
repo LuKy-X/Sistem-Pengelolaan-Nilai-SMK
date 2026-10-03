@@ -374,6 +374,11 @@
                                     @endphp
                                     <td rowspan="{{ $span }}" class="schedule-cell">
                                         <span class="subject-name">{{ $subjectName }}</span>
+                                        @if($cell['is_split_by_break'] ?? false)
+                                            <span style="display:inline-block; font-size:8px; font-weight:700; color:#b45309; background:#fef3c7; border:1px solid #fde68a; border-radius:3px; padding:0 3px; margin-bottom:2px;">
+                                                Bagian {{ $cell['segment_index'] }}/{{ $cell['total_segments'] }}
+                                            </span>
+                                        @endif
                                         <span class="teacher-name">{{ $teacherName }}</span>
                                         <span class="room-badge">{{ $roomName }}</span>
                                     </td>
@@ -399,8 +404,8 @@
                 <div>Mengetahui,</div>
                 <div style="font-weight: 700;">Kepala Sekolah</div>
                 <div class="signature-space"></div>
-                <div class="signature-name">{{ $schoolProfile?->headmaster_name ?? 'Drs. H. Sukardi, M.Pd.' }}</div>
-                <div class="signature-nip">NIP. {{ $schoolProfile?->headmaster_nip ?? '19680512 199403 1 008' }}</div>
+                <div class="signature-name">{{ $schoolProfile?->principal_name ?? $schoolProfile?->headmaster_name ?? 'Sukidi, S.Pd., M.Pd.' }}</div>
+                <div class="signature-nip">NIP. {{ $schoolProfile?->headmaster_nip ?? '-' }}</div>
             </div>
 
             <div class="signature-box">
