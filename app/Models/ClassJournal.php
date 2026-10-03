@@ -99,9 +99,12 @@ class ClassJournal extends Model
         if ($present > 0) {
             return $present;
         }
-        $total = $this->teachingAssignment?->schoolClass?->enrollments()->where('status', 'ACTIVE')->count()
-            ?? $this->teachingAssignment?->schoolClass?->students_count
-            ?? 36;
+        $total = $this->teachingAssignment?->schoolClass?->enrollments()->where('status', 'ACTIVE')->count();
+        if ($total === null || $total === 0) {
+            $total = $this->teachingAssignment?->schoolClass?->enrollments()->count()
+                ?? $this->teachingAssignment?->schoolClass?->students_count
+                ?? $this->attendances()->count();
+        }
 
         return max(0, $total - ($this->sakit_count + $this->izin_count + $this->alpha_count));
     }
