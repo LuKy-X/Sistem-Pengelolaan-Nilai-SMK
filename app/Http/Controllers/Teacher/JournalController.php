@@ -100,7 +100,7 @@ class JournalController extends Controller
                 if ($isFilled) {
                     if ($isToday) {
                         $code = 'today_filled';
-                        $label = '✅ Hari Ini: Selesai Diisi';
+                        $label = 'Hari Ini: Selesai Diisi';
                         if ($periodLabel) {
                             $label .= " ({$periodLabel})";
                         }
@@ -108,24 +108,24 @@ class JournalController extends Controller
                         $priority = 3;
                     } else {
                         $code = 'past_filled';
-                        $label = "✅ Sudah Diisi ({$schedDayName}, {$formattedDate})";
+                        $label = "Sudah Diisi ({$schedDayName}, {$formattedDate})";
                         $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
                         $priority = 5;
                     }
                 } else {
                     if ($isToday) {
                         $code = 'today_unfilled';
-                        $label = $periodLabel ? "⭐ Hari Ini: {$periodLabel} (Belum Diisi)" : '⭐ Hari Ini: Belum Diisi';
+                        $label = $periodLabel ? "Hari Ini: {$periodLabel} (Belum Diisi)" : 'Hari Ini: Belum Diisi';
                         $badgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold';
                         $priority = 2;
                     } elseif ($isPast) {
                         $code = 'overdue';
-                        $label = "⚠️ Terlewat: {$schedDayName}, {$formattedDate} (Belum Diisi)";
+                        $label = "Terlewat: {$schedDayName}, {$formattedDate} (Belum Diisi)";
                         $badgeClass = 'bg-amber-50 text-amber-900 border-amber-300 font-bold';
                         $priority = 1;
                     } else {
                         $code = 'upcoming';
-                        $label = "📅 Jadwal: {$schedDayName}, {$formattedDate}";
+                        $label = "Jadwal: {$schedDayName}, {$formattedDate}";
                         if ($periodLabel) {
                             $label .= " ({$periodLabel})";
                         }
