@@ -80,7 +80,38 @@
     <div class="panel p-4 lg:p-5">
       <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-3">Rincian per Mata Pelajaran</h2>
 
-      <div class="overflow-x-auto">
+      {{-- Kartu untuk layar kecil. --}}
+      <div class="space-y-2.5 md:hidden">
+        @foreach($subjects as $row)
+          @php
+            $gradebook = $row['gradebook'];
+            $letter = $row['predicate'];
+          @endphp
+          <div class="rounded-xl border border-bluelight/80 px-3 py-2.5">
+            <div class="flex items-start justify-between gap-2 mb-1">
+              <div class="min-w-0">
+                <div class="text-xs font-semibold text-bluedark break-words">{{ $row['subject']?->name ?? 'Mata Pelajaran' }}</div>
+                <div class="text-[10px] text-bluedark/45 break-words">{{ $gradebook->name }} &middot; {{ $row['teacher']?->full_name ?? '-' }}</div>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="font-heading font-bold text-bluedark">
+                  {{ $row['average'] !== null ? rtrim(rtrim(number_format($row['average'], 2), '0'), '.') : '-' }}
+                </span>
+                <div class="mt-0.5">
+                  <span class="badge {{ match ($letter) { 'A' => 'badge-green', 'B' => 'badge-blue', 'C' => 'badge-yellow', 'D' => 'badge-yellow', 'E' => 'badge-red', default => 'badge-gray' } }}">
+                    {{ $letter ?? '-' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="text-[10px] text-bluedark/45 mb-2">Komponen terisi {{ $row['graded'] }}/{{ $row['total'] }}</div>
+            <a href="{{ route('student.grades.show', $gradebook) }}" class="btn btn-outline btn-sm w-full">Lihat Rincian</a>
+          </div>
+        @endforeach
+      </div>
+
+      {{-- Tabel untuk layar lebar. --}}
+      <div class="hidden md:block overflow-x-auto">
         <table class="w-full text-xs min-w-[640px]">
           <thead>
             <tr class="text-left text-bluedark/50 border-b border-bluelight">
@@ -101,11 +132,11 @@
                 $passing = $row['passing'];
               @endphp
               <tr class="border-b border-bluelight/60">
-                <td class="py-2.5 pr-3">
-                  <div class="font-semibold text-bluedark">{{ $row['subject']?->name ?? 'Mata Pelajaran' }}</div>
+                <td class="py-2.5 pr-3 max-w-[220px]">
+                  <div class="font-semibold text-bluedark break-words">{{ $row['subject']?->name ?? 'Mata Pelajaran' }}</div>
                   <div class="text-[10px] text-bluedark/45">{{ $gradebook->name }}</div>
                 </td>
-                <td class="py-2.5 pr-3 text-bluedark/60">{{ $row['teacher']?->full_name ?? '-' }}</td>
+                <td class="py-2.5 pr-3 text-bluedark/60 max-w-[180px] break-words">{{ $row['teacher']?->full_name ?? '-' }}</td>
                 <td class="py-2.5 pr-3 text-center text-bluedark/60">{{ $row['graded'] }}/{{ $row['total'] }}</td>
                 <td class="py-2.5 pr-3 text-center">
                   <span class="font-heading font-bold {{ $passing ? 'text-emerald-600' : 'text-amber-600' }}">

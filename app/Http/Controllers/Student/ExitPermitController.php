@@ -9,9 +9,12 @@ use App\Http\Requests\Student\StoreAppealRequest;
 use App\Http\Requests\Student\StoreExitPermitRequest;
 use App\Models\ExitPermit;
 use App\Models\ExitPermitReason;
+use App\Models\LessonPeriod;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -30,7 +33,7 @@ class ExitPermitController extends Controller
         $statusFilter = $request->query('status');
 
         $permits = $student->exitPermits()
-            ->with(['reason', 'approver', 'appeal'])
+            ->with(['reason', 'approver', 'appeal', 'exitPeriod', 'returnPeriod'])
             ->when(
                 in_array($statusFilter, array_column(ExitPermitStatus::cases(), 'value'), true),
                 fn (Builder $query) => $query->where('status', $statusFilter)
@@ -72,7 +75,9 @@ class ExitPermitController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('student.exit-permits.create', compact('student', 'reasons'));
+        $periods = $this->lessonPeriods();
+
+        return view('student.exit-permits.create', compact('student', 'reasons', 'periods'));
     }
 
     public function store(StoreExitPermitRequest $request): RedirectResponse
@@ -96,19 +101,29 @@ class ExitPermitController extends Controller
                 return null;
             }
 
+            $exitPeriod = LessonPeriod::findOrFail($validated['exit_period_id']);
+            $returnPeriod = LessonPeriod::findOrFail($validated['return_period_id']);
+
             $permit = ExitPermit::create([
                 'student_id' => $student->id,
                 'reason_id' => $validated['reason_id'],
                 'reason_detail' => $validated['reason_detail'],
+                'exit_period_id' => $exitPeriod->getKey(),
+                'return_period_id' => $returnPeriod->getKey(),
                 'requested_at' => now(),
-                'planned_exit_at' => $validated['planned_exit_at'],
-                'planned_return_at' => $validated['planned_return_at'],
+                // Waktu diturunkan dari jam mulai jam pelajaran yang dipilih.
+                // Nilai ini tetap disimpan karena timer, deteksi keterlambatan,
+                // notifikasi, dan seluruh halaman modul BK membacanya.
+                'planned_exit_at' => $this->plannedAt($exitPeriod),
+                'planned_return_at' => $this->plannedAt($returnPeriod),
                 'status' => ExitPermitStatus::Pending,
             ]);
 
             $this->audit('EXIT_PERMIT_REQUESTED', $permit, [
                 'student_id' => $student->id,
                 'reason_id' => $permit->reason_id,
+                'exit_period' => $exitPeriod->displayLabel(),
+                'return_period' => $returnPeriod->displayLabel(),
                 'planned_return_at' => $permit->planned_return_at?->toDateTimeString(),
             ]);
 
@@ -130,11 +145,12 @@ class ExitPermitController extends Controller
     {
         Gate::authorize('view', $permit);
 
-        $permit->load(['reason', 'approver', 'appeal.decider']);
+        $permit->load(['reason', 'approver', 'appeal.decider', 'exitPeriod', 'returnPeriod']);
 
         return view('student.exit-permits.show', [
             'student' => Auth::user()->studentProfile,
             'permit' => $permit,
+            'periodSummary' => $permit->periodSummary(),
         ]);
     }
 
@@ -176,6 +192,27 @@ class ExitPermitController extends Controller
         return redirect()
             ->route('student.exit-permits.show', $permit)
             ->with('success', 'Banding keterlambatan terkirim. Menunggu keputusan Guru BK.');
+    }
+
+    /**
+     * Jam pelajaran reguler yang boleh dipilih. Jam istirahat tidak pernah
+     * tampil sebagai pilihan.
+     *
+     * @return Collection<int, LessonPeriod>
+     */
+    private function lessonPeriods()
+    {
+        return LessonPeriod::regular()->get();
+    }
+
+    /**
+     * Mengubah jam pelajaran menjadi tanggal hari ini pada jam mulainya.
+     * Timezone diambil dari konfigurasi aplikasi, sehingga waktu yang
+     * dibandingkan dengan now() selalu berada di kerangka waktu yang sama.
+     */
+    private function plannedAt(LessonPeriod $period): Carbon
+    {
+        return now()->setTimeFromTimeString($period->start_time);
     }
 
     /**

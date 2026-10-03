@@ -17,7 +17,7 @@
   <div>
     <a href="{{ route('student.assignments.index') }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Semua tugas</a>
     <div class="flex flex-wrap items-center gap-2 mt-1">
-      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">{{ $assessment->title }}</h1>
+      <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark min-w-0 break-words">{{ $assessment->title }}</h1>
       <span class="badge badge-blue">{{ $typeLabels[$assessment->type->value] ?? $assessment->type->value }}</span>
       @if($isReviewed)
         <span class="badge badge-green">Sudah Dinilai</span>
@@ -61,7 +61,7 @@
         </dl>
 
         @if($assessment->description)
-          <p class="text-xs text-bluedark/80 mb-3">{{ $assessment->description }}</p>
+          <p class="text-xs text-bluedark/80 mb-3 break-words">{{ $assessment->description }}</p>
         @endif
         @if($assessment->instructions)
           <div class="p-3 rounded-xl bg-bluelight/40 border border-bluelight text-xs text-bluedark/80 whitespace-pre-line">{{ $assessment->instructions }}</div>
@@ -71,25 +71,27 @@
       @if($assessment->rubric && $assessment->rubric->criteria->isNotEmpty())
         <div class="panel p-4 lg:p-5">
           <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-3">Rubrik Penilaian</h2>
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="text-left text-bluedark/50 border-b border-bluelight">
-                <th class="py-1.5 pr-2 font-semibold">Kriteria</th>
-                <th class="py-1.5 font-semibold text-right">Poin Maks</th>
-              </tr>
-            </thead>
-            <tbody>
-              @foreach($assessment->rubric->criteria as $criterion)
-                <tr class="border-b border-bluelight/60">
-                  <td class="py-1.5 pr-2">
-                    <div class="font-semibold text-bluedark">{{ $criterion->criterion }}</div>
-                    @if($criterion->description)<div class="text-[10px] text-bluedark/45">{{ $criterion->description }}</div>@endif
-                  </td>
-                  <td class="py-1.5 text-right font-semibold text-bluedark">{{ $fmt($criterion->max_points) }}</td>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs min-w-[320px]">
+              <thead>
+                <tr class="text-left text-bluedark/50 border-b border-bluelight">
+                  <th class="py-1.5 pr-2 font-semibold">Kriteria</th>
+                  <th class="py-1.5 font-semibold text-right">Poin Maks</th>
                 </tr>
-              @endforeach
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                @foreach($assessment->rubric->criteria as $criterion)
+                  <tr class="border-b border-bluelight/60">
+                    <td class="py-1.5 pr-2">
+                      <div class="font-semibold text-bluedark break-words">{{ $criterion->criterion }}</div>
+                      @if($criterion->description)<div class="text-[10px] text-bluedark/45 break-words">{{ $criterion->description }}</div>@endif
+                    </td>
+                    <td class="py-1.5 text-right font-semibold text-bluedark whitespace-nowrap">{{ $fmt($criterion->max_points) }}</td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
         </div>
       @endif
 
@@ -183,7 +185,7 @@
             <div class="flex flex-col gap-1 mb-3">
               @foreach($score->rubricScores as $rubricScore)
                 <div class="flex items-center justify-between text-xs">
-                  <span class="text-bluedark/70">{{ $rubricScore->criterion?->criterion ?? '-' }}</span>
+                  <span class="text-bluedark/70 min-w-0 break-words">{{ $rubricScore->criterion?->criterion ?? '-' }}</span>
                   <span class="font-semibold text-bluedark">{{ $fmt($rubricScore->points_awarded) }}</span>
                 </div>
               @endforeach

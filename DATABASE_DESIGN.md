@@ -20,6 +20,8 @@
    - Mencegah duplikasi penilaian kriteria rubrik (`rubric_scores` unik untuk skor + kriteria).
 5. **No Ephemeral State Storage**: Timer perizinan dihitung berdasarkan selisih waktu terencana dengan waktu sekarang, bukan angka countdown mentah yang disimpan di database.
 6. **Auditable Point Balances**: Poin kedisiplinan dihitung dari saldo awal tahun ajaran + rekam jejak mutasi poin (`points_delta`), menjamin riwayat perilaku transparan dan dapat diaudit.
+7. **Satu Kerangka Waktu**: Semua timestamp ditulis dan dibaca memakai `config('app.timezone')` = `Asia/Jakarta`. Nilai `lesson_periods.start_time` dan `end_time` adalah jam dinding sekolah tanpa zona waktu, dan wajib diubah memakai `now()->setTimeFromTimeString(...)` agar bisa dibandingkan dengan `now()` pada kerangka yang sama. Mengubah kolom waktu mentah secara langsung akan menggeser countdown dan deteksi keterlambatan sebesar selisih zona waktu.
+8. **Jam Pelajaran Sebagai Rujukan Izin**: Siswa tidak mengetik jam pada pengajuan izin keluar. Ia memilih `exit_period_id` dan `return_period_id`; `planned_exit_at` serta `planned_return_at` diturunkan dari `lesson_periods.start_time`. Kedua kolom timestamp tetap diisi karena timer, detensi keterlambatan, notifikasi, dan seluruh halaman modul BK membacanya. Kedua kolom period nullable karena data lama belum memilikinya.
 
 ---
 
@@ -388,9 +390,11 @@
 - `student_id`: BIGINT UNSIGNED NOT NULL, FK -> `student_profiles(id)` ON DELETE RESTRICT
 - `reason_id`: BIGINT UNSIGNED NOT NULL, FK -> `exit_permit_reasons(id)` ON DELETE RESTRICT
 - `reason_detail`: TEXT NOT NULL
+- `exit_period_id`: BIGINT UNSIGNED NULLABLE, FK -> `lesson_periods(id)` ON DELETE RESTRICT — jam pelajaran saat siswa keluar (dipilih siswa, bukan diketik)
+- `return_period_id`: BIGINT UNSIGNED NULLABLE, FK -> `lesson_periods(id)` ON DELETE RESTRICT — jam pelajaran paling akhir siswa harus sudah kembali
 - `requested_at`: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-- `planned_exit_at`: TIMESTAMP NOT NULL
-- `planned_return_at`: TIMESTAMP NOT NULL
+- `planned_exit_at`: TIMESTAMP NOT NULL — **diturunkan** dari `lesson_periods.start_time` pada `exit_period_id`
+- `planned_return_at`: TIMESTAMP NOT NULL — **diturunkan** dari `lesson_periods.start_time` pada `return_period_id`
 - `approved_at`: TIMESTAMP NULLABLE
 - `approved_by`: BIGINT UNSIGNED NULLABLE, FK -> `staff_profiles(id)` ON DELETE SET NULL
 - `actual_exit_at`: TIMESTAMP NULLABLE

@@ -33,7 +33,7 @@ class ExitPermitDecided extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
-        $permit = ExitPermit::with('reason')->find($this->exitPermitId);
+        $permit = ExitPermit::with(['reason', 'exitPeriod', 'returnPeriod'])->find($this->exitPermitId);
 
         if ($permit === null) {
             return [
@@ -45,11 +45,14 @@ class ExitPermitDecided extends Notification implements ShouldQueue
         }
 
         $reason = $permit->reason?->name ?? 'Izin keluar';
+        $deadline = $permit->returnPeriod !== null
+            ? 'harus kembali di '.$permit->returnPeriod->displayLabel()
+            : 'rencana kembali '.($permit->planned_return_at?->translatedFormat('d M Y H:i') ?? '-');
 
         [$title, $body] = match ($permit->status) {
             ExitPermitStatus::Approved => [
                 'Izin keluar disetujui',
-                $reason.' · rencana kembali '.($permit->planned_return_at?->translatedFormat('d M Y H:i') ?? '-'),
+                $reason.' · '.$deadline,
             ],
             ExitPermitStatus::Rejected => [
                 'Izin keluar ditolak',
@@ -57,7 +60,7 @@ class ExitPermitDecided extends Notification implements ShouldQueue
             ],
             ExitPermitStatus::Late => [
                 'Izin tercatat terlambat kembali',
-                $reason.' · rencana kembali '.($permit->planned_return_at?->translatedFormat('d M Y H:i') ?? '-'),
+                $reason.' · '.$deadline,
             ],
             ExitPermitStatus::Completed => [
                 'Izin selesai',
