@@ -435,7 +435,7 @@ class CounselorJournalAndPermitTest extends TestCase
                 'date' => now()->format('Y-m-d'),
             ]))
             ->assertOk()
-            ->assertSee('Lihat Absensi Kelas Binaan')
+            ->assertSee('Lihat Absensi Kelas')
             ->assertSee('Mode lihat saja')
             ->assertSee('Materi Matematika Kelas Binaan')
             ->assertSee($student->full_name)
@@ -443,6 +443,61 @@ class CounselorJournalAndPermitTest extends TestCase
             ->assertDontSee('Manajemen Absensi')
             ->assertDontSee('formManajemenAbsensi', escape: false)
             ->assertDontSee('name="teaching_assignment_id"', escape: false);
+    }
+
+    public function test_counselor_can_read_attendance_for_all_classes_without_schedule(): void
+    {
+        ClassJournal::query()->delete();
+
+        // Kelas yang TIDAK diampu dan TIDAK diajar: tidak boleh tampil.
+        $this->createJournal($this->foreignClass, 'Materi Kelas Luar Cakupan', now()->subDay());
+
+        // Journal dibuat pada hari tanpa jadwal BK, sehingga absensinya tetap
+        // harus terlihat di tab read-only.
+        $unscheduledDate = now()->subWeek()->next(Carbon::MONDAY);
+        $this->createJournal($this->counseledClass, 'Absensi Hari Tanpa Jadwal', $unscheduledDate);
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.attendance', [
+                'class_id' => '',
+                'date' => $unscheduledDate->format('Y-m-d'),
+            ]))
+            ->assertOk()
+            ->assertSee('Semua Kelas')
+            ->assertSee('Absensi Hari Tanpa Jadwal')
+            ->assertDontSee('Materi Kelas Luar Cakupan')
+            // Tetap read-only: tidak ada formulir untuk kelas mana pun.
+            ->assertDontSee('formManajemenAbsensi', escape: false);
+    }
+
+    public function test_counselor_attendance_tab_includes_taught_classes(): void
+    {
+        ClassJournal::query()->delete();
+
+        // Kelas yang hanya diajar sebagai pengajar, bukan kelas binaaan.
+        $this->counselor->counseledClasses()->sync([$this->counseledClass->id]);
+
+        $taughtClass = SchoolClass::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', [$this->counseledClass->id])
+            ->firstOrFail();
+
+        TeachingAssignment::create([
+            'teacher_id' => $this->counselorTeacher->id,
+            'subject_id' => Subject::where('code', 'MTK')->firstOrFail()->id,
+            'class_id' => $taughtClass->id,
+            'semester_id' => Semester::where('is_active', true)->firstOrFail()->id,
+            'weekly_hours' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->createJournal($taughtClass, 'Materi Kelas Yang Diajar', now());
+
+        $this->actingAs($this->counselor)
+            ->get(route('counselor.journals.attendance', ['date' => now()->format('Y-m-d')]))
+            ->assertOk()
+            ->assertSee($taughtClass->name)
+            ->assertSee('Materi Kelas Yang Diajar');
     }
 
     public function test_counselor_cannot_read_attendance_of_uncounseled_class(): void

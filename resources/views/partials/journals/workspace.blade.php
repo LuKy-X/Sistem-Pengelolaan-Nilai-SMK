@@ -205,12 +205,16 @@
                 <!-- Schedule / Missed / Filled Badge -->
                 <div class="flex flex-col items-end">
                   <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border {{ $summary['badge_class'] }} shadow-2xs">
-                    @if($summary['status_code'] === 'today_unfilled')
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    @if(in_array($summary['status_code'], ['today_filled', 'past_filled'], true))
+                      <svg class="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                    @elseif($summary['status_code'] === 'today_unfilled')
+                      <svg class="w-3.5 h-3.5 text-emerald-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3"/></svg>
                     @elseif($summary['status_code'] === 'overdue')
-                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                      <svg class="w-3.5 h-3.5 text-amber-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    @elseif($summary['status_code'] === 'upcoming')
+                      <svg class="w-3.5 h-3.5 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path stroke-width="2" d="M16 2v4M8 2v4M3 10h18"/></svg>
                     @endif
-                    {{ $summary['status_label'] }}
+                    <span>{{ $summary['status_label'] }}</span>
                   </span>
                 </div>
               </div>
@@ -1062,9 +1066,12 @@ document.addEventListener('DOMContentLoaded', function() {
       headerCols.classList.remove('hidden');
     }
 
-    const rowId = `keterangan-row-${rowIndex++}`;
+    // Satu klik "Tambah Siswa" = satu baris horizontal baru.
+    // `rowNumber` dipakai untuk id baris sekaligus indeks field absences[],
+    // sehingga setiap baris punya nama field unik dan tidak saling menimpa.
+    const rowNumber = rowIndex++;
     const rowDiv = document.createElement('div');
-    rowDiv.id = rowId;
+    rowDiv.id = `keterangan-row-${rowNumber}`;
     rowDiv.className = 'keterangan-row grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1.8fr_auto] gap-2.5 items-center p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs transition-all';
 
     // Student Select Options
@@ -1083,13 +1090,13 @@ document.addEventListener('DOMContentLoaded', function() {
     rowDiv.innerHTML = `
       <div>
         <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Siswa</label>
-        <select name="absences[${rowIndex}][student_id]" class="f-select student-select w-full bg-slate-50 text-xs" required>
+        <select name="absences[${rowNumber}][student_id]" class="f-select student-select w-full bg-slate-50 text-xs" required>
           ${studentOptions}
         </select>
       </div>
       <div>
         <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Status</label>
-        <select name="absences[${rowIndex}][status]" class="f-select status-select w-full bg-slate-50 text-xs font-medium" required>
+        <select name="absences[${rowNumber}][status]" class="f-select status-select w-full bg-slate-50 text-xs font-medium" required>
           <option value="IZIN" ${isIzin}>Izin</option>
           <option value="SAKIT" ${isSakit}>Sakit</option>
           <option value="ALPHA" ${isAlpha}>Alpha</option>
@@ -1097,7 +1104,7 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       <div>
         <label class="md:hidden text-[11px] font-semibold text-slate-500 mb-1 block">Keterangan / Alasan (Opsional)</label>
-        <input type="text" name="absences[${rowIndex}][note]" value="${safeNote}" placeholder="Keterangan (opsional, cth: Sakit demam, urusan keluarga)" class="f-input note-input w-full bg-slate-50 text-xs">
+        <input type="text" name="absences[${rowNumber}][note]" value="${safeNote}" placeholder="Keterangan (opsional, cth: Sakit demam, urusan keluarga)" class="f-input note-input w-full bg-slate-50 text-xs">
       </div>
       <div class="flex justify-end md:justify-center">
         <button type="button" class="btn-remove-row p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors" title="Hapus Siswa">

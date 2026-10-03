@@ -7,7 +7,7 @@
   $tabQuery = $tabQuery ?? [];
   $tabQuery = array_filter($tabQuery, fn ($value) => $value !== null && $value !== '');
   $tabs = [
-    'counselor.journals.index' => 'Absensi Saya',
+    'counselor.journals.index' => 'Isi Absensi',
     'counselor.journals.attendance' => 'Lihat Absensi',
     'counselor.journals.history' => 'Riwayat',
   ];
@@ -37,6 +37,6 @@
     </a>
   @endforeach
   <span class="ml-auto pr-2 text-[11px] text-bluedark/45 hidden sm:inline">
-    Pengisian absensi mengikuti jadwal mengajar Anda
+    Isi absensi hanya pada jadwal Anda &middot; lihat absensi kelasZu amphibODS &amp; yang diajar kapan saja
   </span>
 </nav>

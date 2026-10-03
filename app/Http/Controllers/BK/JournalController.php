@@ -43,63 +43,78 @@ class JournalController extends Controller
                 ],
                 'requireScheduleMatch' => true,
                 'showExportMenu' => false,
-                'subheading' => 'Isi absensi kelas pada hari sesuai jadwal mengajar Anda',
+                'subheading' => 'Isi absensi kelas pada hari sesuai jadwal mengajar Anda. Untuk melihat absensi kelas lain, buka tab Lihat Absensi.',
                 'emptyMessage' => 'Belum ada penugasan mengajar aktif untuk Anda. Hubungi administrator/kurikulum untuk penugasan mengajar dan jadwal.',
             ]
         ));
     }
 
     /**
-     * Tab read-only: seluruh absensi kelas binaannya Guru BK.
+     * Tab read-only: absensi kelas binaaan sekaligus kelas yang diajar Guru BK.
+     *
+     * Tidak memerlukan jadwal hari itu: semua sesi yang tercatat pada tanggal
+     * terpilih ditampilkan, sehingga BK tetap bisa memantau kelas binaannya
+     * pada hari ketika dia tidak mengajar.
      */
     public function attendance(Request $request): View
     {
-        $counselorClasses = $this->counselorClasses()->load([
+        // Read-only: menampilkan kelas binaaan sekaligus kelas yang diajar BK,
+        // sehingga absensi tetap terlihat meski hari itu tidak ada jadwalnya.
+        $visibleClasses = $this->counselorVisibleClasses()->load([
             'gradeLevel',
             'department',
         ]);
 
+        // Tanpa pilihan kelas, tampilkan seluruh kelas binaaan + yang diajar.
         $selectedClassId = $request->query('class_id');
-        $selectedClass = $selectedClassId
-            ? $counselorClasses->firstWhere('id', $selectedClassId)
-            : $counselorClasses->first();
+        $selectedClass = $selectedClassId !== null && $selectedClassId !== ''
+            ? $visibleClasses->firstWhere('id', $selectedClassId)
+            : null;
 
         $selectedDate = $this->journalDateQuery($request->query('date'));
+        $scopeClassId = $selectedClass?->id;
+        $classIds = $visibleClasses->pluck('id')->all();
 
-        $journals = collect();
+        $journals = ClassJournal::withActiveClassStudentCount()
+            ->with([
+                'startPeriod',
+                'endPeriod',
+                'attendances.student',
+                'creator.user',
+                'teachingAssignment.subject',
+                'teachingAssignment.schoolClass',
+            ])
+            ->whereHas('teachingAssignment', fn (Builder $query) => $query->whereIn('class_id', $classIds === [] ? [0] : $classIds))
+            ->when($scopeClassId !== null, fn (Builder $query) => $query
+                ->whereHas('teachingAssignment', fn (Builder $inner) => $inner->where('class_id', $scopeClassId)))
+            ->whereDate('journal_date', $selectedDate)
+            ->get()
+            ->sortBy([
+                fn (ClassJournal $journal) => $journal->teachingAssignment?->schoolClass?->name ?? '',
+                fn (ClassJournal $journal) => $journal->startPeriod?->period_number ?? 0,
+            ])
+            ->values();
+
         $totals = ['hadir' => 0, 'sakit' => 0, 'izin' => 0, 'alpha' => 0];
 
-        if ($selectedClass) {
-            $journals = ClassJournal::withActiveClassStudentCount()
-                ->with([
-                    'startPeriod',
-                    'endPeriod',
-                    'attendances.student',
-                    'creator.user',
-                    'teachingAssignment.subject',
-                ])
-                ->whereHas('teachingAssignment', fn (Builder $query) => $query->where('class_id', $selectedClass->id))
-                ->whereDate('journal_date', $selectedDate)
-                ->get()
-                ->sortBy(fn (ClassJournal $journal) => $journal->startPeriod?->period_number ?? 0)
-                ->values();
-
-            foreach ($journals as $journal) {
-                $totals['hadir'] += $journal->hadir_count;
-                $totals['sakit'] += $journal->sakit_count;
-                $totals['izin'] += $journal->izin_count;
-                $totals['alpha'] += $journal->alpha_count;
-            }
+        foreach ($journals as $journal) {
+            $totals['hadir'] += $journal->hadir_count;
+            $totals['sakit'] += $journal->sakit_count;
+            $totals['izin'] += $journal->izin_count;
+            $totals['alpha'] += $journal->alpha_count;
         }
 
         return view('bk.journals.attendance', [
-            'counselorClasses' => $counselorClasses,
+            'visibleClasses' => $visibleClasses,
             'selectedClass' => $selectedClass,
             'selectedDate' => $selectedDate,
             'journals' => $journals,
             'totals' => $totals,
             'prevDate' => Carbon::parse($selectedDate)->subDay()->format('Y-m-d'),
             'nextDate' => Carbon::parse($selectedDate)->addDay()->format('Y-m-d'),
+            'today' => now()->format('Y-m-d'),
+            'yesterday' => now()->subDay()->format('Y-m-d'),
+            'weekStartDate' => now()->startOfWeek(Carbon::MONDAY)->format('Y-m-d'),
         ]);
     }
 
@@ -108,12 +123,13 @@ class JournalController extends Controller
      */
     public function history(Request $request): View
     {
-        $counselorClasses = $this->counselorClasses()->load(['gradeLevel', 'department']);
-        $classIds = $counselorClasses->pluck('id')->all();
+        // Sama seperti tab Lihat Absensi: kelas binaaan + kelas yang diajar BK.
+        $visibleClasses = $this->counselorVisibleClasses()->load(['gradeLevel', 'department']);
+        $classIds = $visibleClasses->pluck('id')->all();
 
         $classFilter = $request->query('class_id');
         $selectedClass = $classFilter !== null && $classFilter !== ''
-            ? $counselorClasses->firstWhere('id', $classFilter)
+            ? $visibleClasses->firstWhere('id', $classFilter)
             : null;
         $search = trim((string) $request->query('q', ''));
         $dateFrom = $this->journalOptionalDateQuery($request->query('date_from'));
@@ -154,7 +170,7 @@ class JournalController extends Controller
         }
 
         return view('bk.journals.history', [
-            'counselorClasses' => $counselorClasses,
+            'counselorClasses' => $visibleClasses,
             'selectedClass' => $selectedClass,
             'journals' => $journals,
             'totals' => $totals,

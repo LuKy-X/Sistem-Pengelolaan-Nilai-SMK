@@ -221,19 +221,11 @@ class TeacherJournalFlowTest extends TestCase
 
         $journal->load(['attendances', 'teachingAssignment.schoolClass']);
 
-<<<<<<< HEAD
         $activeCount = ClassEnrollment::where('class_id', $this->assignment->class_id)->where('status', 'ACTIVE')->count();
-=======
-        $activeEnrollmentsCount = ClassEnrollment::where('class_id', $this->assignment->class_id)
-            ->where('status', 'ACTIVE')
-            ->count();
-        $expectedHadir = max(0, $activeEnrollmentsCount - 1);
->>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
 
         $this->assertEquals(1, $journal->sakit_count);
         $this->assertEquals(0, $journal->izin_count);
         $this->assertEquals(0, $journal->alpha_count);
-<<<<<<< HEAD
         $this->assertEquals($activeCount - 1, $journal->hadir_count);
     }
 
@@ -244,6 +236,7 @@ class TeacherJournalFlowTest extends TestCase
 
         $student = ClassEnrollment::where('class_id', $this->assignment->class_id)->firstOrFail()->student;
 
+        // Ringkasan di notes sengaja dibuat basi: 35 siswa, padahal enrollment aktual berbeda.
         $journal = ClassJournal::create([
             'teaching_assignment_id' => $this->assignment->id,
             'journal_date' => now()->subDay()->format('Y-m-d'),
@@ -267,9 +260,6 @@ class TeacherJournalFlowTest extends TestCase
         $this->assertSame(1, $journal->alpha_count);
         $this->assertSame($activeCount - 1, $journal->hadir_count);
         $this->assertNotSame(35, $journal->hadir_count);
-=======
-        $this->assertEquals($expectedHadir, $journal->hadir_count);
->>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
     }
 
     public function test_teacher_can_update_their_own_journal_with_student_notes(): void
