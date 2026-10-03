@@ -80,6 +80,22 @@ class LessonPeriod extends Model
         return 'Jam Ke-'.$this->period_number." ($start - $end)";
     }
 
+    /**
+     * Jam pelajaran reguler yang jam mulainya sudah lewat.
+     *
+     * Jam lessons disimpan sebagai jam dinding tanpa zona, jadi harus dipasang
+     * ke tanggal hari ini lewat setTimeFromTimeString() supaya bisa dibandingkan
+     * dengan now() pada kerangka waktu yang sama.
+     */
+    public function hasAlreadyStarted(): bool
+    {
+        if ($this->period_number === null || $this->start_time === null) {
+            return false;
+        }
+
+        return now()->setTimeFromTimeString($this->startTimeForDisplay())->isPast();
+    }
+
     public function startTimeForDisplay(): string
     {
         return substr((string) $this->start_time, 0, 5);

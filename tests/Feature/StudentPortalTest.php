@@ -860,4 +860,75 @@ class StudentPortalTest extends TestCase
 
         return [$periods->last()->getKey(), $periods->first()->getKey()];
     }
+
+    public function test_application_timezone_is_west_indonesian_time(): void
+    {
+        $this->assertSame('Asia/Jakarta', config('app.timezone'));
+
+        // now() harus WIB, bukan UTC. Nilai ini dibandingkan dengan jam dinding
+        // pada lesson_periods, jadi selisih 7 jam akan membuat seluruh hitungan
+        // timer dan keterlambatan salah.
+        $this->assertSame(
+            now()->setTimezone('Asia/Jakarta')->format('H:i'),
+            now()->format('H:i')
+        );
+    }
+
+    public function test_only_regular_periods_are_offered_and_past_ones_are_marked(): void
+    {
+        $periods = LessonPeriod::regular()->get();
+
+        $this->assertNotEmpty($periods);
+        $this->assertSame(0, LessonPeriod::where('is_break', true)->count());
+        $this->assertNull($periods->firstWhere(fn (LessonPeriod $p) => $p->period_number === null));
+
+        // Jam istirahat tidak boleh muncul sebagai pilihan siswa meski datanya ada.
+        $break = LessonPeriod::create([
+            'label' => 'Istirahat',
+            'start_time' => '12:00',
+            'end_time' => '12:30',
+            'is_break' => true,
+        ]);
+
+        $this->assertFalse(
+            LessonPeriod::regular()->get()->contains('id', $break->getKey())
+        );
+        $this->assertFalse($break->hasAlreadyStarted());
+        $break->delete();
+
+        // Jam yang sudah lewat ditandai, jam yang belum lewat tidak.
+        $morning = LessonPeriod::create([
+            'label' => 'Jam Ke-1',
+            'period_number' => 1,
+            'start_time' => '00:05',
+            'end_time' => '00:50',
+            'is_break' => false,
+        ]);
+
+        $this->assertTrue($morning->hasAlreadyStarted());
+        $morning->delete();
+
+        foreach ($periods as $period) {
+            $expected = now()->setTimeFromTimeString($period->start_time)->isPast();
+            $this->assertSame($expected, $period->hasAlreadyStarted(), $period->displayLabel());
+        }
+    }
+
+    public function test_exit_period_options_are_disabled_once_they_have_passed(): void
+    {
+        $past = LessonPeriod::create([
+            'label' => 'Jam Ke-1',
+            'period_number' => 1,
+            'start_time' => '00:05',
+            'end_time' => '00:50',
+            'is_break' => false,
+        ]);
+
+        $this->actingAs($this->studentUser)
+            ->get(route('student.exit-permits.create'))
+            ->assertOk()
+            ->assertSee('sudah lewat');
+
+        $past->delete();
+    }
 }

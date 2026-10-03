@@ -53,12 +53,14 @@
           <select id="return_period_id" name="return_period_id" class="f-select" required>
             <option value="">Pilih jam...</option>
             @foreach($periods as $period)
-              <option value="{{ $period->id }}" @selected((string) old('return_period_id') === (string) $period->id)>
-                {{ $period->displayLabel() }}
+              <option value="{{ $period->id }}"
+                @selected((string) old('return_period_id') === (string) $period->id)
+                @disabled($period->hasAlreadyStarted())>
+                {{ $period->displayLabel() }}@if($period->hasAlreadyStarted()) (sudah lewat)@endif
               </option>
             @endforeach
           </select>
-          <p class="text-[10px] text-bluedark/45 mt-1">Wajib sudah kembali paling lambat di awal jam ini.</p>
+          <p class="text-[10px] text-bluedark/45 mt-1">Wajib sudah kembali paling lambat di awal jam ini. Jam yang sudah lewat tidak dapat dipilih.</p>
           @error('return_period_id')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
         </div>
       </div>
