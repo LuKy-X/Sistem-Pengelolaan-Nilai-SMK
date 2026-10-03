@@ -483,6 +483,8 @@ class TeacherJournalFlowTest extends TestCase
         $response->assertSee('ISTIRAHAT 1');
         $response->assertSee('ISTIRAHAT 2');
         $response->assertSee('Waktu Istirahat, Sholat & Makan Siang');
+        $response->assertDontSee('☕');
+        $response->assertDontSee('🕌');
 
         // Unfilled slot placeholders
         $response->assertSee('Belum diisi');

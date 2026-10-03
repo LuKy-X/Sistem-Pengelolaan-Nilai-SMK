@@ -284,8 +284,9 @@
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 <span>Cetak / Simpan PDF</span>
             </button>
-            <span style="font-size: 11px; color: #64748b;">
-                💡 <em>Pilih "Save as PDF" pada dialog cetak browser untuk menyimpan file.</em>
+            <span style="font-size: 11px; color: #64748b; display: inline-flex; align-items: center; gap: 4px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #64748b; flex-shrink: 0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                <em>Pilih "Save as PDF" pada dialog cetak browser untuk menyimpan file.</em>
             </span>
         </div>
         <div>

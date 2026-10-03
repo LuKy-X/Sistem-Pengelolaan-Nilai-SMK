@@ -37,6 +37,6 @@
     </a>
   @endforeach
   <span class="ml-auto pr-2 text-[11px] text-bluedark/45 hidden sm:inline">
-    Isi absensi hanya pada jadwal Anda &middot; lihat absensi kelasZu amphibODS &amp; yang diajar kapan saja
+    Isi absensi hanya pada jadwal Anda &middot; lihat absensi kelas binaan &amp; yang diajar kapan saja
   </span>
 </nav>

@@ -98,7 +98,7 @@
             <p class="text-xs text-bluedark/50">
               {{ $journals->count() }} sesi terisi pada tanggal ini, lintas mata pelajaran dan pengajar
               @unless($selectedClass)
-                di {{ $visibleClasses->count() }} kelasZu amphibODS dan yang Anda ajar
+                di {{ $visibleClasses->count() }} kelas binaan dan yang Anda ajar
               @endunless
               .
             </p>
