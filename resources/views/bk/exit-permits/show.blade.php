@@ -41,6 +41,15 @@
             <div class="flex justify-between"><span class="text-bluedark/50">Diajukan</span><span class="font-semibold">{{ $permit->requested_at->format('d M Y H:i') }}</span></div>
             <div class="flex justify-between"><span class="text-bluedark/50">Rencana keluar</span><span class="font-semibold">{{ $permit->planned_exit_at->format('d M Y H:i') }}</span></div>
             <div class="flex justify-between"><span class="text-bluedark/50">Rencana kembali</span><span class="font-semibold">{{ $permit->planned_return_at->format('d M Y H:i') }}</span></div>
+            @if($permit->approved_exit_at || $permit->approved_return_at)
+              <div class="flex justify-between border-t border-bluelight pt-1.5 mt-1.5">
+                <span class="text-bluedark/50">Jam disetujui BK</span>
+                <span class="font-semibold text-emerald-700 text-right">
+                  keluar {{ $permit->approved_exit_at?->format('H:i') ?? $permit->planned_exit_at->format('H:i') }}
+                  &rarr; kembali {{ $permit->approved_return_at?->format('H:i') ?? $permit->planned_return_at->format('H:i') }}
+                </span>
+              </div>
+            @endif
             @if($permit->approved_at)
               <div class="flex justify-between"><span class="text-bluedark/50">Diproses</span><span class="font-semibold">{{ $permit->approved_at->format('d M Y H:i') }}</span></div>
             @endif
@@ -56,10 +65,16 @@
               <div>
                 <div class="text-[11px] text-bluedark/60 font-semibold uppercase tracking-wide">Countdown Kepulangan</div>
                 <div class="mt-1.5">
-                  <span class="countdown-pill ok" data-return-at="{{ $permit->planned_return_at->timestamp }}">
+                  <span class="countdown-pill ok" data-return-at="{{ $permit->effectiveReturnAt()->timestamp }}">
                     <span class="dot"></span>Sisa --:--
                   </span>
                 </div>
+                <p class="text-[11px] text-bluedark/50 mt-1.5">
+                  Batas kembali {{ $permit->effectiveReturnAt()->format('d M Y H:i') }}
+                  @unless($permit->approved_return_at)
+                    <span class="text-bluedark/40">(rencana siswa)</span>
+                  @endunless
+                </p>
                 @if($permit->isOverdue())
                   <p class="text-[11px] text-red-600 font-semibold mt-1.5">Siswa sudah melewati batas waktu kepulangan.</p>
                 @endif
@@ -73,7 +88,7 @@
             <div class="mt-4 rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-xs text-emerald-800">
               Siswa tercatat kembali pada <strong>{{ $permit->actual_return_at->format('d M Y H:i') }}</strong>
               @if($permit->status === \App\Enums\ExitPermitStatus::Late)
-                &mdash; terlambat {{ (int) $permit->planned_return_at->diffInMinutes($permit->actual_return_at) }} menit dari rencana.
+                &mdash; terlambat {{ (int) $permit->effectiveReturnAt()->diffInMinutes($permit->actual_return_at) }} menit dari rencana.
               @else
                 &mdash; tepat waktu.
               @endif
@@ -97,11 +112,31 @@
       @if($permit->status === \App\Enums\ExitPermitStatus::Pending)
         <div class="panel p-5">
           <h2 class="font-heading font-semibold text-bluedark text-[15px] mb-1">Keputusan BK</h2>
-          <p class="text-xs text-bluedark/50 mb-4">Pastikan pengajuan disertai keterangan dan telah mendapat izin wali/orang tua.</p>
+          <p class="text-xs text-bluedark/50 mb-4">
+            Tinjau detail pengajuan di atas, lalu tentukan jam keluar &amp; kembali yang disetujui sebelum memutuskan.
+          </p>
 
           <div class="grid sm:grid-cols-2 gap-4">
             <form action="{{ route('counselor.exit-permits.approve', $permit) }}" method="POST" class="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
               @csrf
+              <div class="grid gap-3 mb-3">
+                <div>
+                  <label class="f-label" for="approved_exit_at">Jam Keluar Disetujui</label>
+                  <input type="datetime-local" id="approved_exit_at" name="approved_exit_at"
+                         value="{{ old('approved_exit_at', $permit->planned_exit_at->format('Y-m-d\TH:i')) }}" class="f-input">
+                  @error('approved_exit_at')
+                    <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+                  @enderror
+                </div>
+                <div>
+                  <label class="f-label" for="approved_return_at">Jam Kembali Disetujui <span class="text-red-500">*</span></label>
+                  <input type="datetime-local" id="approved_return_at" name="approved_return_at"
+                         value="{{ old('approved_return_at', $permit->planned_return_at->format('Y-m-d\TH:i')) }}" class="f-input" required>
+                  @error('approved_return_at')
+                    <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
+                  @enderror
+                </div>
+              </div>
               <label class="f-label" for="approval_note">Catatan Persetujuan (opsional)</label>
               <textarea id="approval_note" name="approval_note" rows="2" class="f-textarea mb-3"
                         placeholder="Contoh: wajib melapor ke BK sebelum pulang">{{ old('approval_note') }}</textarea>
@@ -113,6 +148,9 @@
               <label class="f-label" for="rejection_note">Alasan Penolakan <span class="text-red-500">*</span></label>
               <textarea id="rejection_note" name="rejection_note" rows="2" required class="f-textarea mb-3"
                         placeholder="Contoh: tidak ada surat keterangan orang tua">{{ old('rejection_note') }}</textarea>
+              @error('rejection_note')
+                <p class="text-[11px] text-red-600 mt-1 mb-2">{{ $message }}</p>
+              @enderror
               <button type="submit" class="btn btn-danger w-full">Tolak Izin</button>
             </form>
           </div>

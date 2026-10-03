@@ -350,6 +350,11 @@ class SampleTeachingAssignmentSeeder extends Seeder
 
         // Journal Jam 1-2 Bahasa Indonesia (Guru Budi)
         if ($assignBudi && $period1 && $period2) {
+            // Rekap mengikuti jumlah siswa aktif nyata, bukan angka tetap.
+            $activeStudentCount = ClassEnrollment::where('class_id', $classXiiRpl1->id)
+                ->where('status', 'ACTIVE')
+                ->count();
+
             $journalBin = ClassJournal::firstOrCreate(
                 [
                     'teaching_assignment_id' => $assignBudi->id,
@@ -384,6 +389,10 @@ class SampleTeachingAssignmentSeeder extends Seeder
 
         // Previous Journal Jam 3-4 Matematika (Guru Agus) on yesterday
         if ($assign1 && $period3 && $period4) {
+            $activeStudentCountMtk = ClassEnrollment::where('class_id', $classXiiRpl1->id)
+                ->where('status', 'ACTIVE')
+                ->count();
+
             $journalMtk = ClassJournal::firstOrCreate(
                 [
                     'teaching_assignment_id' => $assign1->id,

@@ -204,17 +204,23 @@
         @endif
 
         <div>
+          <label class="f-label" for="counseling_student_search">Cari Siswa</label>
+          <input type="search" id="counseling_student_search" class="f-input mb-3"
+                 placeholder="Ketik nama atau NIS siswa" autocomplete="off">
+
           <label class="f-label" for="c_student_id">Siswa <span class="text-red-500">*</span></label>
           <select id="c_student_id" name="student_id" required class="f-select">
             <option value="">Pilih siswa</option>
             @foreach($students as $student)
               <option value="{{ $student->id }}"
                       data-class="{{ $student->currentEnrollment?->schoolClass?->id ?? '' }}"
+                      data-search="{{ $student->nis }} {{ $student->nisn }}"
                       @selected(old('student_id') == $student->id)>
                 {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
               </option>
             @endforeach
           </select>
+          <p class="text-[11px] text-bluedark/45 mt-1" id="counseling_student_count">Ketik nama atau NIS untuk menyaring daftar siswa.</p>
           @error('student_id')
             <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
           @enderror
@@ -283,31 +289,12 @@
 
 @push('scripts')
 <script>
-  (function () {
-    var classSelect = document.getElementById('modal_class_id');
-    var studentSelect = document.getElementById('c_student_id');
-
-    if (!classSelect || !studentSelect) return;
-
-    var allOptions = Array.prototype.slice.call(studentSelect.options).slice(1);
-
-    classSelect.addEventListener('change', function () {
-      var selectedClass = this.value;
-      var currentValue = studentSelect.value;
-
-      while (studentSelect.options.length > 1) {
-        studentSelect.remove(1);
-      }
-
-      allOptions.forEach(function (option) {
-        if (!selectedClass || option.dataset.class === selectedClass) {
-          studentSelect.add(option.cloneNode(true));
-        }
-      });
-
-      studentSelect.value = currentValue;
-    });
-  }());
+  initStudentPicker({
+    search: document.getElementById('counseling_student_search'),
+    select: document.getElementById('c_student_id'),
+    classFilter: document.getElementById('modal_class_id'),
+    feedback: document.getElementById('counseling_student_count')
+  });
 
   @if($errors->any())
     openModal('counselingModal');

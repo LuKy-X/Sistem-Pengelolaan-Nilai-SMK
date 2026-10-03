@@ -5,6 +5,7 @@ namespace App\Http\Controllers\BK;
 use App\Enums\DisciplinaryLetterType;
 use App\Enums\ExitPermitStatus;
 use App\Http\Controllers\BK\Concerns\HandlesDisciplinePoints;
+use App\Http\Controllers\BK\Concerns\ResolvesCounselorClasses;
 use App\Http\Controllers\Controller;
 use App\Models\DisciplinaryLetter;
 use App\Models\DisciplineRecord;
@@ -17,7 +18,14 @@ use Illuminate\View\View;
 
 class StudentController extends Controller
 {
-    use HandlesDisciplinePoints;
+    use HandlesDisciplinePoints, ResolvesCounselorClasses;
+
+    /**
+     * Cakupan daftar siswa yang bisa dipilih lewat KPI card.
+     *
+     * @var list<string>
+     */
+    public const SCOPES = ['all', 'attention', 'sp1', 'sp23'];
 
     public function index(Request $request): View
     {
@@ -26,7 +34,9 @@ class StudentController extends Controller
         $setting = $this->disciplineSetting($academicYearId);
 
         $search = trim((string) $request->query('q', ''));
-        $scope = $request->query('scope', 'all');
+        $scope = in_array($request->query('scope'), self::SCOPES, true)
+            ? $request->query('scope')
+            : 'all';
 
         $studentsQuery = StudentProfile::query()
             ->with('currentEnrollment.schoolClass')
@@ -44,13 +54,24 @@ class StudentController extends Controller
 
         $thresholdCounts = $this->countStudentsReaching($allBalances, $setting);
 
-        if ($scope === 'attention') {
-            $attentionIds = array_values(array_filter(
+        if ($scope !== 'all') {
+            $allowedTones = match ($scope) {
+                'attention' => ['watch', 'warning', 'high', 'critical'],
+                'sp1' => ['warning'],
+                'sp23' => ['high', 'critical'],
+                default => [],
+            };
+
+            $scopedIds = array_values(array_filter(
                 array_keys($allBalances),
-                fn (int $studentId) => $this->disciplineStanding($allBalances[$studentId], $setting)['tone'] !== 'safe',
+                fn (int $studentId) => in_array(
+                    $this->disciplineStanding($allBalances[$studentId], $setting)['tone'],
+                    $allowedTones,
+                    true
+                )
             ));
 
-            $studentsQuery->whereIn('id', $attentionIds === [] ? [0] : $attentionIds);
+            $studentsQuery->whereIn('id', $scopedIds === [] ? [0] : $scopedIds);
         }
 
         $students = $studentsQuery->paginate(12)->withQueryString();
@@ -69,6 +90,7 @@ class StudentController extends Controller
             'academicYear' => $academicYear,
             'search' => $search,
             'scope' => $scope,
+            'scopes' => self::SCOPES,
             'thresholdCounts' => $thresholdCounts,
             'totalStudents' => $activeStudentIds->count(),
         ]);
@@ -76,6 +98,8 @@ class StudentController extends Controller
 
     public function show(StudentProfile $student): View
     {
+        $this->authorizeCounselorStudent($student);
+
         $academicYear = $this->activeAcademicYear();
         $academicYearId = $academicYear?->id;
         $setting = $this->disciplineSetting($academicYearId);

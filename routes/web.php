@@ -23,6 +23,7 @@ use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
 use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\JournalController as CounselorJournalController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
@@ -489,6 +490,19 @@ Route::middleware('auth')->group(function () {
         Route::prefix('students')->name('students.')->group(function () {
             Route::get('/', [CounselorStudentController::class, 'index'])->name('index');
             Route::get('/{student}', [CounselorStudentController::class, 'show'])->name('show');
+        });
+
+        // Absensi Kelas & Jurnal
+        Route::prefix('journals')->name('journals.')->group(function () {
+            Route::get('/', [CounselorJournalController::class, 'index'])->name('index');
+            // "lihat-absensi" dan "riwayat" didaftarkan sebelum "{journal}" agar tidak
+            // tertangkap sebagai parameter jurnal.
+            Route::get('/lihat-absensi', [CounselorJournalController::class, 'attendance'])->name('attendance');
+            Route::get('/riwayat', [CounselorJournalController::class, 'history'])->name('history');
+            Route::post('/', [CounselorJournalController::class, 'store'])->name('store');
+            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [CounselorJournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [CounselorJournalController::class, 'destroy'])->name('destroy');
         });
     });
 });
