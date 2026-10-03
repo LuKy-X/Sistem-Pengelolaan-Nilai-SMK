@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\LessonPeriod;
 use App\Models\SchoolClass;
 use App\Models\SchoolProfile;
+use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Models\TeachingSchedule;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,21 +112,28 @@ class ScheduleController extends Controller
             $maxSort = max($startSort, $endSort);
             foreach ($periods as $p) {
                 if ($p->sort_order >= $minSort && $p->sort_order <= $maxSort) {
-                    $occupiedByDay[$s->day_of_week][$p->id] = [
-                        'schedule_id' => $s->id,
-                        'subject' => $s->teachingAssignment?->subject?->name,
-                        'teacher' => $s->teachingAssignment?->teacher?->full_name,
-                        'period_number' => $p->period_number,
-                        'label' => $p->label,
-                    ];
+                    if (! $p->is_break) {
+                        $occupiedByDay[$s->day_of_week][$p->id] = [
+                            'schedule_id' => $s->id,
+                            'subject' => $s->teachingAssignment?->subject?->name,
+                            'teacher' => $s->teachingAssignment?->teacher?->full_name,
+                            'period_number' => $p->period_number,
+                            'label' => $p->label,
+                        ];
+                    }
                 }
             }
         }
+
+        $periodsSorted = $periods->sortBy('sort_order')->values();
+        $matrix = $this->buildTimetableMatrix($schedules, $periodsSorted);
 
         if ($request->wantsJson()) {
             return response()->json([
                 'selected_class' => $selectedClass,
                 'periods' => $periods,
+                'periods_sorted' => $periodsSorted,
+                'matrix' => $matrix,
                 'days' => $days,
                 'schedules' => $schedules,
                 'assignments' => $assignments,
@@ -136,6 +145,8 @@ class ScheduleController extends Controller
             'classes',
             'selectedClass',
             'periods',
+            'periodsSorted',
+            'matrix',
             'schedules',
             'assignments',
             'days',
@@ -173,13 +184,9 @@ class ScheduleController extends Controller
         $minSort = min($startP->sort_order, $endP->sort_order);
         $maxSort = max($startP->sort_order, $endP->sort_order);
 
-        // 1. Validasi: Jangan izinkan jadwal bertabrakan / melewati jam istirahat
-        $hasBreak = LessonPeriod::where('is_break', true)
-            ->whereBetween('sort_order', [$minSort, $maxSort])
-            ->first();
-
-        if ($hasBreak) {
-            $msg = 'Tidak dapat menempatkan jadwal pada rentang jam istirahat.';
+        // Jam mulai dan jam selesai tidak boleh pada jam istirahat (tetapi boleh melompati jam istirahat di antaranya)
+        if ($startP->is_break || $endP->is_break) {
+            $msg = 'Jam mulai dan jam selesai harus berupa jam pelajaran, bukan jam istirahat.';
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
@@ -301,13 +308,9 @@ class ScheduleController extends Controller
         $minSort = min($startP->sort_order, $endP->sort_order);
         $maxSort = max($startP->sort_order, $endP->sort_order);
 
-        // 1. Validasi jam istirahat
-        $hasBreak = LessonPeriod::where('is_break', true)
-            ->whereBetween('sort_order', [$minSort, $maxSort])
-            ->first();
-
-        if ($hasBreak) {
-            $msg = 'Tidak dapat menempatkan jadwal pada rentang jam istirahat.';
+        // Jam mulai dan jam selesai tidak boleh pada jam istirahat (tetapi boleh melompati jam istirahat di antaranya)
+        if ($startP->is_break || $endP->is_break) {
+            $msg = 'Jam mulai dan jam selesai harus berupa jam pelajaran, bukan jam istirahat.';
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $msg], 422);
@@ -636,16 +639,10 @@ class ScheduleController extends Controller
 
     /**
      * Export jadwal pelajaran mingguan ke PDF (Print-ready document).
+     * Mendukung export 1 kelas atau seluruh kelas (semua jurusan) dengan kode mapel.
      */
     public function exportPdf(Request $request): View
     {
-        $selectedClassId = $request->query('class_id');
-        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
-        if ($classes->isEmpty()) {
-            $classes = SchoolClass::with('department')->orderBy('name')->get();
-        }
-        $selectedClass = $selectedClassId ? SchoolClass::with('department')->find($selectedClassId) : $classes->first();
-
         $daysCount = (int) $request->input('days_count', 5);
         $daysCount = in_array($daysCount, [5, 6], true) ? $daysCount : 5;
 
@@ -661,6 +658,51 @@ class ScheduleController extends Controller
 
         $periods = LessonPeriod::orderBy('sort_order')->orderBy('start_time')->get();
         $periodsSorted = $periods->sortBy('sort_order')->values();
+        $schoolProfile = SchoolProfile::first();
+
+        $scope = $request->query('scope');
+        $selectedClassId = $request->query('class_id');
+
+        if ($scope === 'all' || $selectedClassId === 'all') {
+            // EXPORT SELURUH KELAS DI SEMUA JURUSAN (MATRIKS JADWAL INDUK DENGAN KODE MAPEL)
+            $classes = SchoolClass::with('department')
+                ->where('is_active', true)
+                ->orderBy('department_id')
+                ->orderBy('name')
+                ->get();
+
+            if ($classes->isEmpty()) {
+                $classes = SchoolClass::with('department')->orderBy('name')->get();
+            }
+
+            $allSchedules = TeachingSchedule::with([
+                'teachingAssignment.subject',
+                'teachingAssignment.teacher',
+                'teachingAssignment.schoolClass.department',
+                'startPeriod',
+                'endPeriod',
+            ])->get();
+
+            $masterGrid = $this->buildMasterTimetableGrid($allSchedules, $periodsSorted, $classes);
+            $subjectLegends = $this->buildSubjectLegends();
+
+            return view('admin.academic.schedules.pdf_all', compact(
+                'classes',
+                'daysCount',
+                'days',
+                'periodsSorted',
+                'masterGrid',
+                'subjectLegends',
+                'schoolProfile'
+            ));
+        }
+
+        // EXPORT 1 KELAS SPESIFIK
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
+        if ($classes->isEmpty()) {
+            $classes = SchoolClass::with('department')->orderBy('name')->get();
+        }
+        $selectedClass = $selectedClassId ? SchoolClass::with('department')->find($selectedClassId) : $classes->first();
 
         $schedules = collect();
         if ($selectedClass) {
@@ -677,7 +719,6 @@ class ScheduleController extends Controller
         }
 
         $matrix = $this->buildTimetableMatrix($schedules, $periodsSorted);
-        $schoolProfile = SchoolProfile::first();
 
         return view('admin.academic.schedules.pdf', compact(
             'selectedClass',
@@ -693,16 +734,10 @@ class ScheduleController extends Controller
 
     /**
      * Export jadwal pelajaran mingguan ke Excel (.xls Spreadsheet).
+     * Mendukung export 1 kelas atau seluruh kelas (semua jurusan) dengan kode mapel.
      */
     public function exportExcel(Request $request): Response
     {
-        $selectedClassId = $request->query('class_id');
-        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
-        if ($classes->isEmpty()) {
-            $classes = SchoolClass::with('department')->orderBy('name')->get();
-        }
-        $selectedClass = $selectedClassId ? SchoolClass::with('department')->find($selectedClassId) : $classes->first();
-
         $daysCount = (int) $request->input('days_count', 5);
         $daysCount = in_array($daysCount, [5, 6], true) ? $daysCount : 5;
 
@@ -718,6 +753,62 @@ class ScheduleController extends Controller
 
         $periods = LessonPeriod::orderBy('sort_order')->orderBy('start_time')->get();
         $periodsSorted = $periods->sortBy('sort_order')->values();
+        $schoolProfile = SchoolProfile::first();
+        $schoolName = $schoolProfile?->school_name ?? 'SMK Negeri 2 Karanganyar';
+
+        $scope = $request->query('scope');
+        $selectedClassId = $request->query('class_id');
+
+        if ($scope === 'all' || $selectedClassId === 'all') {
+            // EXPORT SELURUH KELAS DI SEMUA JURUSAN (MATRIKS JADWAL INDUK DENGAN KODE MAPEL)
+            $classes = SchoolClass::with('department')
+                ->where('is_active', true)
+                ->orderBy('department_id')
+                ->orderBy('name')
+                ->get();
+
+            if ($classes->isEmpty()) {
+                $classes = SchoolClass::with('department')->orderBy('name')->get();
+            }
+
+            $allSchedules = TeachingSchedule::with([
+                'teachingAssignment.subject',
+                'teachingAssignment.teacher',
+                'teachingAssignment.schoolClass.department',
+                'startPeriod',
+                'endPeriod',
+            ])->get();
+
+            $masterGrid = $this->buildMasterTimetableGrid($allSchedules, $periodsSorted, $classes);
+            $subjectLegends = $this->buildSubjectLegends();
+
+            $html = view('admin.academic.schedules.excel_all', compact(
+                'classes',
+                'schoolName',
+                'daysCount',
+                'days',
+                'periodsSorted',
+                'masterGrid',
+                'subjectLegends',
+                'schoolProfile'
+            ))->render();
+
+            $fileName = 'Jadwal_Pelajaran_Semua_Kelas_'.date('Ymd_His').'.xls';
+
+            return response($html, 200, [
+                'Content-Type' => 'application/vnd.ms-excel; charset=utf-8',
+                'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+            ]);
+        }
+
+        // EXPORT 1 KELAS SPESIFIK
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
+        if ($classes->isEmpty()) {
+            $classes = SchoolClass::with('department')->orderBy('name')->get();
+        }
+        $selectedClass = $selectedClassId ? SchoolClass::with('department')->find($selectedClassId) : $classes->first();
 
         $schedules = collect();
         if ($selectedClass) {
@@ -734,8 +825,6 @@ class ScheduleController extends Controller
         }
 
         $matrix = $this->buildTimetableMatrix($schedules, $periodsSorted);
-        $schoolProfile = SchoolProfile::first();
-        $schoolName = $schoolProfile?->school_name ?? 'SMK Negeri 2 Karanganyar';
         $className = $selectedClass?->name ?? 'Semua_Kelas';
 
         $html = view('admin.academic.schedules.excel', compact(
@@ -761,7 +850,8 @@ class ScheduleController extends Controller
     }
 
     /**
-     * Helper untuk menghitung matrix penjadwalan dengan dukungan multi-period (rowspan).
+     * Helper untuk menghitung matrix penjadwalan dengan dukungan multi-period (rowspan)
+     * dan pemotongan visual otomatis jika melewati jam istirahat, serta durasi tanpa istirahat.
      */
     private function buildTimetableMatrix($schedules, $periodsSorted): array
     {
@@ -779,30 +869,171 @@ class ScheduleController extends Controller
             $startIdx = $periodIndexMap[$startId] ?? null;
             $endIdx = $periodIndexMap[$endId] ?? null;
 
-            if ($startIdx !== null && $endIdx !== null && $endIdx >= $startIdx) {
-                $span = $endIdx - $startIdx + 1;
-                $matrix[$startId][$day] = [
+            if ($startIdx === null) {
+                continue;
+            }
+
+            if ($endIdx === null || $endIdx < $startIdx) {
+                $endIdx = $startIdx;
+            }
+
+            // 1. Hitung total jam pelajaran efektif (hanya jam non-istirahat)
+            $actualLessonHours = 0;
+            $actualDurationMinutes = 0;
+            for ($i = $startIdx; $i <= $endIdx; $i++) {
+                $p = $periodsSorted[$i];
+                if (! $p->is_break) {
+                    $actualLessonHours++;
+                    $startT = Carbon::parse($p->start_time);
+                    $endT = Carbon::parse($p->end_time);
+                    $actualDurationMinutes += max(0, $startT->diffInMinutes($endT));
+                }
+            }
+
+            if ($actualDurationMinutes === 0) {
+                $actualDurationMinutes = $actualLessonHours * 45;
+            }
+
+            // 2. Bagi menjadi segmen-segmen yang terpotong jika melewati jam istirahat
+            $segments = [];
+            $currentSegStart = null;
+            $currentSegSpan = 0;
+
+            for ($i = $startIdx; $i <= $endIdx; $i++) {
+                $p = $periodsSorted[$i];
+                if ($p->is_break) {
+                    if ($currentSegStart !== null) {
+                        $segments[] = [
+                            'start_idx' => $currentSegStart,
+                            'span' => $currentSegSpan,
+                        ];
+                        $currentSegStart = null;
+                        $currentSegSpan = 0;
+                    }
+                } else {
+                    if ($currentSegStart === null) {
+                        $currentSegStart = $i;
+                        $currentSegSpan = 1;
+                    } else {
+                        $currentSegSpan++;
+                    }
+                }
+            }
+
+            if ($currentSegStart !== null) {
+                $segments[] = [
+                    'start_idx' => $currentSegStart,
+                    'span' => $currentSegSpan,
+                ];
+            }
+
+            $totalSegs = count($segments);
+
+            // 3. Masukkan setiap segmen ke dalam matrix
+            foreach ($segments as $segIdx => $seg) {
+                $sIdx = $seg['start_idx'];
+                $span = $seg['span'];
+                $startPeriod = $periodsSorted[$sIdx];
+
+                $matrix[$startPeriod->id][$day] = [
                     'type' => 'start',
                     'schedule' => $sch,
                     'span' => $span,
+                    'segment_index' => $segIdx + 1,
+                    'total_segments' => $totalSegs,
+                    'actual_lesson_hours' => $actualLessonHours,
+                    'actual_duration_minutes' => $actualDurationMinutes,
+                    'is_split_by_break' => ($totalSegs > 1),
                 ];
 
-                for ($i = $startIdx + 1; $i <= $endIdx; $i++) {
-                    $pId = $periodsSorted[$i]->id;
+                for ($k = $sIdx + 1; $k < $sIdx + $span; $k++) {
+                    $pId = $periodsSorted[$k]->id;
                     $matrix[$pId][$day] = [
                         'type' => 'covered',
                         'schedule' => $sch,
                     ];
                 }
-            } elseif ($startIdx !== null) {
-                $matrix[$startId][$day] = [
-                    'type' => 'start',
-                    'schedule' => $sch,
-                    'span' => 1,
-                ];
             }
         }
 
         return $matrix;
+    }
+
+    /**
+     * Helper untuk membuat matriks jadwal induk seluruh kelas (semua jurusan).
+     * Format sel mengutamakan CODE mata pelajaran ($subject->code).
+     */
+    private function buildMasterTimetableGrid($allSchedules, $periodsSorted, $classes): array
+    {
+        $grid = [];
+        $periodIndexMap = [];
+        foreach ($periodsSorted as $idx => $p) {
+            $periodIndexMap[$p->id] = $idx;
+        }
+
+        foreach ($allSchedules as $sch) {
+            $classId = $sch->teachingAssignment?->class_id;
+            if (! $classId) {
+                continue;
+            }
+
+            $day = $sch->day_of_week;
+            $startId = $sch->start_period_id;
+            $endId = $sch->end_period_id;
+
+            $startIdx = $periodIndexMap[$startId] ?? null;
+            $endIdx = $periodIndexMap[$endId] ?? null;
+
+            if ($startIdx === null) {
+                continue;
+            }
+
+            if ($endIdx === null || $endIdx < $startIdx) {
+                $endIdx = $startIdx;
+            }
+
+            $subject = $sch->teachingAssignment?->subject;
+            $subjectCode = $subject?->code ?: ($subject?->name ?? '-');
+            $teacher = $sch->teachingAssignment?->teacher;
+            $teacherName = $teacher?->full_name ?? '-';
+
+            for ($i = $startIdx; $i <= $endIdx; $i++) {
+                $p = $periodsSorted[$i];
+                if ($p->is_break) {
+                    continue; // Jam istirahat dilewati
+                }
+
+                $grid[$day][$p->id][$classId] = [
+                    'schedule_id' => $sch->id,
+                    'subject_code' => $subjectCode,
+                    'subject_name' => $subject?->name ?? '-',
+                    'teacher_name' => $teacherName,
+                    'room' => $sch->room ?: '',
+                ];
+            }
+        }
+
+        return $grid;
+    }
+
+    /**
+     * Helper untuk mengumpulkan daftar legenda kode mata pelajaran seluruh sekolah.
+     */
+    private function buildSubjectLegends(): array
+    {
+        return Subject::with('department')
+            ->where('is_active', true)
+            ->orderBy('code')
+            ->get()
+            ->map(function ($s) {
+                return [
+                    'code' => $s->code ?: $s->name,
+                    'name' => $s->name,
+                    'department' => $s->department?->name ?? 'Umum / Semua',
+                ];
+            })
+            ->unique('code')
+            ->values()
+            ->all();
     }
 }

@@ -53,6 +53,9 @@ class AdminAttendanceMonitoringTest extends TestCase
         $response->assertSee('Catatan Siswa Lengkap');
         $response->assertSee('Materi Pembelajaran');
         $response->assertSee('Presensi (H | S | I | A)');
+        $response->assertDontSee('<th class="text-center">Status</th>', false);
+        $response->assertDontSee('<th class="text-center w-28">Aksi</th>', false);
+        $response->assertDontSee('Detail Siswa');
     }
 
     public function test_admin_can_view_single_class_agenda_journal(): void
@@ -69,6 +72,8 @@ class AdminAttendanceMonitoringTest extends TestCase
         $response->assertSee('Jumlah Siswa');
         $response->assertSee('Hadir');
         $response->assertSee('Absensi');
+        $response->assertDontSee('Status &amp; Aksi', false);
+        $response->assertDontSee('Detail Siswa');
     }
 
     public function test_admin_can_filter_attendance(): void

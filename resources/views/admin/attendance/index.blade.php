@@ -581,7 +581,6 @@
                                 <th rowspan="3" class="th-navy th-left" style="min-width: 190px;">Materi Pokok</th>
                                 <th colspan="4" class="th-jumlah">Jumlah Siswa</th>
                                 <th rowspan="3" class="th-navy th-left" style="min-width: 200px;">Keterangan / Siswa Absen</th>
-                                <th rowspan="3" class="th-navy th-center whitespace-nowrap" style="width: 95px;">Status &amp; Aksi</th>
                             </tr>
                             <tr>
                                 <th rowspan="2" class="th-hadir" style="width: 55px;">Hadir</th>
@@ -604,7 +603,7 @@
                                     @if($period->is_break)
                                         <!-- Baris Jam Istirahat Melintang Penuh Sinkron Guru -->
                                         <tr class="bg-amber-50/70 border-y-2 border-amber-200/80 hover:bg-amber-50 transition-colors">
-                                            <td colspan="11" class="py-2.5 px-4 text-center">
+                                            <td colspan="10" class="py-2.5 px-4 text-center">
                                                 <div class="inline-flex items-center justify-center gap-2 text-amber-950 font-bold text-xs tracking-wide">
                                                     <span class="w-6 h-6 rounded-lg bg-amber-200/80 text-amber-900 flex items-center justify-center shrink-0">
                                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -772,14 +771,6 @@
                                                         </span>
                                                     @endif
                                                 </td>
-                                                <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-                                                    <button type="button" 
-                                                            onclick="openStudentAttendanceModal({{ json_encode($modalPayload) }})"
-                                                            class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-blue-50 text-blueprim hover:bg-blue-100 transition-colors shadow-2xs border border-blue-200">
-                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                        <span>Detail Siswa</span>
-                                                    </button>
-                                                </td>
                                             </tr>
 
                                         {{-- 2. Sesi Terjadwal Namun Belum Diisi Guru --}}
@@ -815,12 +806,6 @@
                                                 <td class="px-3.5 py-3 text-xs text-amber-700 italic align-middle">
                                                     Menunggu pencatatan jurnal &amp; presensi oleh guru
                                                 </td>
-                                                <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
-                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                                                        <span>Belum Diisi</span>
-                                                    </span>
-                                                </td>
                                             </tr>
 
                                         {{-- 3. Jam Pelajaran Tanpa Jadwal --}}
@@ -848,9 +833,6 @@
                                                 <td class="px-2 py-3 text-center align-middle"><span class="text-slate-300 font-mono text-xs">-</span></td>
                                                 <td class="px-2 py-3 text-center align-middle"><span class="text-slate-300 font-mono text-xs">-</span></td>
                                                 <td class="px-3.5 py-3 text-xs text-slate-400 italic align-middle">-</td>
-                                                <td class="px-3 py-3 text-center align-middle whitespace-nowrap">
-                                                    <span class="text-[11px] text-slate-400">-</span>
-                                                </td>
                                             </tr>
                                         @endif
                                     @endif
@@ -900,8 +882,6 @@
                                 <th>Guru Pengajar</th>
                                 <th>Materi Pembelajaran</th>
                                 <th class="text-center">Presensi (H | S | I | A)</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center w-28">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -942,43 +922,10 @@
                                             <span class="text-slate-300 font-mono">-</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
-                                        <span class="badge {{ $s['badge_class'] }} text-[11px] font-semibold">
-                                            {{ $s['status_label'] }}
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        @if($s['type'] === 'filled')
-                                            @php
-                                                $sessionModalPayload = [
-                                                    'class_name' => $s['class_name'],
-                                                    'subject_name' => $s['subject_name'],
-                                                    'teacher_name' => $s['teacher_name'],
-                                                    'date' => \Carbon\Carbon::parse($date)->translatedFormat('l, d F Y'),
-                                                    'period_label' => $s['period_label'].' ('.$s['time_range'].')',
-                                                    'material' => $s['material'],
-                                                    'notes' => $s['notes'] ?? '',
-                                                    'hadir' => $s['hadir_count'],
-                                                    'sakit' => $s['sakit_count'],
-                                                    'izin' => $s['izin_count'],
-                                                    'alpha' => $s['alpha_count'],
-                                                    'students' => $s['all_students'],
-                                                ];
-                                            @endphp
-                                            <button type="button" 
-                                                    onclick="openStudentAttendanceModal({{ json_encode($sessionModalPayload) }})"
-                                                    class="btn btn-outline btn-sm text-[11px] py-1 px-2.5 flex items-center justify-center gap-1 mx-auto text-blueprim hover:bg-blue-50">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                                <span>Detail Siswa</span>
-                                            </button>
-                                        @else
-                                            <span class="text-[11px] text-slate-400 italic">Belum Ada Data</span>
-                                        @endif
-                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-12 text-slate-400">
+                                    <td colspan="7" class="text-center py-12 text-slate-400">
                                         Belum ada jadwal sesi pembelajaran pada filter ini.
                                     </td>
                                 </tr>

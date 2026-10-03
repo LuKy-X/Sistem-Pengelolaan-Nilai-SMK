@@ -186,6 +186,9 @@
                                 @endphp
                                 <td rowspan="{{ $span }}" class="schedule-cell">
                                     <span class="subject-name">{{ $subName }}</span>
+                                    @if($cell['is_split_by_break'] ?? false)
+                                        <small style="color: #b45309; font-weight: bold;">(Bagian {{ $cell['segment_index'] }}/{{ $cell['total_segments'] }})</small><br />
+                                    @endif
                                     <span class="teacher-name">{{ $teaName }}</span>
                                     <span class="room-pill">{{ $room }}</span>
                                 </td>
@@ -227,7 +230,7 @@
         </tr>
         <tr>
             <td colspan="2" style="text-align: center; font-weight: bold; text-decoration: underline;">
-                {{ $schoolProfile?->headmaster_name ?? 'Drs. H. Sukardi, M.Pd.' }}
+                {{ $schoolProfile?->principal_name ?? $schoolProfile?->headmaster_name ?? 'Sukidi, S.Pd., M.Pd.' }}
             </td>
             @if(count($days) > 3)
                 <td colspan="{{ count($days) - 3 }}"></td>
@@ -238,7 +241,7 @@
         </tr>
         <tr>
             <td colspan="2" style="text-align: center; font-size: 8.5pt; color: #475569;">
-                NIP. {{ $schoolProfile?->headmaster_nip ?? '19700101 199503 1 002' }}
+                NIP. {{ $schoolProfile?->headmaster_nip ?? '-' }}
             </td>
             @if(count($days) > 3)
                 <td colspan="{{ count($days) - 3 }}"></td>
