@@ -47,7 +47,7 @@
       </div>
       <div>
         <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ $todaySchedules->count() }}</div>
-        <div class="text-[11px] text-bluedark/55 mt-1">Jadwal Hari Ini</div>
+        <div class="text-[11px] text-bluedark/55 mt-1 truncate">Jadwal Hari Ini</div>
       </div>
     </div>
 
@@ -57,7 +57,7 @@
       </div>
       <div>
         <div class="font-heading text-xl font-bold text-amber-600 leading-none">{{ $unfinishedCount }}</div>
-        <div class="text-[11px] text-bluedark/55 mt-1">Tugas Belum Selesai</div>
+        <div class="text-[11px] text-bluedark/55 mt-1 truncate">Tugas Belum Selesai</div>
       </div>
     </div>
 
@@ -69,7 +69,7 @@
         <div class="font-heading text-xl font-bold {{ $academicSummary['overall']['average'] !== null ? ($academicSummary['overall']['passing'] ? 'text-emerald-600' : 'text-amber-600') : 'text-bluedark/40' }} leading-none">
           {{ $academicSummary['overall']['average'] !== null ? rtrim(rtrim(number_format($academicSummary['overall']['average'], 2), '0'), '.') : '-' }}
         </div>
-        <div class="text-[11px] text-bluedark/55 mt-1">Rata-rata Nilai</div>
+        <div class="text-[11px] text-bluedark/55 mt-1 truncate">Rata-rata Nilai</div>
       </div>
     </div>
 
@@ -79,7 +79,7 @@
       </div>
       <div>
         <div class="font-heading text-xl font-bold text-bluedark leading-none">{{ $balance }}</div>
-        <div class="text-[11px] text-bluedark/55 mt-1">Poin Kedisiplinan</div>
+        <div class="text-[11px] text-bluedark/55 mt-1 truncate">Poin Kedisiplinan</div>
       </div>
     </div>
   </div>

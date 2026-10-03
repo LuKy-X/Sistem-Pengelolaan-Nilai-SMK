@@ -6,7 +6,9 @@
 <div class="space-y-4 lg:space-y-5">
 
   <div>
-    <a href="{{ route('student.schedules.index') }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Kembali ke jadwal</a>
+    {{-- Pertahankan hari yang sedang dilihat, agar siswa kembali ke hari yang
+         sama dan bukan selalu ke hari saat ini. --}}
+    <a href="{{ route('student.schedules.index', ['day' => $schedule->day_of_week]) }}" class="text-[11px] font-semibold text-blueprim hover:underline">&larr; Kembali ke jadwal {{ strtolower($dayName) }}</a>
     <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark mt-1">Detail Jadwal</h1>
   </div>
 

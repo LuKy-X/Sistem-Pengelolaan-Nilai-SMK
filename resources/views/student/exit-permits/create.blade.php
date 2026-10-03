@@ -27,26 +27,48 @@
       </div>
 
       <div>
-        <label class="f-label" for="reason_detail">Detail Keperluan <span class="text-red-500">*</span></label>
-        <textarea id="reason_detail" name="reason_detail" rows="4" class="f-textarea" placeholder="Contoh: Mengambil obat ke apotek bersama orang tua, dijemput di gerbang sekolah." required minlength="10">{{ old('reason_detail') }}</textarea>
+        <label class="f-label" for="detail_kebutuhan">Detail Keperluan <span class="text-red-500">*</span></label>
+        <textarea id="detail_kebutuhan" name="reason_detail" rows="4" class="f-textarea" placeholder="Contoh: Mengambil obat ke apotek bersama orang tua, dijemput di gerbang sekolah." required minlength="10" maxlength="1000">{{ old('reason_detail') }}</textarea>
+        <p class="text-[10px] text-bluedark/45 mt-1">Minimal 10 karakter, maksimal 1000 karakter.</p>
         @error('reason_detail')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
       </div>
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="f-label" for="planned_exit_at">Rencana Waktu Keluar <span class="text-red-500">*</span></label>
-          <input type="datetime-local" id="planned_exit_at" name="planned_exit_at" class="f-input" value="{{ old('planned_exit_at') }}" required>
-          @error('planned_exit_at')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
+          <label class="f-label" for="exit_period_id">Keluar pada Jam Pelajaran <span class="text-red-500">*</span></label>
+          <select id="exit_period_id" name="exit_period_id" class="f-select" required>
+            <option value="">Pilih jam...</option>
+            @foreach($periods as $period)
+              <option value="{{ $period->id }}" @selected((string) old('exit_period_id') === (string) $period->id)>
+                {{ $period->displayLabel() }}
+              </option>
+            @endforeach
+          </select>
+          <p class="text-[10px] text-bluedark/45 mt-1">Jam saat Anda meninggalkan sekolah.</p>
+          @error('exit_period_id')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
         </div>
+
         <div>
-          <label class="f-label" for="planned_return_at">Rencana Waktu Kembali <span class="text-red-500">*</span></label>
-          <input type="datetime-local" id="planned_return_at" name="planned_return_at" class="f-input" value="{{ old('planned_return_at') }}" required>
-          @error('planned_return_at')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
+          <label class="f-label" for="return_period_id">Harus Kembali Pada Jam <span class="text-red-500">*</span></label>
+          <select id="return_period_id" name="return_period_id" class="f-select" required>
+            <option value="">Pilih jam...</option>
+            @foreach($periods as $period)
+              <option value="{{ $period->id }}"
+                @selected((string) old('return_period_id') === (string) $period->id)
+                @disabled($period->hasAlreadyStarted())>
+                {{ $period->displayLabel() }}@if($period->hasAlreadyStarted()) (sudah lewat)@endif
+              </option>
+            @endforeach
+          </select>
+          <p class="text-[10px] text-bluedark/45 mt-1">Wajib sudah kembali paling lambat di awal jam ini. Jam yang sudah lewat tidak dapat dipilih.</p>
+          @error('return_period_id')<p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>@enderror
         </div>
       </div>
 
-      <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800">
-        Setelah izin disetujui, timer kepulangan berjalan dan keterlambatan tercatat otomatis. Jika terlambat karena hal mendesak, Anda dapat mengajukan banding kepada Guru BK.
+      <div class="p-3 rounded-xl bg-bluelight/50 border border-bluelight text-[11px] text-bluedark/75">
+        Durasi izin dihitung otomatis dari kedua jam di atas, jadi Anda tidak perlu menulis jam.
+        Setelah izin disetujui, timer kepulangan berjalan dan keterlambatan tercatat otomatis.
+        Jika terlambat karena hal mendesak, Anda dapat mengajukan banding kepada Guru BK.
       </div>
 
       <div class="flex gap-2">

@@ -32,7 +32,7 @@ class AssessmentController extends Controller
             'subject',
             'semester.academicYear',
             'schedules',
-            'gradebooks.columns' => fn ($q) => $q->orderBy('sort_order')->with('category', 'assessments.latePolicy', 'assessments.rubric.criteria'),
+            'gradebooks.columns' => fn ($q) => $q->orderBy('sort_order')->with('category', 'assessments.gradebookColumn', 'assessments.latePolicy', 'assessments.rubric.criteria'),
             'gradebooks.students.student.user',
         ])
             ->where('teacher_id', $teacher->id)

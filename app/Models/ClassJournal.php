@@ -80,17 +80,53 @@ class ClassJournal extends Model
 
     public function getSakitCountAttribute(): int
     {
+<<<<<<< HEAD
         return $this->absenceCount(AttendanceStatus::Sick);
+=======
+        $count = $this->relationLoaded('attendances')
+            ? $this->attendances->where('status', AttendanceStatus::Sick)->count()
+            : 0;
+
+        if ($count === 0 && preg_match('/Sakit:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+>>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
     }
 
     public function getIzinCountAttribute(): int
     {
+<<<<<<< HEAD
         return $this->absenceCount(AttendanceStatus::Permit);
+=======
+        $count = $this->relationLoaded('attendances')
+            ? $this->attendances->where('status', AttendanceStatus::Permit)->count()
+            : 0;
+
+        if ($count === 0 && preg_match('/Izin:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+>>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
     }
 
     public function getAlphaCountAttribute(): int
     {
+<<<<<<< HEAD
         return $this->absenceCount(AttendanceStatus::Absent);
+=======
+        $count = $this->relationLoaded('attendances')
+            ? $this->attendances->where('status', AttendanceStatus::Absent)->count()
+            : 0;
+
+        if ($count === 0 && preg_match('/Alpha:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return $count;
+>>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
     }
 
     /**
@@ -102,6 +138,7 @@ class ClassJournal extends Model
      */
     public function getHadirCountAttribute(): int
     {
+<<<<<<< HEAD
         $totalStudents = $this->activeStudentCount();
 
         if ($totalStudents > 0) {
@@ -136,5 +173,42 @@ class ClassJournal extends Model
                         ->where('status', 'ACTIVE'),
                 ]),
         ]);
+=======
+        $present = $this->relationLoaded('attendances')
+            ? $this->attendances->where('status', AttendanceStatus::Present)->count()
+            : 0;
+
+        if ($present > 0) {
+            return $present;
+        }
+
+        // Determine true total active students enrolled in this class from database
+        $total = 0;
+        if ($this->relationLoaded('teachingAssignment') && $this->teachingAssignment?->relationLoaded('schoolClass')) {
+            $class = $this->teachingAssignment->schoolClass;
+            if ($class?->relationLoaded('enrollments')) {
+                $total = $class->enrollments->where('status', 'ACTIVE')->count();
+            } else {
+                $total = $class->enrollments()->where('status', 'ACTIVE')->count();
+            }
+        } elseif ($this->teaching_assignment_id) {
+            $total = ClassEnrollment::where('class_id', $this->teachingAssignment?->class_id)
+                ->where('status', 'ACTIVE')
+                ->count();
+        }
+
+        $nonPresent = $this->sakit_count + $this->izin_count + $this->alpha_count;
+
+        if ($total > 0) {
+            return max(0, $total - $nonPresent);
+        }
+
+        // Fallback for tests or legacy notes if no enrollments exist in database
+        if (preg_match('/Hadir:\s*(\d+)/i', $this->notes ?? '', $m)) {
+            return (int) $m[1];
+        }
+
+        return 0;
+>>>>>>> 20ced0b66372a12f543f8ad88845821ac4f25b47
     }
 }

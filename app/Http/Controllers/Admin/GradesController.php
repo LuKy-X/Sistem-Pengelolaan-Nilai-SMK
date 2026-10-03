@@ -72,7 +72,7 @@ class GradesController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $classes = SchoolClass::where('is_active', true)->orderBy('name')->get();
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
         $semesters = Semester::with('academicYear')->latest('start_date')->get();
         $subjects = Subject::where('is_active', true)->orderBy('name')->get();
         $teachers = TeacherProfile::where('status', 'ACTIVE')->orderBy('full_name')->get();

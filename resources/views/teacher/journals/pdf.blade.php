@@ -423,7 +423,7 @@
                         @if($period->is_break)
                             <tr class="break-row">
                                 <td colspan="12">
-                                    ☕ {{ strtoupper($period->name) }} ({{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }})
+                                    {{ strtoupper($period->name) }} ({{ substr($period->start_time, 0, 5) }} - {{ substr($period->end_time, 0, 5) }})
                                     @if(str_contains(strtolower($period->name), '2') || substr($period->start_time, 0, 2) >= '11')
                                         &middot; Waktu Istirahat, Sholat &amp; Makan Siang
                                     @endif

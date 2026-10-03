@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\TeachingSchedule;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -24,13 +25,44 @@ class ScheduleController extends Controller
         7 => 'Minggu',
     ];
 
-    public function index(): View
+    /**
+     * Nama hari ringkas untuk strip ringkasan, supaya ketujuh hari tetap muat
+     * satu baris pada layar laptop dan tidak memakan tinggi halaman.
+     *
+     * @var array<int, string>
+     */
+    public const DAY_SHORT_NAMES = [
+        1 => 'Sen',
+        2 => 'Sel',
+        3 => 'Rab',
+        4 => 'Kam',
+        5 => 'Jum',
+        6 => 'Sab',
+        7 => 'Min',
+    ];
+
+    /**
+     * Halaman hanya menampilkan satu hari pada satu waktu, dipilih lewat query
+     * string ?day= supaya pilihan bertahan saat halaman di-refresh dan URL-nya
+     * bisa dibagikan.
+     *
+     * Nilai di luar 1-7 diabaikan dan jatuh ke hari saat siswa membuka halaman.
+     * Bukan error: tautan lama atau inputaksi tidak sengaja tidak boleh
+     * membuat halaman gagal dibuka.
+     */
+    public function index(Request $request): View
     {
         $student = Auth::user()->studentProfile;
 
         abort_if($student === null, 403, 'Profil siswa tidak ditemukan. Hubungi admin sekolah.');
 
         $enrollment = $student->currentEnrollment()->with('schoolClass.department')->first();
+
+        $selectedDay = $request->integer('day');
+
+        if ($selectedDay < 1 || $selectedDay > 7) {
+            $selectedDay = now()->dayOfWeekIso;
+        }
 
         $schedules = collect();
 
@@ -54,9 +86,24 @@ class ScheduleController extends Controller
                 ->groupBy('day_of_week');
         }
 
-        $dayNames = self::DAY_NAMES;
+        $daySchedules = $schedules->get($selectedDay, collect());
 
-        return view('student.schedules.index', compact('student', 'enrollment', 'schedules', 'dayNames'));
+        // Jumlah pelajaran per hari untuk ketujuh hari, termasuk hari kosong.
+        // Ini yang membuat siswa bisa melihat hari mana yang terpadat tanpa
+        // harus membuka setiap hari satu per satu.
+        $dayCounts = collect(self::DAY_NAMES)
+            ->mapWithKeys(fn (string $name, int $day) => [$day => $schedules->get($day, collect())->count()]);
+
+        return view('student.schedules.index', [
+            'student' => $student,
+            'enrollment' => $enrollment,
+            'daySchedules' => $daySchedules,
+            'dayCounts' => $dayCounts,
+            'selectedDay' => $selectedDay,
+            'today' => now()->dayOfWeekIso,
+            'previousDay' => $selectedDay === 1 ? 7 : $selectedDay - 1,
+            'nextDay' => $selectedDay === 7 ? 1 : $selectedDay + 1,
+        ]);
     }
 
     /**

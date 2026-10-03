@@ -77,6 +77,8 @@ class User extends Authenticatable
 
     public function hasRole(string|array $roles): bool
     {
+        $this->loadMissing('roles');
+
         $roles = (array) $roles;
         $aliasMap = [
             'GURU' => 'TEACHER',

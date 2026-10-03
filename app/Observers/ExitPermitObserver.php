@@ -44,6 +44,8 @@ class ExitPermitObserver
             return;
         }
 
+        $permit->loadMissing(['exitPeriod', 'returnPeriod']);
+
         $user->notify(new ExitPermitDecided($permit->getKey()));
     }
 }
