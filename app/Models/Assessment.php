@@ -78,6 +78,10 @@ class Assessment extends Model
 
     public function getMaxScoreAttribute(): float
     {
-        return (float) ($this->gradebookColumn?->max_score ?? 100.00);
+        if ($this->relationLoaded('gradebookColumn')) {
+            return (float) ($this->gradebookColumn?->max_score ?? 100.00);
+        }
+
+        return (float) 100.00;
     }
 }

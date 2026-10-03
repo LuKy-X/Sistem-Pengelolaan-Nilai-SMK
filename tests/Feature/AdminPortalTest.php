@@ -6,6 +6,7 @@ use App\Models\AcademicYear;
 use App\Models\Department;
 use App\Models\GradeLevel;
 use App\Models\Semester;
+use App\Models\StudentProfile;
 use App\Models\TeacherProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -283,5 +284,35 @@ class AdminPortalTest extends TestCase
                 'id' => $semester->id,
             ]);
         }
+    }
+
+    public function test_admin_can_view_students_index_without_lazy_loading_error(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.academic.students.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Data Siswa');
+    }
+
+    public function test_admin_can_view_student_detail_without_lazy_loading_error(): void
+    {
+        $admin = $this->getAdminUser();
+        $student = StudentProfile::firstOrFail();
+
+        $response = $this->actingAs($admin)->get(route('admin.academic.students.show', $student));
+
+        $response->assertStatus(200);
+        $response->assertSee($student->full_name);
+    }
+
+    public function test_admin_can_view_grades_index_without_lazy_loading_error(): void
+    {
+        $admin = $this->getAdminUser();
+
+        $response = $this->actingAs($admin)->get(route('admin.grades.index'));
+
+        $response->assertStatus(200);
     }
 }

@@ -70,7 +70,7 @@ class StudentsController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $classes = SchoolClass::where('is_active', true)->orderBy('name')->get();
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
         $departments = Department::where('is_active', true)->orderBy('name')->get();
         $gradeLevels = GradeLevel::orderBy('name')->get();
 
@@ -153,7 +153,7 @@ class StudentsController extends Controller
             'exitPermits',
         ]);
 
-        $classes = SchoolClass::where('is_active', true)->orderBy('name')->get();
+        $classes = SchoolClass::where('is_active', true)->with('department')->orderBy('name')->get();
 
         return view('admin.academic.students.show', compact('student', 'classes'));
     }

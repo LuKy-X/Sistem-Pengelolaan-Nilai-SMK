@@ -12,6 +12,7 @@ use App\Models\StudentProfile;
 use App\Models\TeacherProfile;
 use App\Models\TeachingAssignment;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,6 +46,78 @@ class TeacherPortalTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Dashboard Guru');
         $response->assertSee($this->teacherProfile->full_name);
+        $response->assertSee('Total Siswa Diampu');
+        $response->assertSee('Tugas Belum Dinilai');
+        $response->assertSee('Total Tugas &amp; UH', false);
+        $response->assertSee('Jurnal Kelas Terisi');
+        $response->assertSee('Rata-rata Nilai per Kelas');
+        $response->assertSee('Jadwal Mengajar Hari Ini');
+    }
+
+    public function test_teacher_dashboard_shows_no_schedule_on_saturday_and_formats_time_without_seconds(): void
+    {
+        // 2026-10-03 is a Saturday (day_of_week = 6)
+        Carbon::setTestNow('2026-10-03 09:00:00');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Sabtu, 3 Oktober 2026');
+        $response->assertSee('Tidak Ada Jadwal Mengajar Hari Ini');
+        $response->assertSee('Hari ini (Sabtu) Anda tidak memiliki jadwal kelas tatap muka.');
+        $response->assertSee('Lihat Jadwal Mingguan Lengkap');
+
+        // Check weekly schedule has times formatted without seconds: e.g. "(07:00 - 10:15)"
+        $response->assertSee('(07:00 - 10:15)');
+        $response->assertDontSee('07:00:00');
+        $response->assertDontSee('10:15:00');
+        $response->assertSee('Jam ke-');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_teacher_dashboard_shows_today_schedule_when_available(): void
+    {
+        // 2026-10-02 is a Friday (day_of_week = 5), where teacher has scheduled class in seeder
+        Carbon::setTestNow('2026-10-02 09:00:00');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.dashboard'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Jumat, 2 Oktober 2026');
+        // On Friday, should see today's class schedule
+        $response->assertSee('Sesi Tatap Muka');
+        $response->assertDontSee('Tidak Ada Jadwal Mengajar Hari Ini');
+
+        Carbon::setTestNow();
+    }
+
+    public function test_teacher_dashboard_refined_elements(): void
+    {
+        Carbon::setTestNow('2026-10-03 09:00:00');
+
+        $response = $this->actingAs($this->teacherUser)->get(route('teacher.dashboard'));
+
+        $response->assertStatus(200);
+
+        // 1. Quick actions row is removed
+        $response->assertDontSee('id="quickActions"', false);
+        $response->assertDontSee('Buat Tugas/UH');
+        $response->assertDontSee('Rubrik Penilaian');
+
+        // 2. Accurate attendance counts (real database enrollments, no hallucinated numbers)
+        $response->assertDontSee('Hadir: 35');
+        $response->assertDontSee('Hadir: 34');
+
+        // 3. Recent assignments widget has 'Nilai' button, no 'Detail' button
+        $response->assertSee('Tugas &amp; Ulangan Harian Terbaru', false);
+        $response->assertSee('Nilai');
+
+        // 4. Riwayat Jurnal has 'Buka Jurnal' button directing to specific assignment and date
+        $response->assertSee('Riwayat Jurnal &amp; Absensi Terkini', false);
+        $response->assertSee('Buka Jurnal');
+
+        Carbon::setTestNow();
     }
 
     public function test_guest_cannot_view_teacher_dashboard(): void
