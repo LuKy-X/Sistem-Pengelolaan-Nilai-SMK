@@ -14,6 +14,7 @@ use App\Models\AdmissionPath;
 use App\Models\AdmissionPeriod;
 use App\Models\AdmissionRequirement;
 use App\Models\AdmissionScheduleItem;
+use App\Models\AlumniStory;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\CareerCompany;
@@ -29,6 +30,7 @@ use App\Services\PublicMediaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -857,6 +859,138 @@ class CmsController extends Controller
         ]);
     }
 
+    public function alumni(Request $request): View
+    {
+        $search = $request->string('search')->trim()->toString();
+
+        $graduates = StudentProfile::query()
+            ->where('status', 'GRADUATED')
+            ->with([
+                'alumniProfile.stories' => fn ($query) => $query->with('media')->orderByDesc('id'),
+            ])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('full_name', 'like', "%{$search}%")
+                        ->orWhere('nis', 'like', "%{$search}%")
+                        ->orWhereHas('alumniProfile', function ($alumniQuery) use ($search) {
+                            $alumniQuery->where('current_occupation', 'like', "%{$search}%")
+                                ->orWhere('current_company', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->orderByDesc('graduation_date')
+            ->orderByDesc('id')
+            ->paginate(15)
+            ->withQueryString();
+
+        $stats = [
+            'total' => StudentProfile::where('status', 'GRADUATED')->count(),
+            'featured' => AlumniStory::where('is_featured', true)->count(),
+            'stories' => AlumniStory::count(),
+        ];
+
+        return view('admin.cms.alumni', compact('graduates', 'search', 'stats'));
+    }
+
+    public function updateAlumni(Request $request, StudentProfile $student): RedirectResponse
+    {
+        abort_unless($student->status === 'GRADUATED', 404);
+
+        $validated = $request->validate([
+            'graduation_year' => ['required', 'integer', 'min:1900', 'max:2100'],
+            'current_occupation' => ['nullable', 'string', 'max:150'],
+            'current_company' => ['nullable', 'string', 'max:150'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'social_link' => ['nullable', 'url', 'max:255'],
+            'is_featured' => ['nullable', 'boolean'],
+            'story.title' => ['nullable', 'string', 'max:200'],
+            'story.story' => ['nullable', 'string'],
+            'story.career_story' => ['nullable', 'string'],
+            'story.quote' => ['nullable', 'string'],
+            'story.photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'story.remove_photo' => ['nullable', 'boolean'],
+        ]);
+
+        $storyData = $validated['story'] ?? [];
+        unset($validated['story']);
+
+        $alumni = $student->alumniProfile;
+        $story = $alumni?->stories()->latest('id')->first();
+        $storyText = collect([
+            $storyData['title'] ?? null,
+            $storyData['story'] ?? null,
+            $storyData['career_story'] ?? null,
+            $storyData['quote'] ?? null,
+        ])->contains(fn (?string $value): bool => filled($value));
+        $hasStoryChanges = $story !== null || $storyText || $request->hasFile('story.photo');
+
+        if (($hasStoryChanges || $request->boolean('is_featured'))
+            && (blank($storyData['title'] ?? null) || blank($storyData['story'] ?? null))) {
+            return back()
+                ->withErrors([
+                    'story.title' => 'Judul kisah wajib diisi.',
+                    'story.story' => 'Cerita alumni wajib diisi.',
+                ])
+                ->withInput();
+        }
+
+        $storyPhoto = $request->file('story.photo');
+        $storyPhotoPath = $storyPhoto?->store('alumni/stories', 'public');
+
+        if ($storyPhoto !== null && $storyPhotoPath === false) {
+            throw new \RuntimeException('Gagal menyimpan foto kisah alumni.');
+        }
+
+        $alumni ??= $student->alumniProfile()->create([
+            'graduation_year' => $student->graduation_date?->year ?? now()->year,
+        ]);
+
+        $isFeatured = $request->boolean('is_featured');
+        $alumni->update([
+            ...$validated,
+            'is_featured' => $isFeatured,
+        ]);
+
+        if ($hasStoryChanges) {
+            $storyAttributes = array_intersect_key($storyData, array_flip(['title', 'story', 'career_story', 'quote']));
+            $storyAttributes['is_featured'] = $isFeatured;
+
+            $alumni->stories()
+                ->when($story !== null, fn ($query) => $query->whereKeyNot($story->id))
+                ->update(['is_featured' => false]);
+
+            if ($story === null) {
+                $story = $alumni->stories()->create($storyAttributes);
+            } else {
+                $story->update($storyAttributes);
+            }
+
+            if ($request->hasFile('story.photo') || $request->boolean('story.remove_photo')) {
+                $story->loadMissing('media');
+
+                foreach ($story->media as $media) {
+                    Storage::disk($media->disk ?: 'public')->delete($media->path);
+                    $media->delete();
+                }
+            }
+
+            if ($storyPhoto !== null && $storyPhotoPath !== false) {
+                $story->media()->create([
+                    'collection' => 'default',
+                    'disk' => 'public',
+                    'path' => $storyPhotoPath,
+                    'original_name' => $storyPhoto->getClientOriginalName(),
+                    'mime_type' => $storyPhoto->getMimeType(),
+                    'size' => $storyPhoto->getSize(),
+                    'uploaded_by' => $request->user()?->id,
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.cms.alumni.index')
+            ->with('success', 'Data alumni dan kisahnya berhasil diperbarui.');
+    }
+
     public function products(Request $request): View
     {
         $search = $request->string('search')->trim()->toString();
@@ -1076,7 +1210,7 @@ class CmsController extends Controller
         $oppStatus = $request->input('status');
         $oppCompanyId = $request->input('company_id');
 
-        $oppQuery = CareerOpportunity::with(['company', 'applications.student'])
+        $oppQuery = CareerOpportunity::with(['company', 'applications.student', 'media'])
             ->when($searchOpp !== '', function ($q) use ($searchOpp) {
                 $q->where(function ($sub) use ($searchOpp) {
                     $sub->where('title', 'like', "%{$searchOpp}%")
@@ -1150,9 +1284,17 @@ class CmsController extends Controller
             'close_date' => ['nullable', 'date', 'after_or_equal:open_date'],
             'application_link' => ['nullable', 'url', 'max:255'],
             'status' => ['required', 'in:OPEN,CLOSED'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
-        CareerOpportunity::create($validated);
+        $photo = $request->file('photo');
+        unset($validated['photo']);
+
+        $opportunity = CareerOpportunity::create($validated);
+
+        if ($photo !== null) {
+            $this->syncCareerOpportunityPhoto($opportunity, $photo);
+        }
 
         return redirect()->route('admin.cms.career', ['tab' => 'opportunities'])
             ->with('success', 'Lowongan pekerjaan/magang BKK berhasil dipublikasikan.');
@@ -1176,15 +1318,28 @@ class CmsController extends Controller
             'close_date' => ['nullable', 'date', 'after_or_equal:open_date'],
             'application_link' => ['nullable', 'url', 'max:255'],
             'status' => ['required', 'in:OPEN,CLOSED'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'remove_photo' => ['nullable', 'boolean'],
         ]);
 
+        $photo = $request->file('photo');
+        unset($validated['photo'], $validated['remove_photo']);
+
         $opportunity->update($validated);
+        $this->syncCareerOpportunityPhoto($opportunity, $photo, $request->boolean('remove_photo'));
 
         return redirect()->back()->with('success', 'Data lowongan karir berhasil diperbarui.');
     }
 
     public function destroyCareerOpportunity(CareerOpportunity $opportunity): RedirectResponse
     {
+        $opportunity->load('media');
+
+        foreach ($opportunity->media as $media) {
+            Storage::disk($media->disk ?: 'public')->delete($media->path);
+            $media->delete();
+        }
+
         $opportunity->delete();
 
         return redirect()->back()->with('success', 'Lowongan karir berhasil dihapus.');
@@ -1217,7 +1372,7 @@ class CmsController extends Controller
 
     public function previewCareerOpportunity(CareerOpportunity $opportunity, PublicMediaService $mediaService): JsonResponse
     {
-        $opportunity->load(['company', 'applications.student']);
+        $opportunity->load(['company', 'applications.student', 'media']);
 
         $typeValue = $opportunity->type instanceof CareerOpportunityType ? $opportunity->type->value : $opportunity->type;
         $typeLabel = $opportunity->type instanceof CareerOpportunityType ? $opportunity->type->label() : ($typeValue === 'JOB' ? 'Lowongan Kerja' : 'Magang PKL');
@@ -1231,6 +1386,7 @@ class CmsController extends Controller
             'company_name' => $opportunity->company?->name ?? 'Mitra Industri',
             'company_industry' => $opportunity->company?->industry ?? '',
             'company_logo' => $opportunity->company ? $mediaService->forModel($opportunity->company, 'logo') : null,
+            'photo_url' => $mediaService->forModel($opportunity),
             'type' => $typeValue,
             'type_label' => $typeLabel,
             'location' => $opportunity->location ?? '',
@@ -1244,6 +1400,43 @@ class CmsController extends Controller
             'description' => $opportunity->description ?? '',
             'requirements' => $opportunity->requirements ?? '',
             'applications_count' => $opportunity->applications->count(),
+        ]);
+    }
+
+    private function syncCareerOpportunityPhoto(
+        CareerOpportunity $opportunity,
+        ?UploadedFile $photo,
+        bool $removePhoto = false,
+    ): void {
+        if ($photo === null && ! $removePhoto) {
+            return;
+        }
+
+        $photoPath = $photo?->store('career/opportunities', 'public');
+
+        if ($photo !== null && $photoPath === false) {
+            throw new \RuntimeException('Gagal menyimpan foto lowongan.');
+        }
+
+        $opportunity->loadMissing('media');
+
+        foreach ($opportunity->media->where('collection', 'photo') as $media) {
+            Storage::disk($media->disk ?: 'public')->delete($media->path);
+            $media->delete();
+        }
+
+        if ($photo === null || $photoPath === false) {
+            return;
+        }
+
+        $opportunity->media()->create([
+            'collection' => 'photo',
+            'disk' => 'public',
+            'path' => $photoPath,
+            'original_name' => $photo->getClientOriginalName(),
+            'mime_type' => $photo->getMimeType(),
+            'size' => $photo->getSize(),
+            'uploaded_by' => auth()->id(),
         ]);
     }
 

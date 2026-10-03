@@ -227,7 +227,7 @@ body.is-landing .link-card:focus-within::before {
   align-items: center;
   width: max-content;
   padding: 0.25rem 2rem;
-  animation: industri-marquee 34s linear infinite;
+  animation: industri-marquee 16s linear infinite;
   will-change: transform;
 }
 .industri-marquee-set {

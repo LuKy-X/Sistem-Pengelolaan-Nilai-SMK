@@ -16,8 +16,14 @@
                 <div class="bg-white border border-bluelight rounded-3xl shadow-xs">
                     <x-public.empty-state
                         icon="news"
-                        title="Belum ada periode pendaftaran"
-                        description="Informasi PPDB belum dipublikasikan. Silakan hubungi sekolah untuk jadwal pendaftaran terbaru." />
+                        title="PPDB sedang ditutup"
+                        description="Belum ada periode pendaftaran yang dibuka. Jadwal dan persyaratan akan ditampilkan saat pendaftaran dimulai." />
+                    <div class="pb-8 text-center">
+                        <a href="{{ route('public.profile') }}"
+                            class="inline-flex items-center justify-center rounded-full bg-bluedark px-5 py-3 font-heading text-sm font-semibold text-white transition-colors hover:bg-blueprim">
+                            Kontak sekolah
+                        </a>
+                    </div>
                 </div>
             @else
                 <div class="space-y-8">
@@ -183,11 +189,13 @@
         </div>
     </section>
 
-    <x-public.cta-band
-        title="Pendaftaran tahun pelajaran berikutnya segera dibuka"
-        description="Pantau jadwal, jalur pendaftaran, dan biaya terbaru langsung dari halaman PPDB sekolah."
-        action-label="Lihat Semua Jurusan"
-        :action-url="route('public.departments.index')"
-        secondary-label="Konsultasi ke BKK"
-        :secondary-url="route('public.career.index')" />
+    @if ($periods->isNotEmpty())
+        <x-public.cta-band
+            title="Ada pertanyaan tentang pendaftaran?"
+            description="Hubungi sekolah jika kamu memerlukan bantuan terkait jadwal, persyaratan, atau jalur PPDB."
+            action-label="Hubungi Sekolah"
+            :action-url="route('public.profile')"
+            secondary-label="Lihat semua jurusan"
+            :secondary-url="route('public.departments.index')" />
+    @endif
 @endsection

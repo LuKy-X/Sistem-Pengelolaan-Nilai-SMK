@@ -102,7 +102,7 @@ class SampleTeachingAssignmentSeeder extends Seeder
         // BUILD A REAL GRADEBOOK FOR GURU AGUS (Matematika XII RPL 1)
         $gradebook = Gradebook::firstOrCreate(
             ['teaching_assignment_id' => $assign1->id, 'name' => 'Buku Nilai Matematika XII RPL 1'],
-            ['description' => 'Buku nilai utama semester ganjil tahun ajaran 2025/2026', 'is_active' => true]
+            ['description' => 'Buku nilai utama semester ganjil tahun ajaran 2026/2027', 'is_active' => true]
         );
 
         // Enrolled students into gradebook

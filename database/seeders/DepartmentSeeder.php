@@ -69,8 +69,8 @@ class DepartmentSeeder extends Seeder
             ],
             [
                 'code' => 'TPM',
-                'name' => 'Teknik Pemesinan',
-                'short_name' => 'TPM',
+                'name' => 'Mesin',
+                'short_name' => 'Mesin',
                 'description' => 'Fokus pada mesin bubut, frais, CNC, pengelasan, dan manufaktur presisi.',
                 'vision' => 'Menjadi pusat pelatihan teknik mesin yang menghasilkan pekerja terampil.',
                 'mission' => 'Melatih keterampilan mesin bubut, frais, CNC, dan pengelasan.',
@@ -79,8 +79,8 @@ class DepartmentSeeder extends Seeder
             ],
             [
                 'code' => 'TPK',
-                'name' => 'Tekstil dan Percetakan',
-                'short_name' => 'TPK',
+                'name' => 'Tekstil',
+                'short_name' => 'Tekstil',
                 'description' => 'Fokus pada tenun, rajut, warna, jahit, dan percetakan kain.',
                 'vision' => 'Menjadi contoh produksi kain yang berkelanjutan.',
                 'mission' => 'Melatih keterampilan tenun, pewarnaan, dan jahit mesin.',

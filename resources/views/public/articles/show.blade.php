@@ -26,7 +26,7 @@
 
                 <div class="flex flex-wrap items-center justify-center gap-2 mt-5 reveal">
                     @if ($article->category)
-                        <a href="{{ route('public.articles.index', ['kategori' => $article->category->slug]) }}"
+                        <a href="{{ route('public.articles.index', ['category' => $article->category->slug]) }}"
                             class="text-xs font-heading font-semibold text-blueprim bg-bluelight px-3 py-1 rounded-full hover:bg-bluesoft transition-colors">
                             {{ $article->category->name }}
                         </a>

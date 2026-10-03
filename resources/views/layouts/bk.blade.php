@@ -17,7 +17,7 @@
      admin/guru dashboard; BK reuses it so both areas look identical. --}}
 <body class="font-body antialiased teacher-portal">
 
-<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
+<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" data-transition-manager="loader" aria-hidden="true">
   <div class="page-transition-diagonal">
     <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
   </div>

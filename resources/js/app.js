@@ -59,6 +59,7 @@ function initIndustriMarquee() {
             var clone = firstSet.cloneNode(true);
             clone.setAttribute('aria-hidden', 'true');
             clone.querySelectorAll('img').forEach(function (img) { img.alt = ''; });
+            clone.querySelectorAll('a').forEach(function (link) { link.setAttribute('tabindex', '-1'); });
             track.appendChild(clone);
             guard++;
         }
@@ -91,26 +92,34 @@ function initIndustriMarquee() {
    ========================================================= */
 function initPageTransition() {
     var overlay = document.getElementById('pageTransitionOverlay');
-    if (!overlay) return;
+    if (!overlay || overlay.dataset.transitionManager === 'loader') return;
+
+    function hideOverlay() {
+        overlay.classList.add('is-animated');
+        requestAnimationFrame(function () {
+            overlay.classList.add('is-hidden');
+        });
+    }
 
     // On first load — sweep the bands away
-    overlay.classList.add('is-animated');
-    requestAnimationFrame(function () {
-        overlay.classList.add('is-hidden');
-    });
+    hideOverlay();
 
     // On internal link click — sweep bands in, then navigate
     document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
         var anchor = e.target.closest('a[href]');
         if (!anchor) return;
 
         var href = anchor.getAttribute('href');
         if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-        if (anchor.target === '_blank') return;
+        if (anchor.target && anchor.target !== '_self') return;
+        if (anchor.hasAttribute('download')) return;
 
         try {
             var url = new URL(href, window.location.href);
-            if (url.hostname !== window.location.hostname) return;
+            if (url.origin !== window.location.origin) return;
+            if (url.pathname === window.location.pathname && url.search === window.location.search) return;
         } catch (_) {
             return;
         }
@@ -121,36 +130,56 @@ function initPageTransition() {
             window.location.href = href;
         }, 420);
     });
+
+    window.addEventListener('pageshow', hideOverlay);
+    window.addEventListener('popstate', hideOverlay);
 }
 
 /* =========================================================
-   BERITA / ARTIKEL CATEGORY FILTER
+   PUBLIC CATEGORY FILTERS
    ========================================================= */
-function initBeritaFilter() {
-    var filterBtns  = document.querySelectorAll('.berita-filter-btn');
-    var beritaCards = document.querySelectorAll('.berita-card[data-category]');
-    var beritaEmpty = document.getElementById('beritaEmpty');
-    if (!filterBtns.length || !beritaCards.length) return;
+function initPublicCategoryFilters() {
+    document.querySelectorAll('[data-public-filter]').forEach(function (filterGroup) {
+        var contentGrid = document.getElementById(filterGroup.dataset.filterTarget);
+        var filterButtons = filterGroup.querySelectorAll('[data-filter]');
+        if (!contentGrid) return;
 
-    filterBtns.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            filterBtns.forEach(function (b) { b.classList.remove('is-active'); });
-            btn.classList.add('is-active');
+        var cards = contentGrid.querySelectorAll('[data-category]');
+        var emptyMessage = filterGroup.dataset.filterEmpty
+            ? document.getElementById(filterGroup.dataset.filterEmpty)
+            : null;
 
-            var filter       = btn.getAttribute('data-filter');
+        if (!filterButtons.length || !cards.length) return;
+
+        function applyFilters() {
+            var activeFilter = filterGroup.querySelector('[data-filter][aria-pressed="true"]');
+            var filter = activeFilter ? activeFilter.dataset.filter : 'all';
             var visibleCount = 0;
 
-            beritaCards.forEach(function (card) {
-                var cats = (card.getAttribute('data-category') || '').split(' ');
-                var show = filter === 'all' || cats.indexOf(filter) !== -1;
-                card.style.display = show ? '' : 'none';
-                if (show) visibleCount++;
+            cards.forEach(function (card) {
+                var isVisible = filter === 'all' || card.dataset.category === filter;
+
+                card.classList.toggle('hidden', !isVisible);
+                visibleCount += isVisible ? 1 : 0;
             });
 
-            if (beritaEmpty) {
-                beritaEmpty.classList.toggle('hidden', visibleCount !== 0);
+            if (emptyMessage) {
+                emptyMessage.classList.toggle('hidden', visibleCount !== 0);
             }
+        }
+
+        filterButtons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                filterButtons.forEach(function (filterButton) {
+                    var isActive = filterButton === button;
+                    filterButton.classList.toggle('is-active', isActive);
+                    filterButton.setAttribute('aria-pressed', String(isActive));
+                });
+                applyFilters();
+            });
         });
+
+        applyFilters();
     });
 }
 
@@ -338,7 +367,9 @@ function initAiChat() {
         return 'ai-chat-bubble ai-chat-bubble--' + who;
     }
 
-    var BOT_ICON = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M8 7V5a4 4 0 018 0v2"/></svg>';
+    // Robot head with a face: without the eyes and mouth the same outline reads
+    // as a padlock at this size.
+    var BOT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="12" rx="4"/><path d="M8 7V5a4 4 0 018 0v2"/><circle cx="9" cy="13" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.1" fill="currentColor" stroke="none"/><path d="M9.5 16.4c1.5 1 3.5 1 5 0"/><path d="M2.5 12v3M21.5 12v3"/></svg>';
 
     /**
      * Build a message row. `reply` may contain newlines and `**bold**`
@@ -783,7 +814,7 @@ function initAnimations() {
                 yPercent: -12,
                 ease: 'none',
                 scrollTrigger: {
-                    trigger: '#home',
+                    trigger: '#beranda',
                     start: 'top top',
                     end: 'bottom top',
                     scrub: 0.6,
@@ -823,7 +854,7 @@ function initAnimations() {
                         duration: 1.6,
                         ease: 'power2.out',
                         onUpdate: function () {
-                            el.textContent = Math.round(proxy.val) + suffix;
+                            el.textContent = formatCounterValue(proxy.val) + suffix;
                         },
                     });
                 },
@@ -849,11 +880,16 @@ function initAnimations() {
 
         // Counters — just set immediately
         document.querySelectorAll('.counter').forEach(function (el) {
-            var target = el.getAttribute('data-target') || '0';
+            var target = parseFloat(el.getAttribute('data-target')) || 0;
             var suffix = el.getAttribute('data-suffix') || '';
-            el.textContent = target + suffix;
+            el.textContent = formatCounterValue(target) + suffix;
         });
     }
+}
+
+/** Indonesian digit grouping, so 1290 counts up as "1.290". */
+function formatCounterValue(value) {
+    return Math.round(value).toLocaleString('id-ID');
 }
 
 /* =========================================================
@@ -872,7 +908,7 @@ function init() {
     initMobileNav();
     initIndustriMarquee();
     initPageTransition();
-    initBeritaFilter();
+    initPublicCategoryFilters();
     initPasswordToggle();
     initPasswordResetHint();
     initDemoCredentials();

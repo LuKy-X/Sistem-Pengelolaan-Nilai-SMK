@@ -24,15 +24,6 @@ use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
-use App\Http\Controllers\Student\AppealController as StudentAppealController;
-use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
-use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
-use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
-use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
-use App\Http\Controllers\Student\GradeController as StudentGradeController;
-use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
-use App\Http\Controllers\Student\ProfileController as StudentProfileController;
-use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
 use App\Http\Controllers\Public\AlumniController;
@@ -43,6 +34,15 @@ use App\Http\Controllers\Public\DepartmentController;
 use App\Http\Controllers\Public\HomeController;
 use App\Http\Controllers\Public\SchoolProfileController;
 use App\Http\Controllers\Public\StudentProductController;
+use App\Http\Controllers\Student\AppealController as StudentAppealController;
+use App\Http\Controllers\Student\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Student\DisciplineController as StudentDisciplineController;
+use App\Http\Controllers\Student\ExitPermitController as StudentExitPermitController;
+use App\Http\Controllers\Student\GradeController as StudentGradeController;
+use App\Http\Controllers\Student\NotificationController as StudentNotificationController;
+use App\Http\Controllers\Student\ProfileController as StudentProfileController;
+use App\Http\Controllers\Student\ScheduleController as StudentScheduleController;
 use App\Http\Controllers\Teacher\AssessmentController;
 use App\Http\Controllers\Teacher\DashboardController;
 use App\Http\Controllers\Teacher\GradebookController;
@@ -86,8 +86,10 @@ Route::name('public.')->group(function () {
     Route::get('/berita/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 
     Route::get('/prestasi', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/prestasi/{achievement}', [AchievementController::class, 'show'])->name('achievements.show');
 
     Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+    Route::get('/alumni/{alumni}', [AlumniController::class, 'show'])->name('alumni.show');
 
     Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
@@ -98,6 +100,7 @@ Route::name('public.')->group(function () {
     Route::redirect('/karir', '/karier')->name('career.legacy');
 
     Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
+    Route::get('/karier/{opportunity}', [CareerController::class, 'show'])->name('career.show');
 
     // ==========================================
     // 1b. PUBLIC CHATBOT (JSON, read-only)
@@ -270,7 +273,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/achievements/{achievement}/preview', [CmsController::class, 'previewAchievement'])->name('achievements.preview');
 
             // Alumni
-            Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
+            Route::get('/alumni', [CmsController::class, 'alumni'])->name('alumni.index');
+            Route::put('/alumni/{student}', [CmsController::class, 'updateAlumni'])->name('alumni.update');
 
             // Produk Siswa
             Route::get('/products', [CmsController::class, 'products'])->name('products');

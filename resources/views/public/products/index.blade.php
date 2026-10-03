@@ -12,42 +12,37 @@
 
     <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            @php
+                $categoryFilters = $categories->map(fn ($category) => [
+                    'value' => $category->id,
+                    'label' => $category->name,
+                ])->all();
+            @endphp
 
-            @if ($categories->isNotEmpty())
-                <div class="flex flex-wrap items-center gap-2 mb-8">
-                    <a href="{{ route('public.products.index') }}"
-                        @class([
-                            'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                            'bg-bluedark text-white border-bluedark' => $selectedCategory === null,
-                            'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedCategory !== null,
-                        ])>
-                        Semua
-                    </a>
-
-                    @foreach ($categories as $category)
-                        <a href="{{ route('public.products.index', ['kategori' => $category->id]) }}"
-                            @class([
-                                'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                                'bg-bluedark text-white border-bluedark' => $selectedCategory === $category->id,
-                                'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedCategory !== $category->id,
-                            ])>
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
+            <div class="mb-8 flex justify-end">
+                <x-public.search-form
+                    :action="route('public.products.index')"
+                    id="product-search"
+                    :search-value="$search"
+                    placeholder="Cari produk..."
+                    filter-name="category"
+                    filter-label="Semua kategori"
+                    :filter-value="$selectedCategory"
+                    :filters="$categoryFilters" />
+            </div>
 
             @if ($products->isEmpty())
                 <div class="bg-white border border-bluelight rounded-3xl shadow-xs">
                     <x-public.empty-state
                         icon="box"
-                        title="Belum ada produk"
-                        description="Produk siswa belum dipublikasikan. Silakan kembali lagi nanti." />
+                        :title="$search !== '' || $selectedCategory !== '' ? 'Produk tidak ditemukan' : 'Belum ada produk'"
+                        :description="$search !== '' || $selectedCategory !== '' ? 'Coba ubah kata kunci atau kategori filter.' : 'Produk siswa belum dipublikasikan. Silakan kembali lagi nanti.'" />
                 </div>
             @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
+                <div id="publicProducts" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
                     @foreach ($products as $product)
-                        <x-public.product-card :product="$product" heading-level="h2" />
+                        <x-public.product-card :product="$product" heading-level="h2"
+                            data-category="{{ $product->category_id ?? 'uncategorized' }}" />
                     @endforeach
                 </div>
 

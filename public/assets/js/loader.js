@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var OVERLAY_DURATION = 350;
+  var OVERLAY_DURATION = 420;
   var HOLD_BEFORE_REVEAL = 120;
   var safetyTimer = null;
 
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function() {
     void overlay.offsetHeight;
   }
 
-  function revealOverlay() {
+  function animateOverlayAway() {
     if (safetyTimer) {
       clearTimeout(safetyTimer);
       safetyTimer = null;
@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("pageshow", function(event) {
     // If page is restored from Back-Forward cache (bfcache)
     if (event.persisted) {
-      hideOverlayInstantly();
+      animateOverlayAway();
       try {
         sessionStorage.removeItem("playPageTransition");
       } catch (err) {}
@@ -219,14 +219,17 @@ document.addEventListener("DOMContentLoaded", function() {
     } catch (err) {}
 
     if (shouldPlay && !reduceMotion) {
-      window.setTimeout(revealOverlay, HOLD_BEFORE_REVEAL);
+      window.setTimeout(animateOverlayAway, HOLD_BEFORE_REVEAL);
     } else {
       hideOverlayInstantly();
     }
   });
 
   window.addEventListener("popstate", function() {
-    hideOverlayInstantly();
+    animateOverlayAway();
+    try {
+      sessionStorage.removeItem("playPageTransition");
+    } catch (err) {}
   });
 
   window.addEventListener("pagehide", function() {

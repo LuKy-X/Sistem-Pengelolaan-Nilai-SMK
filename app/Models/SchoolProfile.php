@@ -35,9 +35,9 @@ class SchoolProfile extends Model
     {
         if (! empty($this->logo)) {
             return app(PublicMediaService::class)->url($this->logo, 'public')
-                ?? asset('assets/images/logo/logo.png');
+                ?? asset(config('public_site.logo_fallback'));
         }
 
-        return asset('assets/images/logo/logo.png');
+        return asset(config('public_site.logo_fallback'));
     }
 }

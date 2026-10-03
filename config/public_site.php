@@ -64,7 +64,9 @@ return [
     */
     'hero_fallback' => 'assets/images/hero/hero-jurusan.png',
 
-    'logo_fallback' => 'assets/images/logo/logo-smk-bisa-hebat.png',
+    'logo_fallback' => 'assets/images/logo/logo.png',
+
+    'alumni_fallback' => 'assets/images/landing/lulusan-terbaik-w800.jpg',
 
     /*
     | Number of items shown on the landing page for each section.

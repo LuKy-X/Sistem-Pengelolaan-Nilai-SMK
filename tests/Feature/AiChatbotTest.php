@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Ai\Agents\SchoolAssistant;
+use App\Ai\Participants\GuestChatbotParticipant;
 use App\Ai\Tools\GetAchievementCount;
 use App\Ai\Tools\GetDepartmentList;
 use App\Ai\Tools\GetSchoolProfile;
@@ -384,6 +385,25 @@ class AiChatbotTest extends TestCase
             ->assertJsonStructure(['intent', 'reply', 'suggestions', 'links', 'conversation_id'])
             ->assertJsonPath('intent', 'ai')
             ->assertJsonPath('reply', 'Jawaban Gemini untuk pertanyaan umum.');
+    }
+
+    public function test_chatbot_reply_persists_guest_conversation(): void
+    {
+        SchoolAssistant::fake(['Jawaban Gemini untuk pertanyaan umum.'])->preventStrayPrompts();
+
+        $response = $this->postJson('/tanya-ai', [
+            'message' => 'Apa hubungan antara gravitasi dan ruang-waktu?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('reply', 'Jawaban Gemini untuk pertanyaan umum.');
+
+        $this->assertDatabaseCount('agent_conversations', 1);
+        $this->assertDatabaseCount('agent_conversation_messages', 2);
+        $this->assertDatabaseHas('agent_conversations', [
+            'id' => $response->json('conversation_id'),
+            'participant_type' => GuestChatbotParticipant::class,
+        ]);
     }
 
     public function test_chatbot_returns_conversation_id(): void
