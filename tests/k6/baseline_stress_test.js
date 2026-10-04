@@ -24,16 +24,14 @@ export const options = {
 const BASE_URL = __ENV.TARGET_URL || 'https://sivana.my.id';
 
 const PUBLIC_PAGES = [
-    { name: 'Home Landing', path: '/' },
-    { name: 'Login Page', path: '/login' },
+    { name: 'Profil Sekolah', path: '/profil' },
+    { name: 'Jurusan / Keahlian', path: '/jurusan' },
     { name: 'Berita Sekolah', path: '/berita' },
-    { name: 'Agenda Sekolah', path: '/agenda' },
-    { name: 'Galeri Kegiatan', path: '/galeri' },
     { name: 'Prestasi Siswa', path: '/prestasi' },
-    { name: 'Ekstrakurikuler', path: '/ekstrakurikuler' },
-    { name: 'Fasilitas', path: '/fasilitas' },
-    { name: 'Jurusan / Kompetensi Keahlian', path: '/jurusan' },
-    { name: 'Kontak', path: '/kontak' },
+    { name: 'Alumni', path: '/alumni' },
+    { name: 'Info PPDB', path: '/ppdb' },
+    { name: 'Produk Siswa (TeFa)', path: '/produk-siswa' },
+    { name: 'Bursa Kerja (Karier)', path: '/karier' },
 ];
 
 export default function () {
