@@ -375,6 +375,10 @@ body.is-landing .link-card:focus-within::before {
   transition: transform .4s cubic-bezier(0.76, 0, 0.24, 1);
 }
 
+.page-transition-overlay.is-login-submit.is-animated .page-transition-band {
+  transition-duration: .65s;
+}
+
 
 
 
