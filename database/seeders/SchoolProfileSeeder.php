@@ -38,7 +38,7 @@ class SchoolProfileSeeder extends Seeder
 
         // Kepala sekolah didaftarkan sebagai Guru (posisi non-mengajar) agar memiliki NIP untuk keperluan laporan/ekspor
         $teacherRole = Role::where('code', 'TEACHER')->first();
-        if ($teacherRole && ! app()->isProduction()) {
+        if ($teacherRole) {
             $userSukidi = User::firstOrCreate(
                 ['username' => 'kepsek.sukidi'],
                 [
