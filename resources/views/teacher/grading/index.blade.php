@@ -167,15 +167,6 @@
 @section('content')
 <div class="space-y-6">
 
-  @if(session('success'))
-    <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-xs">
-      <div class="flex items-center gap-2">
-        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-        <span class="font-medium">{{ session('success') }}</span>
-      </div>
-      <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold">&times;</button>
-    </div>
-  @endif
 
   <div>
     <h1 class="font-heading text-xl md:text-2xl font-bold text-bluedark">Penilaian Siswa</h1>

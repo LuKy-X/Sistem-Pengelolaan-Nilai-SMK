@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DepartmentController as AdminDepartmentController;
 use App\Http\Controllers\Admin\GradesController;
 use App\Http\Controllers\Admin\GuidanceController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\SemesterController;
 use App\Http\Controllers\Admin\StudentsController;
@@ -130,6 +131,13 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::post('/check-unique', [ValidationCheckController::class, 'checkUnique'])->name('check-unique');
+
+        // Profil & Akun Administrator
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [AdminProfileController::class, 'index'])->name('index');
+            Route::put('/', [AdminProfileController::class, 'update'])->name('update');
+            Route::put('/password', [AdminProfileController::class, 'updatePassword'])->name('password');
+        });
 
         // Master Data Akademik
         Route::prefix('academic')->name('academic.')->group(function () {

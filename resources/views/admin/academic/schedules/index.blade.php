@@ -181,26 +181,6 @@ thead .sticky-col-period {
 @section('content')
 <div class="space-y-6">
 
-    <!-- Flash Message Notification -->
-    @if(session('success'))
-      <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between shadow-xs">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-          <span class="font-medium">{{ session('success') }}</span>
-        </div>
-        <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-700 font-bold">&times;</button>
-      </div>
-    @endif
-
-    @if(session('error'))
-      <div class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center justify-between shadow-xs">
-        <div class="flex items-center gap-2">
-          <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          <span class="font-medium">{{ session('error') }}</span>
-        </div>
-        <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-700 font-bold">&times;</button>
-      </div>
-    @endif
 
     <!-- Header Section (Mirip Desain Guru Daftar Nilai) -->
     <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print relative z-30">

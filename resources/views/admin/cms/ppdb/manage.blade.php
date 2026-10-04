@@ -38,33 +38,6 @@
         </div>
     </div>
 
-    <!-- Alert Success / Notification -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-3 text-sm shadow-xs animate-in fade-in duration-200">
-            <div class="flex items-center gap-2.5">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-600 shrink-0">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span class="font-medium">{{ session('success') }}</span>
-            </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-base leading-none">&times;</button>
-        </div>
-    @endif
-
-    <!-- Alert Errors -->
-    @if($errors->any())
-        <div class="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm shadow-xs">
-            <div class="flex items-center gap-2 font-semibold mb-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-red-600"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                <span>Mohon periksa kesalahan input berikut:</span>
-            </div>
-            <ul class="list-disc list-inside text-xs space-y-1 text-red-700">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     <!-- Summary Hero Banner of Selected Wave (Refined High-Contrast Theme) -->
     <div class="panel p-6 sm:p-7 bg-white border border-bluelight rounded-3xl shadow-sm relative overflow-hidden">
