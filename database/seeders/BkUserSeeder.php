@@ -16,6 +16,10 @@ class BkUserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $counselorRole = Role::where('code', 'COUNSELOR')->first();
 
         if (! $counselorRole) {

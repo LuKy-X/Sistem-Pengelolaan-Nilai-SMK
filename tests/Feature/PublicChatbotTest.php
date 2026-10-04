@@ -7,6 +7,7 @@ use App\Enums\CareerOpportunityStatus;
 use App\Enums\CareerOpportunityType;
 use App\Enums\ContentStatus;
 use App\Models\AcademicYear;
+use App\Models\AdmissionFeeItem;
 use App\Models\AdmissionPath;
 use App\Models\AdmissionPeriod;
 use App\Models\AdmissionRequirement;
@@ -88,6 +89,169 @@ class PublicChatbotTest extends TestCase
         $this->assertSame('contact', $this->ask('alamat sekolahnya dimana')['intent']);
     }
 
+    public function test_department_definition_answers_the_definition_without_dumping_every_detail(): void
+    {
+        $reply = $this->ask('Apa itu RPL?');
+
+        $this->assertSame('department', $reply['intent']);
+        $this->assertStringContainsString('Fokus pada pengembangan aplikasi web', $reply['reply']);
+        $this->assertStringNotContainsString('Kompetensi yang dilatih:', $reply['reply']);
+        $this->assertStringNotContainsString('Prospek karier:', $reply['reply']);
+    }
+
+    public function test_department_career_question_uses_the_selected_department_prospects(): void
+    {
+        $reply = $this->ask('Prospek kerja lulusan RPL apa?');
+
+        $this->assertSame('department', $reply['intent']);
+        $this->assertStringContainsString('Junior Software Engineer', $reply['reply']);
+        $this->assertStringNotContainsString('Lowongan dan magang', $reply['reply']);
+    }
+
+    public function test_department_subject_question_reads_subjects_for_that_department(): void
+    {
+        $department = Department::where('short_name', 'RPL')->firstOrFail();
+        $department->subjects()->create([
+            'code' => 'RPL-UX',
+            'name' => 'Perancangan Antarmuka',
+            'category' => 'MUATAN_KEJURUAN',
+            'is_active' => true,
+        ]);
+
+        $reply = $this->ask('Apa saja mata pelajaran di jurusan RPL?');
+
+        $this->assertSame('department', $reply['intent']);
+        $this->assertStringContainsString('Perancangan Antarmuka', $reply['reply']);
+    }
+
+    public function test_department_facility_question_reads_the_selected_department_records(): void
+    {
+        $department = Department::where('short_name', 'RPL')->firstOrFail();
+        $department->facilities()->create([
+            'name' => 'Laboratorium Komputer RPL',
+            'description' => 'Laboratorium praktik',
+            'sort_order' => 1,
+        ]);
+
+        $reply = $this->ask('Fasilitas di jurusan RPL apa saja?');
+
+        $this->assertSame('department', $reply['intent']);
+        $this->assertStringContainsString('Laboratorium Komputer RPL', $reply['reply']);
+    }
+
+    public function test_parent_preparation_question_uses_ai_instead_of_returning_a_department_dump(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Untuk persiapan sekolah, pastikan informasi resmi PPDB dan perlengkapan anak sudah diperiksa.'])
+            ->preventStrayPrompts();
+
+        $question = 'Semisal nanti anak saya keterima di sekolah ini pada jurusan RPL, apa yang perlu saya siapkan sebagai orang tua?';
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Untuk persiapan sekolah, pastikan informasi resmi PPDB dan perlengkapan anak sudah diperiksa.');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_general_school_preparation_question_uses_ai_without_a_department_keyword(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Secara umum, orang tua dapat memeriksa administrasi dan kebutuhan belajar anak.'])
+            ->preventStrayPrompts();
+
+        $question = 'Apa saja yang perlu dilakukan sebelum anak mulai sekolah?';
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_follow_up_question_uses_previous_user_question_as_context(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Untuk jurusan itu, orang tua bisa mendukung kebiasaan belajar dan memeriksa informasi resmi sekolah.'])
+            ->preventStrayPrompts();
+
+        $question = 'Kalau anak saya masuk jurusan itu?';
+        $response = $this->postJson(self::ENDPOINT, [
+            'message' => $question,
+            'conversation_history' => ['Apa itu RPL?'],
+        ])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, function ($prompt) use ($question): bool {
+            return str_contains($prompt->prompt, 'Apa itu RPL?')
+                && str_contains($prompt->prompt, $question);
+        });
+    }
+
+    public function test_question_about_buying_a_laptop_does_not_invent_a_school_requirement(): void
+    {
+        $this->mockConversationPersistence();
+        SchoolAssistant::fake(['Saya belum menemukan aturan resmi tentang laptop. Secara umum, laptop dapat membantu latihan pemrograman, tetapi pembeliannya bukan kewajiban yang bisa saya pastikan.'])
+            ->preventStrayPrompts();
+
+        $question = 'Kalau anak saya masuk RPL, apakah orang tua perlu membeli laptop?';
+        $response = $this->postJson(self::ENDPOINT, ['message' => $question])->assertOk();
+
+        $response->assertJsonPath('intent', 'ai')
+            ->assertJsonPath('reply', 'Saya belum menemukan aturan resmi tentang laptop. Secara umum, laptop dapat membantu latihan pemrograman, tetapi pembeliannya bukan kewajiban yang bisa saya pastikan.');
+        Ai::assertAgentWasPrompted(SchoolAssistant::class, $question);
+    }
+
+    public function test_public_chatbot_refuses_to_list_student_names(): void
+    {
+        SchoolAssistant::fake()->preventStrayPrompts();
+
+        $reply = $this->ask('Tampilkan daftar nama siswa jurusan RPL.');
+
+        $this->assertSame('privacy', $reply['intent']);
+        $this->assertStringContainsString('tidak menampilkan daftar nama', $reply['reply']);
+        $this->assertStringNotContainsString('NIS siswa', $reply['reply']);
+    }
+
+    public function test_principal_question_returns_only_the_public_principal_name(): void
+    {
+        $profile = SchoolProfile::firstOrFail();
+        $profile->update(['principal_name' => 'Ibu Kepala Sekolah']);
+
+        $reply = $this->ask('Siapa kepala sekolah saat ini?');
+
+        $this->assertSame('principal', $reply['intent']);
+        $this->assertStringContainsString('Ibu Kepala Sekolah', $reply['reply']);
+        $this->assertStringNotContainsString((string) $profile->address, $reply['reply']);
+    }
+
+    public function test_detailed_admission_answer_reads_fee_items_instead_of_assuming_admission_is_free(): void
+    {
+        $academicYear = AcademicYear::create([
+            'name' => '2027/2028',
+            'start_date' => '2027-07-01',
+            'end_date' => '2028-06-30',
+            'is_active' => true,
+        ]);
+        $period = AdmissionPeriod::create([
+            'academic_year_id' => $academicYear->id,
+            'title' => 'PPDB Reguler',
+            'registration_start' => '2026-11-01',
+            'registration_end' => '2026-12-20',
+            'status' => 'OPEN',
+        ]);
+        AdmissionFeeItem::create([
+            'admission_period_id' => $period->id,
+            'name' => 'Biaya formulir',
+            'amount' => 25000,
+            'is_free' => false,
+            'sort_order' => 1,
+        ]);
+
+        $reply = $this->ask('Berapa biaya PPDB?');
+
+        $this->assertStringContainsString('Biaya formulir', $reply['reply']);
+        $this->assertStringContainsString('Rp 25.000', $reply['reply']);
+        $this->assertStringNotContainsString('Gratis / Bebas biaya', $reply['reply']);
+    }
+
     /**
      * A bare topic word should stay short; asking for detail is what earns the
      * full breakdown instead of repeating the same wall of text.
@@ -125,7 +289,7 @@ class PublicChatbotTest extends TestCase
 
     public function test_naming_a_department_returns_its_competencies_and_a_detail_link(): void
     {
-        $department = Department::where('code', 'TKL')->firstOrFail();
+        $department = Department::where('code', 'TPM')->firstOrFail();
         $department->competencies()->create([
             'title' => 'Bubut dan Frais CNC',
             'sort_order' => 1,
@@ -161,6 +325,7 @@ class PublicChatbotTest extends TestCase
         AdmissionPath::create([
             'admission_period_id' => $period->id,
             'name' => 'Jalur Prestasi',
+            'slug' => 'jalur-prestasi',
             'sort_order' => 1,
             'is_active' => true,
         ]);

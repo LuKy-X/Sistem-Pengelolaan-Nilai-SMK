@@ -10,10 +10,13 @@ use App\Models\AlumniStory;
 use App\Models\Article;
 use App\Models\CareerOpportunity;
 use App\Models\Department;
+use App\Models\DepartmentFacility;
 use App\Models\StudentProduct;
+use App\Models\Subject;
 use DateTimeInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -24,10 +27,10 @@ use Throwable;
  * school profile), so the assistant never repeats a stale hardcoded fact:
  * whatever an administrator edits shows up on the very next question.
  *
- * Matching is intentionally simple and dependency-free. The visitor question is
- * normalized and matched against a small keyword table. Questions spanning
- * multiple topics or requiring teaching-assignment data are routed to the AI
- * agent so it can combine the relevant database tools.
+ * The semantic analyzer determines the request before this service retrieves
+ * matching CMS records. Queries with missing context, multiple topics, or
+ * follow-up reasoning are routed to the AI agent instead of returning a
+ * partial answer from a matching keyword.
  *
  * All database access goes through `guard()`, which turns a failing query into
  * `null`: the chatbot keeps answering from the remaining sources instead of
@@ -91,6 +94,7 @@ class PublicChatbotService
     public function __construct(
         private readonly PublicSiteService $publicSite,
         private readonly SchoolStatisticsService $schoolStatistics,
+        private readonly ChatbotIntentAnalyzer $intentAnalyzer,
     ) {}
 
     /**
@@ -119,7 +123,7 @@ class PublicChatbotService
      *     links: list<array{label: string, url: string}>
      * }
      */
-    public function answer(string $question): array
+    public function answer(string $question, array $conversationHistory = []): array
     {
         $question = trim($question);
 
@@ -130,18 +134,60 @@ class PublicChatbotService
         if ($this->isPersonalInformationQuestion($question)) {
             return $this->reply(
                 'privacy',
-                'Maaf, saya tidak dapat membantu membagikan alamat rumah atau informasi pribadi kepala sekolah, guru, maupun siswa. Saya hanya dapat membantu dengan informasi resmi sekolah.',
+                $this->asksForStudentIdentity($question)
+                    ? 'Maaf, chatbot publik tidak menampilkan daftar nama, NIS, atau identitas siswa. Saya dapat membantu dengan jumlah siswa secara agregat.'
+                    : 'Maaf, saya tidak dapat membantu membagikan alamat rumah atau informasi pribadi kepala sekolah, guru, maupun siswa. Saya hanya dapat membantu dengan informasi resmi sekolah.',
                 ['Alamat resmi sekolah?', 'Kontak sekolah?'],
             );
         }
 
-        if ($this->requiresAiAnswer($question)) {
-            return $this->fallbackAnswer();
+        $analysis = $this->intentAnalyzer->analyze($question);
+        $department = $this->matchDepartment($question)
+            ?? $this->departmentFromHistory($conversationHistory);
+
+        if (in_array($analysis['intent'], ['department_career', 'department_curriculum', 'department_facility'], true)) {
+            if ($department === null && $analysis['intent'] !== 'department_facility') {
+                return $this->routeToAi($analysis, null, 'department_context_missing');
+            }
+
+            $answer = match ($analysis['intent']) {
+                'department_career' => $this->departmentCareerAnswer($department),
+                'department_curriculum' => $this->departmentCurriculumAnswer($department),
+                'department_facility' => $this->departmentFacilityAnswer($department),
+            };
+
+            Log::debug('School chatbot used a relevant local answer', [
+                'intent' => $analysis['intent'],
+                'department' => $department->code,
+                'confidence' => $analysis['confidence'],
+            ]);
+
+            return $answer;
         }
+
+        if ($analysis['intent'] === 'principal') {
+            return $this->principalAnswer();
+        }
+
+        if ($analysis['requires_ai'] || $this->requiresAiAnswer($question)) {
+            return $this->routeToAi($analysis, $department, $analysis['reason']);
+        }
+
+        $intent = $this->detectIntent($question);
+
+        if ($intent === '') {
+            return $this->routeToAi($analysis, $department, 'no_confident_local_answer');
+        }
+
+        Log::debug('School chatbot used a local answer', [
+            'intent' => $intent,
+            'department' => $department?->code,
+            'confidence' => 0.86,
+        ]);
 
         $detail = $this->wantsDetail($question);
 
-        return match ($this->detectIntent($question)) {
+        return match ($intent) {
             'greeting' => $this->greetingAnswer(),
             'thanks' => $this->thanksAnswer(),
             'contact' => $this->contactAnswer(),
@@ -154,8 +200,127 @@ class PublicChatbotService
             'statistics' => $this->statisticsAnswer(),
             'vision' => $this->visionAnswer(),
             'department' => $this->departmentAnswer($question, $detail),
-            default => $this->fallbackAnswer(),
+            default => $this->routeToAi($analysis, $department, 'no_local_answer_handler'),
         };
+    }
+
+    /**
+     * @param  array{intent: string|null, role: string|null, context: string|null, requires_ai: bool, confidence: float, reason: string}  $analysis
+     */
+    private function routeToAi(array $analysis, ?Department $department, string $reason): array
+    {
+        Log::info('School chatbot routed a question to Gemini', [
+            'intent' => $analysis['intent'] ?? 'unclassified',
+            'role' => $analysis['role'],
+            'context' => $analysis['context'],
+            'department' => $department?->code,
+            'confidence' => $analysis['confidence'],
+            'reason' => $reason,
+        ]);
+
+        return $this->fallbackAnswer();
+    }
+
+    /** @return array{intent: string, reply: string, suggestions: list<string>, links: list<array{label: string, url: string}>} */
+    private function departmentCareerAnswer(Department $department): array
+    {
+        $reply = filled($department->career_prospects)
+            ? "Prospek kerja lulusan {$department->name}: ".$this->clip($department->career_prospects, 320)
+            : "Informasi prospek kerja untuk jurusan {$department->name} belum dicantumkan di sistem sekolah.";
+
+        return $this->reply(
+            'department',
+            $reply,
+            ['Apa yang dipelajari di jurusan ini?', 'Fasilitas jurusan ini apa saja?'],
+            [['label' => 'Detail Jurusan', 'url' => route('public.departments.show', $department)]],
+        );
+    }
+
+    /** @return array{intent: string, reply: string, suggestions: list<string>, links: list<array{label: string, url: string}>} */
+    private function departmentCurriculumAnswer(Department $department): array
+    {
+        $subjects = $this->guard(fn (): array => Subject::query()
+            ->where('department_id', $department->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->all()) ?? [];
+        $competencies = $this->guard(fn (): array => $department->competencies()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('title')
+            ->all()) ?? [];
+
+        $reply = match (true) {
+            $subjects !== [] => "Mata pelajaran yang tercatat untuk jurusan {$department->name}: ".$this->bulletList($subjects, 10),
+            $competencies !== [] => "Kompetensi yang tercatat untuk jurusan {$department->name}: ".$this->bulletList($competencies, 10),
+            default => "Daftar mata pelajaran dan kompetensi jurusan {$department->name} belum tersedia di sistem sekolah.",
+        };
+
+        return $this->reply(
+            'department',
+            $reply,
+            ['Apa prospek kerja jurusan ini?', 'Fasilitas jurusan ini apa saja?'],
+            [['label' => 'Detail Jurusan', 'url' => route('public.departments.show', $department)]],
+        );
+    }
+
+    /** @return array{intent: string, reply: string, suggestions: list<string>, links: list<array{label: string, url: string}>} */
+    private function departmentFacilityAnswer(?Department $department): array
+    {
+        $facilities = $this->guard(fn () => DepartmentFacility::query()
+            ->with('department')
+            ->whereHas('department', fn ($query) => $query->where('is_active', true))
+            ->when($department !== null, fn ($query) => $query->where('department_id', $department->id))
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()) ?? new Collection;
+
+        $reply = $facilities->isNotEmpty()
+            ? 'Fasilitas yang tercatat di sistem sekolah: '.$this->bulletList($facilities
+                ->map(fn (DepartmentFacility $facility): string => ($department === null ? $facility->department?->short_name.': ' : '').$facility->name)
+                ->all(), 10)
+            : 'Informasi fasilitas belum tersedia di sistem sekolah.';
+
+        return $this->reply(
+            'department',
+            $reply,
+            ['Apa yang dipelajari di jurusan ini?', 'Apa prospek kerja jurusan ini?'],
+            [['label' => 'Detail Jurusan', 'url' => route('public.departments.show', $department)]],
+        );
+    }
+
+    /** @return array{intent: string, reply: string, suggestions: list<string>, links: list<array{label: string, url: string}>} */
+    private function principalAnswer(): array
+    {
+        $principalName = $this->publicSite->profile()?->principal_name;
+
+        return $this->reply(
+            'principal',
+            filled($principalName)
+                ? 'Kepala sekolah saat ini adalah **'.$principalName.'**.'
+                : 'Nama kepala sekolah belum dicantumkan di profil sekolah.',
+            ['Alamat resmi sekolah?', 'Kontak sekolah?'],
+            [['label' => 'Profil Sekolah', 'url' => route('public.profile')]],
+        );
+    }
+
+    /** @param list<string> $conversationHistory */
+    private function departmentFromHistory(array $conversationHistory): ?Department
+    {
+        foreach (array_reverse($conversationHistory) as $previousQuestion) {
+            if (! is_string($previousQuestion)) {
+                continue;
+            }
+
+            $department = $this->matchDepartment($previousQuestion);
+
+            if ($department !== null) {
+                return $department;
+            }
+        }
+
+        return null;
     }
 
     /* =========================================================
@@ -251,14 +416,40 @@ class PublicChatbotService
         }
 
         $requestsPrivateInformation = false;
-        foreach (['rumah', 'alamat pribadi', 'tempat tinggal', 'tinggal di mana', 'nomor pribadi', 'nomor hp pribadi', 'no hp pribadi'] as $marker) {
+        foreach ([
+            'rumah', 'alamat pribadi', 'tempat tinggal', 'tinggal di mana', 'nomor pribadi',
+            'nomor hp pribadi', 'no hp pribadi', 'nomor hp', 'no hp', 'nip', 'nis',
+        ] as $marker) {
             if ($this->rootPosition($haystack, $marker) !== null) {
                 $requestsPrivateInformation = true;
                 break;
             }
         }
 
-        return $mentionsPerson && $requestsPrivateInformation;
+        return ($mentionsPerson && $requestsPrivateInformation) || $this->asksForStudentIdentity($haystack, true);
+    }
+
+    private function asksForStudentIdentity(string $question, bool $normalized = false): bool
+    {
+        $haystack = $normalized ? $question : $this->normalize($question);
+        $mentionsStudents = $this->rootPosition($haystack, 'siswa') !== null
+            || $this->rootPosition($haystack, 'murid') !== null;
+
+        return $mentionsStudents && $this->containsAny($haystack, [
+            'daftar', 'nama', 'identitas', 'data siswa', 'siapa saja',
+        ]);
+    }
+
+    /** @param list<string> $phrases */
+    private function containsAny(string $value, array $phrases): bool
+    {
+        foreach ($phrases as $phrase) {
+            if (str_contains($value, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -425,7 +616,18 @@ class PublicChatbotService
                 $lines[] = 'Syarat berkas: '.$this->bulletList($open->requirements->pluck('title')->all());
             }
 
-            $lines[] = 'Biaya pendaftaran: Gratis / Bebas biaya (Sekolah Negeri).';
+            if ($open->feeItems->isNotEmpty()) {
+                $lines[] = 'Biaya pendaftaran:';
+
+                foreach ($open->feeItems as $feeItem) {
+                    $amount = $feeItem->is_free
+                        ? 'Gratis'
+                        : ($feeItem->amount > 0 ? $this->formatNumber((float) $feeItem->amount) : 'belum dicantumkan');
+                    $lines[] = "- {$feeItem->name}: {$amount}";
+                }
+            } else {
+                $lines[] = 'Informasi biaya pendaftaran belum dicantumkan untuk periode ini.';
+            }
 
             if ($open->scheduleItems->isNotEmpty()) {
                 $lines[] = 'Tahapan: '.$this->bulletList($open->scheduleItems->pluck('title')->all(), 4);
@@ -785,11 +987,11 @@ class PublicChatbotService
             ->pluck('title')
             ->all()) ?? [];
 
-        if ($competencies !== []) {
+        if ($detail && $competencies !== []) {
             $lines[] = 'Kompetensi yang dilatih: '.$this->bulletList($competencies, $detail ? 8 : 4);
         }
 
-        if (filled($department->career_prospects)) {
+        if ($detail && filled($department->career_prospects)) {
             $lines[] = 'Prospek karier: '.$this->clip($department->career_prospects, 260);
         }
 

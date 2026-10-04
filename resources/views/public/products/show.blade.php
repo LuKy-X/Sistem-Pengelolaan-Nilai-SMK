@@ -83,14 +83,21 @@
 
                     <div class="mt-8 flex flex-col sm:flex-row gap-3">
                         @if (filled($product->contact))
-                            <a href="https://wa.me/{{ preg_replace('/\D+/', '', $product->contact) }}"
+                            @php
+                                $orderMessage = 'Halo, saya tertarik memesan '.$product->name.'. Apakah produk ini masih tersedia? Mohon informasi lebih lanjut mengenai pemesanan. Terima kasih.';
+                                $whatsappNumber = preg_replace('/\D+/', '', $product->contact);
+                                if (str_starts_with($whatsappNumber, '0')) {
+                                    $whatsappNumber = '62'.substr($whatsappNumber, 1);
+                                }
+                            @endphp
+                            <a href="https://wa.me/{{ $whatsappNumber }}?text={{ rawurlencode($orderMessage) }}"
                                 target="_blank" rel="noopener"
-                                class="inline-flex items-center justify-center gap-2 font-heading font-medium text-white bg-[#25D366] hover:bg-[#1DA851] transition-colors px-6 py-3.5 rounded-full text-sm">
+                                class="inline-flex min-h-12 w-full items-center justify-center gap-2 font-heading font-medium text-white bg-[#25D366] hover:bg-[#1DA851] transition-colors px-6 py-3.5 rounded-full text-sm sm:w-auto">
                                 Pesan via WhatsApp
                             </a>
                         @endif
                         <a href="{{ route('public.products.index') }}"
-                            class="inline-flex items-center justify-center gap-2 font-heading font-medium text-bluedark border border-bluelight hover:bg-bluelight transition-colors px-6 py-3.5 rounded-full text-sm">
+                            class="inline-flex min-h-12 w-full items-center justify-center gap-2 font-heading font-medium text-bluedark border border-bluelight hover:bg-bluelight transition-colors px-6 py-3.5 rounded-full text-sm sm:w-auto">
                             Lihat Produk Lain
                         </a>
                     </div>

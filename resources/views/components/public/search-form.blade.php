@@ -13,7 +13,7 @@
 ])
 
 <form action="{{ $action }}" method="GET" role="search"
-    class="grid w-full grid-cols-1 gap-2 {{ $filterName ? 'sm:grid-cols-[minmax(0,1fr)_minmax(10rem,0.7fr)_auto] lg:max-w-3xl' : 'sm:grid-cols-[minmax(0,1fr)_auto] lg:max-w-md' }}">
+    class="grid w-full min-w-0 gap-2 {{ $filterName ? 'grid-cols-1 min-[400px]:grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_minmax(10rem,0.7fr)_auto] lg:max-w-3xl' : 'grid-cols-[minmax(0,1fr)_auto] lg:max-w-md' }}">
     @foreach ($hiddenFields as $name => $value)
         @if (filled($value))
             <input type="hidden" name="{{ $name }}" value="{{ $value }}">
@@ -28,7 +28,7 @@
         value="{{ $searchValue }}"
         maxlength="100"
         placeholder="{{ $placeholder }}"
-        class="min-h-11 min-w-0 rounded-xl border border-bluesoft/60 bg-white px-4 text-sm text-bluedark placeholder:text-bluedark/40 focus:border-blueprim focus:outline-none focus:ring-2 focus:ring-blueprim/20">
+        class="min-h-11 min-w-0 {{ $filterName ? 'min-[400px]:col-span-2 sm:col-span-1' : '' }} rounded-xl border border-bluesoft/60 bg-white px-4 text-sm text-bluedark placeholder:text-bluedark/40 focus:border-blueprim focus:outline-none focus:ring-2 focus:ring-blueprim/20">
 
     @if ($filterName)
         <label for="{{ $filterName }}-{{ $id }}" class="sr-only">{{ $filterLabel }}</label>
