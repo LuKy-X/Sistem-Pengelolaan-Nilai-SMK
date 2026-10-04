@@ -481,26 +481,6 @@
         </a>
     </div>
 
-    {{-- Category filter pills (tags from articles) --}}
-    @if ($articles->isNotEmpty())
-        @php
-            $allCategories = $articles->pluck('category')->filter()->unique('id');
-        @endphp
-        <div class="mt-6 flex flex-wrap gap-2 reveal" id="beritaFilter"
-            data-public-filter data-filter-target="beritaGrid" data-filter-empty="beritaEmpty">
-            <button type="button" data-filter="all" aria-pressed="true"
-                class="berita-filter-btn is-active font-heading text-xs sm:text-sm font-medium px-4 py-2 rounded-full border transition-colors">
-                Semua
-            </button>
-            @foreach ($allCategories as $category)
-                <button type="button" data-filter="{{ $category->slug }}" aria-pressed="false"
-                    class="berita-filter-btn font-heading text-xs sm:text-sm font-medium px-4 py-2 rounded-full border transition-colors">
-                    {{ $category->name }}
-                </button>
-            @endforeach
-        </div>
-    @endif
-
     @if ($articles->isEmpty())
         <div class="mt-10 bg-white border border-bluelight rounded-3xl">
             <x-public.empty-state
@@ -512,7 +492,6 @@
         <div class="mt-8 sm:mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-group" id="beritaGrid">
             @foreach ($articles as $article)
                 <article
-                    data-category="{{ $article->category?->slug ?? 'informasi' }}"
                     class="berita-card link-card bg-white rounded-3xl overflow-hidden border border-bluelight stagger-item">
                     <a href="{{ route('public.articles.show', $article) }}"
                         class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
@@ -543,8 +522,6 @@
             @endforeach
         </div>
     @endif
-
-    <p id="beritaEmpty" class="hidden text-center text-sm text-bluedark/50 mt-10">Belum ada artikel untuk kategori ini.</p>
 
     <div class="mt-8 flex md:hidden justify-center reveal">
         <a href="{{ route('public.articles.index') }}"

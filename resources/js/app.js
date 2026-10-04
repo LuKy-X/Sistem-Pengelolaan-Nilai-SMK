@@ -126,10 +126,18 @@ function initPageTransition() {
     if (!overlay || overlay.dataset.transitionManager === 'loader') return;
 
     function hideOverlay() {
+        overlay.classList.remove('is-login-submit');
         overlay.classList.add('is-animated');
         requestAnimationFrame(function () {
             overlay.classList.add('is-hidden');
         });
+    }
+
+    function showOverlay() {
+        overlay.classList.add('is-animated');
+        overlay.classList.add('is-hidden');
+        void overlay.offsetWidth;
+        overlay.classList.remove('is-hidden');
     }
 
     // On first load — sweep the bands away
@@ -161,7 +169,7 @@ function initPageTransition() {
         }
 
         e.preventDefault();
-        overlay.classList.remove('is-hidden');
+        showOverlay();
         setTimeout(function () {
             window.location.href = href;
         }, 420);
@@ -178,8 +186,8 @@ function initPageTransition() {
 
             event.preventDefault();
             loginForm.dataset.submitting = 'true';
-            overlay.classList.add('is-animated');
-            overlay.classList.remove('is-hidden');
+            overlay.classList.add('is-login-submit');
+            showOverlay();
 
             var submitButton = loginForm.querySelector('button[type="submit"]');
             if (submitButton) {
@@ -190,7 +198,7 @@ function initPageTransition() {
 
             window.setTimeout(function () {
                 HTMLFormElement.prototype.submit.call(loginForm);
-            }, 420);
+            }, 700);
         });
     }
 
