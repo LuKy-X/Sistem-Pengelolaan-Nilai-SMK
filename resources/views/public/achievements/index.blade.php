@@ -12,44 +12,41 @@
 
     <section class="pt-8 sm:pt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+            @php
+                $categoryFilters = $categories->map(fn ($category) => [
+                    'value' => $category->slug,
+                    'label' => $category->name,
+                ])->all();
+            @endphp
 
-            @if ($categories->isNotEmpty())
-                <div class="flex flex-wrap items-center gap-2 mb-8">
-                    <a href="{{ route('public.achievements.index') }}"
-                        @class([
-                            'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                            'bg-bluedark text-white border-bluedark' => $selectedCategory === '',
-                            'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedCategory !== '',
-                        ])>
-                        Semua
-                    </a>
+            <div class="mb-8 flex justify-end">
+                <x-public.search-form
+                    :action="route('public.achievements.index')"
+                    id="achievement-search"
+                    :search-value="$search"
+                    placeholder="Cari prestasi..."
+                    filter-name="category"
+                    filter-label="Semua kategori"
+                    :filter-value="$selectedCategory"
+                    :filters="$categoryFilters" />
+            </div>
 
-                    @foreach ($categories as $category)
-                        <a href="{{ route('public.achievements.index', ['kategori' => $category->slug]) }}"
-                            @class([
-                                'font-heading font-medium text-xs px-4 py-2 rounded-full border transition-colors',
-                                'bg-bluedark text-white border-bluedark' => $selectedCategory === $category->slug,
-                                'bg-white text-bluedark/70 border-bluelight hover:border-bluesoft' => $selectedCategory !== $category->slug,
-                            ])>
-                            {{ $category->name }}
-                        </a>
-                    @endforeach
-                </div>
-            @endif
-
+            <div id="publicAchievementsResults">
             @if ($achievements->isEmpty())
                 <div class="bg-white border border-bluelight rounded-3xl shadow-xs">
                     <x-public.empty-state
                         icon="trophy"
-                        title="Belum ada prestasi"
-                        :description="$selectedCategory !== ''
-                            ? 'Tidak ada prestasi pada kategori ini.'
-                            : 'Data prestasi siswa belum dipublikasikan.'" />
+                        :title="$search !== '' || $selectedCategory !== '' ? 'Prestasi tidak ditemukan' : 'Belum ada prestasi'"
+                        :description="$search !== '' || $selectedCategory !== '' ? 'Coba ubah kata kunci atau kategori filter.' : 'Data prestasi siswa belum dipublikasikan.'" />
                 </div>
             @else
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
+                <div id="publicAchievements" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 stagger-group">
                     @foreach ($achievements as $achievement)
-                        <article class="stagger-item link-card relative flex flex-col bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden h-full card-hover">
+                        <article
+                            class="stagger-item link-card relative flex flex-col bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden h-full card-hover">
+                            <a href="{{ route('public.achievements.show', $achievement) }}"
+                                class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
+                                aria-label="Lihat detail prestasi {{ $achievement->title }}"></a>
                             <div class="h-40 shrink-0">
                                 <x-public.media :model="$achievement" :alt="$achievement->title" icon="award" />
                             </div>
@@ -85,6 +82,9 @@
                                 @if (filled($achievement->description))
                                     <p class="text-sm text-bluedark/60 mt-3 leading-relaxed line-clamp-3">{{ $achievement->description }}</p>
                                 @endif
+                                <span class="mt-auto pt-4 text-xs font-heading font-medium text-blueprim">
+                                    Lihat detail prestasi
+                                </span>
                             </div>
                         </article>
                     @endforeach
@@ -94,6 +94,7 @@
                     {{ $achievements->links() }}
                 </div>
             @endif
+            </div>
         </div>
     </section>
 

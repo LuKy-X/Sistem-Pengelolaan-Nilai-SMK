@@ -18,8 +18,7 @@ class AdmissionController extends Controller
                 'requirements',
                 'feeItems',
             ])
-            ->whereIn('status', ['OPEN', 'CLOSED'])
-            ->orderByRaw('CASE WHEN status = ? THEN 0 ELSE 1 END', ['OPEN'])
+            ->where('status', 'OPEN')
             ->orderByDesc('registration_start')
             ->get();
 

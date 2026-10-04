@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class ArticleController extends Controller
@@ -15,18 +16,27 @@ class ArticleController extends Controller
 
     public function index(Request $request): View
     {
-        $selectedCategory = $request->string('kategori')->trim()->toString();
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', Rule::exists('article_categories', 'slug')],
+        ]);
+        $search = trim($filters['q'] ?? '');
+        $category = $filters['category'] ?? '';
 
         $articles = Article::query()
             ->where('status', ContentStatus::Published)
             ->with(['category', 'media'])
-            ->when(
-                $selectedCategory !== '',
-                fn ($query) => $query->whereHas(
-                    'category',
-                    fn ($categoryQuery) => $categoryQuery->where('slug', $selectedCategory)
-                )
-            )
+            ->when($category !== '', fn ($query) => $query->whereHas(
+                'category',
+                fn ($categoryQuery) => $categoryQuery->where('slug', $category)
+            ))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('excerpt', 'like', "%{$search}%")
+                        ->orWhere('content', 'like', "%{$search}%");
+                });
+            })
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->paginate(self::PER_PAGE)
@@ -34,11 +44,12 @@ class ArticleController extends Controller
 
         return view('public.articles.index', [
             'articles' => $articles,
+            'search' => $search,
+            'selectedCategory' => $category,
             'categories' => ArticleCategory::query()
                 ->whereHas('articles', fn ($query) => $query->where('status', ContentStatus::Published))
                 ->orderBy('name')
                 ->get(),
-            'selectedCategory' => $selectedCategory,
         ]);
     }
 

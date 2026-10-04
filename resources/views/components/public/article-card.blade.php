@@ -4,10 +4,15 @@
 
 @php
     $categoryName = $article->category?->name ?? 'Informasi';
+    $categorySlug = $article->category?->slug ?? 'informasi';
     $publishedAt = $article->published_at;
 @endphp
 
-<article {{ $attributes->merge(['class' => 'berita-card link-card relative bg-white rounded-3xl overflow-hidden border border-bluelight shadow-card h-full']) }}>
+<article {{ $attributes->merge([
+    'class' => 'berita-card link-card relative bg-white rounded-3xl overflow-hidden border border-bluelight shadow-card h-full',
+    'data-category' => $categorySlug,
+    'data-search' => trim(implode(' ', [$article->title, $article->excerpt, $categoryName])),
+]) }}>
     <a href="{{ route('public.articles.show', $article) }}"
         class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
         aria-label="Baca artikel: {{ $article->title }}"></a>

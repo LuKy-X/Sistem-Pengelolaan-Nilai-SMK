@@ -131,6 +131,11 @@ class DisciplinaryLetterController extends Controller
 
     public function show(DisciplinaryLetter $letter): View
     {
+        $this->authorizeCounselorStudent(
+            $letter->student_id,
+            'Anda tidak memiliki akses ke Surat Peringatan ini.'
+        );
+
         $letter->load(['student.currentEnrollment.schoolClass', 'issuer', 'academicYear']);
 
         return view('bk.letters.show', [
@@ -140,6 +145,11 @@ class DisciplinaryLetterController extends Controller
 
     public function destroy(DisciplinaryLetter $letter): RedirectResponse
     {
+        $this->authorizeCounselorStudent(
+            $letter->student_id,
+            'Anda tidak memiliki akses ke Surat Peringatan ini.'
+        );
+
         $studentId = $letter->student_id;
         $type = $letter->type->value;
 

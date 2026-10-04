@@ -5,10 +5,23 @@
 ])
 
 <article
-    {{ $attributes->merge(['class' => 'stagger-item flex flex-col h-full card-hover bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden']) }}>
-    <a href="{{ route('public.products.show', $product) }}" class="block h-48 shrink-0" tabindex="-1" aria-hidden="true">
+    {{ $attributes->merge([
+        'class' => 'link-card relative stagger-item flex flex-col h-full card-hover bg-white rounded-3xl border border-bluelight shadow-card overflow-hidden',
+        'data-search' => trim(implode(' ', [
+            $product->name,
+            $product->description,
+            $product->category?->name,
+            $product->department?->name,
+            $product->department?->short_name,
+            $product->contact,
+        ])),
+    ]) }}>
+    <a href="{{ route('public.products.show', $product) }}"
+        class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
+        aria-label="Lihat detail produk {{ $product->name }}"></a>
+    <div class="block h-48 shrink-0">
         <x-public.media :model="$product" :alt="$product->name" icon="box" />
-    </a>
+    </div>
 
     <div class="p-5 flex flex-col flex-1">
         <div class="flex flex-wrap items-center gap-2">
@@ -21,9 +34,7 @@
         </div>
 
         <{{ $headingLevel }} class="font-heading font-semibold text-bluedark mt-3 leading-snug">
-            <a href="{{ route('public.products.show', $product) }}" class="hover:text-blueprim transition-colors">
-                {{ $product->name }}
-            </a>
+            {{ $product->name }}
         </{{ $headingLevel }}>
 
         @if (filled($product->description))

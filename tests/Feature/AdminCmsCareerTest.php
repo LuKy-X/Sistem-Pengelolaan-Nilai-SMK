@@ -58,6 +58,9 @@ class AdminCmsCareerTest extends TestCase
         $resOpp = $this->actingAs($admin)->get(route('admin.cms.career', ['tab' => 'opportunities']));
         $resOpp->assertOk();
         $resOpp->assertSee('Teknisi Perakitan Sepeda Motor');
+        $resOpp->assertSee('id="createOppPhotoPreview"', false)
+            ->assertSee("handleOpportunityPhotoPicked('create', this.files)", false)
+            ->assertSee('id="editOppPhotoCurrent"', false);
 
         // Tab companies
         $resComp = $this->actingAs($admin)->get(route('admin.cms.career', ['tab' => 'companies']));
@@ -93,6 +96,7 @@ class AdminCmsCareerTest extends TestCase
 
     public function test_admin_can_store_and_update_career_opportunity(): void
     {
+        Storage::fake('public');
         $admin = $this->getAdminUser();
         $company = CareerCompany::create(['name' => 'PT. Telkom Indonesia', 'industry' => 'Telekomunikasi']);
 
@@ -108,6 +112,7 @@ class AdminCmsCareerTest extends TestCase
             'close_date' => '2026-06-30',
             'application_link' => 'https://career.telkom.co.id/intern',
             'status' => 'OPEN',
+            'photo' => UploadedFile::fake()->image('magang.png', 800, 500),
         ];
 
         $res = $this->actingAs($admin)->post(route('admin.cms.career.opportunities.store'), $payload);
@@ -123,6 +128,9 @@ class AdminCmsCareerTest extends TestCase
 
         $opp = CareerOpportunity::where('title', 'Junior Network Engineer Magang')->first();
         $this->assertNotNull($opp);
+        $oldPhoto = $opp->media()->firstOrFail();
+        Storage::disk('public')->assertExists($oldPhoto->path);
+        $this->assertSame('photo', $oldPhoto->collection);
 
         // Update
         $updatePayload = [
@@ -136,6 +144,7 @@ class AdminCmsCareerTest extends TestCase
             'close_date' => '2026-07-15',
             'application_link' => 'https://career.telkom.co.id/job',
             'status' => 'OPEN',
+            'photo' => UploadedFile::fake()->image('network-job.png', 900, 600),
         ];
 
         $resUpdate = $this->actingAs($admin)->put(route('admin.cms.career.opportunities.update', $opp), $updatePayload);
@@ -146,6 +155,20 @@ class AdminCmsCareerTest extends TestCase
         $this->assertEquals('Senior Network Technician (Updated)', $opp->title);
         $this->assertEquals(CareerOpportunityType::Job, $opp->type);
         $this->assertEquals('Semarang', $opp->location);
+        Storage::disk('public')->assertMissing($oldPhoto->path);
+        $newPhoto = $opp->media()->firstOrFail();
+        Storage::disk('public')->assertExists($newPhoto->path);
+
+        $this->actingAs($admin)
+            ->put(route('admin.cms.career.opportunities.update', $opp), [
+                ...$updatePayload,
+                'photo' => null,
+                'remove_photo' => '1',
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('media', ['id' => $newPhoto->id]);
+        Storage::disk('public')->assertMissing($newPhoto->path);
     }
 
     public function test_admin_can_toggle_opportunity_status_via_ajax(): void
@@ -200,6 +223,16 @@ class AdminCmsCareerTest extends TestCase
             'requirements' => 'Menguasai Adobe Illustrator & Photoshop.',
             'status' => 'OPEN',
         ]);
+        Storage::fake('public');
+        Storage::disk('public')->put('career/opportunities/admin-preview.png', 'image');
+        $opp->media()->create([
+            'collection' => 'photo',
+            'disk' => 'public',
+            'path' => 'career/opportunities/admin-preview.png',
+            'original_name' => 'admin-preview.png',
+            'mime_type' => 'image/png',
+            'size' => 5,
+        ]);
 
         $res = $this->actingAs($admin)->getJson(route('admin.cms.career.opportunities.preview', $opp));
         $res->assertOk();
@@ -210,7 +243,7 @@ class AdminCmsCareerTest extends TestCase
             'type' => 'JOB',
             'type_label' => 'Lowongan Kerja',
             'status' => 'OPEN',
-        ]);
+        ])->assertJsonPath('photo_url', url('/storage/career/opportunities/admin-preview.png'));
     }
 
     public function test_admin_can_delete_career_opportunity(): void

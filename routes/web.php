@@ -24,6 +24,7 @@ use App\Http\Controllers\BK\DashboardController as CounselorDashboardController;
 use App\Http\Controllers\BK\DisciplinaryLetterController;
 use App\Http\Controllers\BK\DisciplineController;
 use App\Http\Controllers\BK\ExitPermitController;
+use App\Http\Controllers\BK\JournalController as CounselorJournalController;
 use App\Http\Controllers\BK\StudentController as CounselorStudentController;
 use App\Http\Controllers\Public\AchievementController;
 use App\Http\Controllers\Public\AdmissionController;
@@ -87,8 +88,10 @@ Route::name('public.')->group(function () {
     Route::get('/berita/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
 
     Route::get('/prestasi', [AchievementController::class, 'index'])->name('achievements.index');
+    Route::get('/prestasi/{achievement}', [AchievementController::class, 'show'])->name('achievements.show');
 
     Route::get('/alumni', [AlumniController::class, 'index'])->name('alumni.index');
+    Route::get('/alumni/{alumni}', [AlumniController::class, 'show'])->name('alumni.show');
 
     Route::get('/ppdb', [AdmissionController::class, 'index'])->name('ppdb.index');
 
@@ -99,6 +102,7 @@ Route::name('public.')->group(function () {
     Route::redirect('/karir', '/karier')->name('career.legacy');
 
     Route::get('/karier', [CareerController::class, 'index'])->name('career.index');
+    Route::get('/karier/{opportunity}', [CareerController::class, 'show'])->name('career.show');
 
     // ==========================================
     // 1b. PUBLIC CHATBOT (JSON, read-only)
@@ -285,7 +289,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/achievements/{achievement}/preview', [CmsController::class, 'previewAchievement'])->name('achievements.preview');
 
             // Alumni
-            Route::get('/alumni', [CmsController::class, 'career'])->name('alumni.index');
+            Route::get('/alumni', [CmsController::class, 'alumni'])->name('alumni.index');
+            Route::put('/alumni/{student}', [CmsController::class, 'updateAlumni'])->name('alumni.update');
 
             // Produk Siswa
             Route::get('/products', [CmsController::class, 'products'])->name('products');
@@ -497,6 +502,19 @@ Route::middleware('auth')->group(function () {
         Route::prefix('students')->name('students.')->group(function () {
             Route::get('/', [CounselorStudentController::class, 'index'])->name('index');
             Route::get('/{student}', [CounselorStudentController::class, 'show'])->name('show');
+        });
+
+        // Absensi Kelas & Jurnal
+        Route::prefix('journals')->name('journals.')->group(function () {
+            Route::get('/', [CounselorJournalController::class, 'index'])->name('index');
+            // "lihat-absensi" dan "riwayat" didaftarkan sebelum "{journal}" agar tidak
+            // tertangkap sebagai parameter jurnal.
+            Route::get('/lihat-absensi', [CounselorJournalController::class, 'attendance'])->name('attendance');
+            Route::get('/riwayat', [CounselorJournalController::class, 'history'])->name('history');
+            Route::post('/', [CounselorJournalController::class, 'store'])->name('store');
+            Route::get('/{journal}', [CounselorJournalController::class, 'show'])->name('show');
+            Route::put('/{journal}', [CounselorJournalController::class, 'update'])->name('update');
+            Route::delete('/{journal}', [CounselorJournalController::class, 'destroy'])->name('destroy');
         });
     });
 });

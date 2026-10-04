@@ -16,22 +16,22 @@ class SemesterSeeder extends Seeder
             return;
         }
 
-        Semester::firstOrCreate(
+        Semester::updateOrCreate(
             ['academic_year_id' => $year->id, 'semester_number' => 1],
             [
                 'name' => 'Ganjil',
-                'start_date' => '2025-07-01',
-                'end_date' => '2025-12-31',
+                'start_date' => '2026-07-01',
+                'end_date' => '2026-12-31',
                 'is_active' => true,
             ]
         );
 
-        Semester::firstOrCreate(
+        Semester::updateOrCreate(
             ['academic_year_id' => $year->id, 'semester_number' => 2],
             [
                 'name' => 'Genap',
-                'start_date' => '2026-01-01',
-                'end_date' => '2026-06-30',
+                'start_date' => '2027-01-01',
+                'end_date' => '2027-06-30',
                 'is_active' => false,
             ]
         );

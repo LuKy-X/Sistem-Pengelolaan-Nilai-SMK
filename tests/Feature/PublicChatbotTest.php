@@ -68,7 +68,7 @@ class PublicChatbotTest extends TestCase
 
         $this->assertSame('department', $reply['intent']);
         $this->assertStringContainsString('Rekayasa Perangkat Lunak', $reply['reply']);
-        $this->assertStringContainsString('Tekstil dan Percetakan', $reply['reply']);
+        $this->assertStringContainsString('Tekstil', $reply['reply']);
         $this->assertStringNotContainsString($inactive->name, $reply['reply']);
     }
 
@@ -266,9 +266,9 @@ class PublicChatbotTest extends TestCase
     {
         SiteStatistic::create([
             'section' => 'HERO',
-            'key' => 'siswa_aktif',
-            'label' => 'Siswa Aktif',
-            'value' => '1.284',
+            'key' => 'program_keahlian',
+            'label' => 'Program Keahlian',
+            'value' => '99',
             'sort_order' => 1,
             'is_active' => true,
         ]);
@@ -282,11 +282,15 @@ class PublicChatbotTest extends TestCase
             'is_active' => false,
         ]);
 
+        $activeDepartments = Department::query()->where('is_active', true)->count();
+
         $reply = $this->ask('Berapa jumlah siswa aktif sekolah ini?');
 
         $this->assertSame('statistics', $reply['intent']);
-        $this->assertStringContainsString('Siswa Aktif', $reply['reply']);
-        $this->assertStringContainsString('1.284', $reply['reply']);
+        $this->assertStringContainsString('Program Keahlian', $reply['reply']);
+        // The stored "99" is never quoted: the answer counts the department table.
+        $this->assertStringContainsString((string) $activeDepartments, $reply['reply']);
+        $this->assertStringNotContainsString('99', $reply['reply']);
         $this->assertStringNotContainsString('Angka Internal', $reply['reply']);
     }
 

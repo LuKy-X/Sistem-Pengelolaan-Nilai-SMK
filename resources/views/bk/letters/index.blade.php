@@ -118,7 +118,7 @@
               <td><x-bk.status-badge :label="$label" :tone="$tone" :dot="true" /></td>
               <td>
                 <div class="flex items-center justify-end gap-1.5">
-                  <a href="{{ route('counselor.disciplinary-letters.show', $letter) }}" class="btn btn-outline btn-sm">Detail</a>
+                  <a href="{{ route('counselor.disciplinary-letters.show', $letter) }}" class="btn btn-outline btn-sm" data-no-transition="true">Detail</a>
                   @if($letter->document_path)
                     <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($letter->document_path) }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Berkas</a>
                   @endif
@@ -242,17 +242,23 @@
         @endif
 
         <div>
+          <label class="f-label" for="letter_student_search">Cari Siswa</label>
+          <input type="search" id="letter_student_search" class="f-input mb-3"
+                 placeholder="Ketik nama atau NIS siswa" autocomplete="off">
+
           <label class="f-label" for="letter_student_id">Siswa <span class="text-red-500">*</span></label>
           <select id="letter_student_id" name="student_id" required class="f-select">
             <option value="">Pilih siswa</option>
             @foreach($students as $student)
               <option value="{{ $student->id }}"
                       data-class="{{ $student->currentEnrollment?->schoolClass?->id ?? '' }}"
+                      data-search="{{ $student->nis }} {{ $student->nisn }}"
                       data-balance="{{ $pointHints[$student->id]['balance'] ?? '' }}">
                 {{ $student->full_name }} — {{ $student->currentEnrollment?->schoolClass?->name ?? 'Tanpa kelas' }}
               </option>
             @endforeach
           </select>
+          <p class="text-[11px] text-bluedark/45 mt-1" id="letter_student_count">Ketik nama atau NIS untuk menyaring daftar siswa.</p>
           <p class="text-[11px] text-bluedark/45 mt-1" id="balanceHint">Saldo poin siswa akan tampil di sini.</p>
           @error('student_id')
             <p class="text-[11px] text-red-600 mt-1">{{ $message }}</p>
@@ -321,32 +327,12 @@
 
 @push('scripts')
 <script>
-  (function () {
-    var classSelect = document.getElementById('letter_class_id');
-    var studentSelect = document.getElementById('letter_student_id');
-
-    if (!classSelect || !studentSelect) return;
-
-    var allOptions = Array.prototype.slice.call(studentSelect.options).slice(1);
-
-    classSelect.addEventListener('change', function () {
-      var selectedClass = this.value;
-      var currentValue = studentSelect.value;
-
-      while (studentSelect.options.length > 1) {
-        studentSelect.remove(1);
-      }
-
-      allOptions.forEach(function (option) {
-        if (!selectedClass || option.dataset.class === selectedClass) {
-          studentSelect.add(option.cloneNode(true));
-        }
-      });
-
-      studentSelect.value = currentValue;
-      studentSelect.dispatchEvent(new Event('change'));
-    });
-  }());
+  initStudentPicker({
+    search: document.getElementById('letter_student_search'),
+    select: document.getElementById('letter_student_id'),
+    classFilter: document.getElementById('letter_class_id'),
+    feedback: document.getElementById('letter_student_count')
+  });
 
   document.addEventListener('bk:before-open', function (event) {
     var opener = event.target.closest('[data-modal-open]');

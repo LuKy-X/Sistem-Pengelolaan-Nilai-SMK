@@ -328,8 +328,15 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                                 
                                 <!-- Judul Lowongan -->
                                 <td class="py-3.5 px-3">
-                                    <div class="font-heading font-semibold text-bluedark text-[13px] leading-snug">
-                                        {{ $opp->title }}
+                                    <div class="flex items-center gap-2">
+                                        @if ($opp->media->isNotEmpty())
+                                            <span class="h-10 w-12 shrink-0 overflow-hidden rounded-lg bg-bluelight">
+                                                <x-public.media :model="$opp" :alt="$opp->title" class="h-full w-full" />
+                                            </span>
+                                        @endif
+                                        <span class="font-heading font-semibold text-bluedark text-[13px] leading-snug">
+                                            {{ $opp->title }}
+                                        </span>
                                     </div>
                                     @if(filled($opp->application_link))
                                         <a href="{{ $opp->application_link }}" target="_blank" class="inline-flex items-center gap-1 text-[10.5px] text-blueprim hover:underline mt-0.5">
@@ -756,7 +763,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
             <button type="button" onclick="closeCreateOppModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-bluedark/40 hover:text-bluedark hover:bg-slate-200 text-xl font-bold">&times;</button>
         </div>
 
-        <form method="POST" action="{{ route('admin.cms.career.opportunities.store') }}" class="overflow-y-auto p-6 space-y-4">
+        <form method="POST" action="{{ route('admin.cms.career.opportunities.store') }}" enctype="multipart/form-data" class="overflow-y-auto p-6 space-y-4">
             @csrf
 
             <!-- Perusahaan Mitra -->
@@ -821,6 +828,16 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                 </div>
             </div>
 
+            <div>
+                <label for="createOppPhoto" class="f-label text-xs">Foto lowongan / PKL (opsional)</label>
+                <img id="createOppPhotoPreview" src="" alt="Pratinjau foto lowongan"
+                    class="mb-2 hidden h-36 w-full rounded-xl border border-bluelight object-cover">
+                <input id="createOppPhoto" type="file" name="photo" accept="image/jpeg,image/png,image/webp"
+                    onchange="handleOpportunityPhotoPicked('create', this.files)"
+                    class="mt-1 block w-full text-xs text-bluedark/70 file:mr-3 file:rounded-lg file:border-0 file:bg-bluelight file:px-3 file:py-2 file:font-semibold file:text-blueprim">
+                <p class="mt-1 text-[11px] text-bluedark/50">JPG, PNG, atau WEBP; maksimal 4 MB. Foto ini dikelola pada data lowongan.</p>
+            </div>
+
             <!-- Deskripsi Tugas -->
             <div>
                 <label class="f-label text-xs">Deskripsi Tugas &amp; Pekerjaan</label>
@@ -857,7 +874,7 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
             <button type="button" onclick="closeEditOppModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-bluedark/40 hover:text-bluedark hover:bg-slate-200 text-xl font-bold">&times;</button>
         </div>
 
-        <form id="editOppForm" method="POST" action="" class="overflow-y-auto p-6 space-y-4">
+        <form id="editOppForm" method="POST" action="" enctype="multipart/form-data" class="overflow-y-auto p-6 space-y-4">
             @csrf
             @method('PUT')
 
@@ -922,6 +939,21 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                 </div>
             </div>
 
+            <div class="space-y-2">
+                <label for="editOppPhoto" class="f-label text-xs">Foto lowongan / PKL (opsional)</label>
+                <img id="editOppPhotoCurrent" src="" alt="Pratinjau foto lowongan"
+                    class="hidden h-28 w-full rounded-xl border border-bluelight object-cover">
+                <input id="editOppPhoto" type="file" name="photo" accept="image/jpeg,image/png,image/webp"
+                    onchange="handleOpportunityPhotoPicked('edit', this.files)"
+                    class="block w-full text-xs text-bluedark/70 file:mr-3 file:rounded-lg file:border-0 file:bg-bluelight file:px-3 file:py-2 file:font-semibold file:text-blueprim">
+                <label id="editOppRemovePhotoLabel" class="hidden items-center gap-2 text-xs text-rose-700">
+                    <input id="editOppRemovePhoto" type="checkbox" name="remove_photo" value="1"
+                        class="rounded border-rose-200 text-rose-600 focus:ring-rose-500">
+                    Hapus foto lowongan
+                </label>
+                <p class="text-[11px] text-bluedark/50">JPG, PNG, atau WEBP; maksimal 4 MB.</p>
+            </div>
+
             <!-- Deskripsi Tugas -->
             <div>
                 <label class="f-label text-xs">Deskripsi Tugas &amp; Pekerjaan</label>
@@ -968,6 +1000,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
             <p class="text-xs text-center text-bluedark/50 mb-4">Simulasi kartu lowongan pada halaman publik (<code class="bg-slate-100 px-1 py-0.5 rounded text-blueprim">/karir</code>):</p>
 
             <article class="p-5 sm:p-6 bg-white rounded-3xl border border-bluelight shadow-card card-hover transition-all">
+                <div id="pvOppPhotoWrapper" class="hidden mb-4 h-40 overflow-hidden rounded-2xl bg-bluelight">
+                    <img id="pvOppPhoto" src="" alt="Foto lowongan" class="h-full w-full object-cover">
+                </div>
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <!-- Logo & Badges Row (100% SVG, Zero Emoji) -->
@@ -1015,11 +1050,11 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
                         </div>
                     </div>
 
-                    <!-- Tanggal Ditutup & Tombol Lamar -->
+                    <!-- Batas Pendaftaran & Tombol Lamar -->
                     <div class="shrink-0 text-right">
                         <div id="pvOppCloseDateWrapper">
                             <p class="text-[11px] text-bluedark/45">
-                                Ditutup<br>
+                                Batas pendaftaran<br>
                                 <span id="pvOppCloseDate" class="font-heading font-semibold text-bluedark/70">
                                     -
                                 </span>
@@ -1483,6 +1518,23 @@ function openEditOppModal(id) {
         document.getElementById('editOppCloseDate').value = data.close_date || '';
         document.getElementById('editOppDescription').value = data.description || '';
         document.getElementById('editOppRequirements').value = data.requirements || '';
+        document.getElementById('editOppPhoto').value = '';
+        document.getElementById('editOppRemovePhoto').checked = false;
+        const currentPhoto = document.getElementById('editOppPhotoCurrent');
+        const removePhotoLabel = document.getElementById('editOppRemovePhotoLabel');
+        currentPhoto.dataset.currentPhoto = data.photo_url || '';
+        currentPhoto.dataset.selectedPhoto = '';
+        if (data.photo_url) {
+            currentPhoto.src = data.photo_url;
+            currentPhoto.classList.remove('hidden');
+            removePhotoLabel.classList.remove('hidden');
+            removePhotoLabel.classList.add('inline-flex');
+        } else {
+            currentPhoto.src = '';
+            currentPhoto.classList.add('hidden');
+            removePhotoLabel.classList.add('hidden');
+            removePhotoLabel.classList.remove('inline-flex');
+        }
 
         document.getElementById('editOppModal').classList.add('show');
     })
@@ -1495,12 +1547,60 @@ function closeEditOppModal() {
     document.getElementById('editOppModal').classList.remove('show');
 }
 
+function handleOpportunityPhotoPicked(mode, files) {
+    if (!files || files.length === 0) {
+        return;
+    }
+
+    const preview = document.getElementById(mode === 'create' ? 'createOppPhotoPreview' : 'editOppPhotoCurrent');
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        preview.src = event.target.result;
+        if (mode === 'edit') {
+            preview.dataset.selectedPhoto = event.target.result;
+        }
+        preview.classList.remove('hidden');
+    };
+
+    reader.readAsDataURL(files[0]);
+
+    if (mode === 'edit') {
+        document.getElementById('editOppRemovePhoto').checked = false;
+    }
+}
+
+document.getElementById('editOppRemovePhoto')?.addEventListener('change', function() {
+    const preview = document.getElementById('editOppPhotoCurrent');
+
+    if (this.checked) {
+        preview.classList.add('hidden');
+        return;
+    }
+
+    const source = preview.dataset.selectedPhoto || preview.dataset.currentPhoto;
+    if (source) {
+        preview.src = source;
+        preview.classList.remove('hidden');
+    }
+});
+
 function previewOpp(id) {
     fetch('{{ url('/admin/cms/career/opportunities') }}/' + id + '/preview', {
         headers: { 'Accept': 'application/json' }
     })
     .then(res => res.json())
     .then(data => {
+        const photoWrapper = document.getElementById('pvOppPhotoWrapper');
+        const photoImage = document.getElementById('pvOppPhoto');
+        if (data.photo_url) {
+            photoImage.src = data.photo_url;
+            photoWrapper.classList.remove('hidden');
+        } else {
+            photoImage.src = '';
+            photoWrapper.classList.add('hidden');
+        }
+
         // Logo & Fallback
         const oppLogo = document.getElementById('pvOppLogo');
         const oppFallback = document.getElementById('pvOppLogoFallback');
