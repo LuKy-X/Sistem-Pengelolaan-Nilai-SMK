@@ -34,4 +34,47 @@ class UserSeederTest extends TestCase
 
         $this->assertSame(76, TeacherProfile::query()->count());
     }
+
+    public function test_admin_and_students_are_created_by_user_seeder(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $this->seed(UserSeeder::class);
+
+        $admin = User::query()->where('username', 'admin')->firstOrFail();
+        $this->assertTrue($admin->hasRole('ADMIN'));
+        $this->assertTrue(Hash::check('password123', $admin->password));
+
+        $studentAhmad = User::query()->where('username', 'siswa.ahmad')->firstOrFail();
+        $this->assertTrue($studentAhmad->hasRole('STUDENT'));
+        $this->assertNotNull($studentAhmad->studentProfile);
+        $this->assertSame('10001', $studentAhmad->studentProfile->nis);
+
+        $studentSiti = User::query()->where('username', 'siswa.siti')->firstOrFail();
+        $this->assertTrue($studentSiti->hasRole('STUDENT'));
+
+        $studentRizky = User::query()->where('username', 'siswa.rizky')->firstOrFail();
+        $this->assertTrue($studentRizky->hasRole('STUDENT'));
+    }
+
+    public function test_specified_teachers_are_assigned_as_counselors_with_proper_profiles(): void
+    {
+        $this->seed(RoleSeeder::class);
+        $this->seed(UserSeeder::class);
+
+        $counselorNames = [
+            'Endah Dwi Sayekti',
+            'Fitriyah Maimun Thofiah',
+            'Puput Sinta Dewi',
+        ];
+
+        foreach ($counselorNames as $name) {
+            $user = User::query()->where('name', $name)->firstOrFail();
+            $this->assertTrue($user->hasRole('COUNSELOR'), "User {$name} should have COUNSELOR role");
+            $this->assertTrue($user->isCounselor(), "User {$name} should return true for isCounselor()");
+            $this->assertSame('counselor.dashboard', $user->dashboardRouteName());
+            $this->assertNotNull($user->staffProfile, "User {$name} should have StaffProfile");
+            $this->assertNotNull($user->teacherProfile, "User {$name} should have TeacherProfile");
+            $this->assertTrue($user->teacherProfile->isCounselor());
+        }
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\GradeLevel;
 use App\Models\SchoolClass;
 use App\Models\StudentProfile;
 use App\Models\TeacherProfile;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -126,6 +127,13 @@ class SampleClassSeeder extends Seeder
                         ]
                     );
                 }
+            }
+
+            // Hubungkan semua kelas ke akun Guru BK agar dapat langsung mengelola absensi & konseling
+            $counselorUsers = User::whereHas('roles', fn ($q) => $q->where('code', 'COUNSELOR'))->get();
+            $allClassIds = SchoolClass::query()->where('academic_year_id', $academicYear->id)->pluck('id')->all();
+            foreach ($counselorUsers as $counselor) {
+                $counselor->counseledClasses()->syncWithoutDetaching($allClassIds);
             }
         });
     }

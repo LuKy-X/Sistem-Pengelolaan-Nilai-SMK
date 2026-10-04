@@ -23,10 +23,6 @@ class BkStudentSeeder extends Seeder
 {
     public function run(): void
     {
-        if (app()->isProduction()) {
-            return;
-        }
-
         $studentRole = Role::where('code', 'STUDENT')->first();
         $year = AcademicYear::where('is_active', true)->first() ?? AcademicYear::first();
         $rpl = Department::where('code', 'RPL')->first();
