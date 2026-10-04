@@ -336,51 +336,6 @@ body.is-landing .link-card:focus-within::before {
 }
 
 
-/* Page transition loader (colorful curtain) */
-.page-transition-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  overflow: hidden;
-}
-.page-transition-diagonal {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-
-  width: 200vmax;
-
-  height: calc(100vw * 0.516 + 100vh * 0.971);
-  transform: translate(-50%, -50%) rotate(-28deg);
-  display: flex;
-  flex-direction: column;
-}
-.page-transition-band {
-  flex: 1 1 0;
-  transform: scaleY(1);
-  transform-origin: 50% 50%;
-}
-
-.page-transition-band:nth-child(4n+1) { background: #1D4E89; }
-.page-transition-band:nth-child(4n+2) { background: #7CA943; }
-.page-transition-band:nth-child(4n+3) { background: #F2B705; }
-.page-transition-band:nth-child(4n+4) { background: #E4572E; }
-
-.page-transition-overlay.is-hidden .page-transition-band {
-  transform: scaleY(0);
-}
-
-.page-transition-overlay.is-animated .page-transition-band {
-  transition: transform .4s cubic-bezier(0.76, 0, 0.24, 1);
-}
-
-.page-transition-overlay.is-login-submit.is-animated .page-transition-band {
-  transition-duration: .65s;
-}
-
-
-
 
 /* Berita filter buttons */
 .berita-filter-btn,

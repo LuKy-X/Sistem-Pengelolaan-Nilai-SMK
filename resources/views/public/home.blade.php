@@ -536,8 +536,8 @@
 {{-- ======================================================
      PPDB CTA
      ====================================================== --}}
+@if ($admissionPeriod)
 <section id="ppdb" class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-24 sm:mt-28 md:mt-32 scroll-mt-20">
-    @if ($admissionPeriod)
         <div class="text-center max-w-xl mx-auto reveal">
             <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-blueprim font-semibold mb-2">Penerimaan Peserta Didik Baru</p>
             <h2 class="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-bluedark">Pendaftaran sedang dibuka</h2>
@@ -631,25 +631,7 @@
                 </a>
             </div>
         </div>
-    @else
-        <div class="mx-auto max-w-2xl rounded-3xl border border-bluelight bg-white px-6 py-10 text-center shadow-xs sm:px-10">
-            <p class="font-heading text-xs font-semibold uppercase tracking-[0.16em] text-blueprim">Penerimaan Peserta Didik Baru</p>
-            <h2 class="mt-3 font-heading text-2xl font-bold text-bluedark sm:text-3xl">PPDB sedang ditutup</h2>
-            <p class="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-bluedark/60">
-                Periode pendaftaran belum dibuka. Informasi jadwal dan persyaratan akan tersedia di halaman PPDB saat pendaftaran dimulai.
-            </p>
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-                <a href="{{ route('public.ppdb.index') }}"
-                    class="inline-flex items-center justify-center rounded-full border border-bluelight px-5 py-3 font-heading text-sm font-semibold text-bluedark transition-colors hover:bg-bluelight">
-                    Informasi PPDB
-                </a>
-                <a href="{{ route('public.profile') }}"
-                    class="inline-flex items-center justify-center rounded-full bg-bluedark px-5 py-3 font-heading text-sm font-semibold text-white transition-colors hover:bg-blueprim">
-                    Kontak sekolah
-                </a>
-            </div>
-    </div>
-    @endif
 </section>
+@endif
 
 @endsection

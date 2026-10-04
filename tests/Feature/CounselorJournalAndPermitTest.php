@@ -125,10 +125,9 @@ class CounselorJournalAndPermitTest extends TestCase
             ->assertSee(route('counselor.journals.history'), escape: false);
     }
 
-    public function test_journal_tabs_skip_the_page_transition_animation(): void
+    public function test_journal_pages_render_navigation_links(): void
     {
-        // Ketiga tab harus memakai data-no-transition agar pindah halaman langsung,
-        // tanpa animasi slide dari loader.js / app.js.
+        // Halaman jurnal harus menampilkan tautan navigasi yang bisa digunakan.
         foreach ([
             route('counselor.journals.index'),
             route('counselor.journals.attendance'),
@@ -137,7 +136,7 @@ class CounselorJournalAndPermitTest extends TestCase
             $this->actingAs($this->counselor)
                 ->get($url)
                 ->assertOk()
-                ->assertSee('data-no-transition="true"', escape: false);
+                ->assertSee($url, escape: false);
         }
     }
 

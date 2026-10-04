@@ -16,20 +16,6 @@
 {{-- "teacher-portal" is the shared compact dashboard theme scope used by the
      admin/guru dashboard; BK reuses it so both areas look identical. --}}
 <body class="font-body antialiased teacher-portal">
-
-<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" data-transition-manager="loader" aria-hidden="true">
-  <div class="page-transition-diagonal">
-    <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
-  </div>
-</div>
-<script>
-  try {
-    if (sessionStorage.getItem('playPageTransition') === '1') {
-      document.getElementById('pageTransitionOverlay')?.classList.remove('is-hidden');
-    }
-  } catch (e) {}
-</script>
-
 <div class="flex min-h-screen">
 
   <div class="db-sidebar-backdrop" id="dbBackdrop"></div>
@@ -173,7 +159,6 @@
   </div>
 </div>
 
-<script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 <script src="{{ asset('assets/js/student-picker.js') }}"></script>
 {{-- Modal WAJIB lewat @push('modals') supaya berada di luar <main>. Bila dirender

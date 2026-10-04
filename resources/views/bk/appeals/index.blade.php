@@ -109,7 +109,7 @@
               <td><x-bk.status-badge :label="$label" :tone="$tone" :dot="true" /></td>
               <td>
                 <div class="flex items-center justify-end gap-1.5">
-                  <a href="{{ route('counselor.exit-permits.show', $appeal->exit_permit_id) }}" class="btn btn-outline btn-sm" data-no-transition="true">Izin</a>
+                  <a href="{{ route('counselor.exit-permits.show', $appeal->exit_permit_id) }}" class="btn btn-outline btn-sm">Izin</a>
                   @if($decision === 'PENDING')
                     <button type="button" class="btn btn-primary btn-sm" data-modal-open="appealModal-{{ $appeal->id }}">Putuskan</button>
                   @endif

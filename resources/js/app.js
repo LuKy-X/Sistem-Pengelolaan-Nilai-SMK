@@ -119,94 +119,6 @@ function initIndustriMarquee() {
 }
 
 /* =========================================================
-   PAGE TRANSITION
-   ========================================================= */
-function initPageTransition() {
-    var overlay = document.getElementById('pageTransitionOverlay');
-    if (!overlay || overlay.dataset.transitionManager === 'loader') return;
-
-    function hideOverlay() {
-        overlay.classList.remove('is-login-submit');
-        overlay.classList.add('is-animated');
-        requestAnimationFrame(function () {
-            overlay.classList.add('is-hidden');
-        });
-    }
-
-    function showOverlay() {
-        overlay.classList.add('is-animated');
-        overlay.classList.add('is-hidden');
-        void overlay.offsetWidth;
-        overlay.classList.remove('is-hidden');
-    }
-
-    // On first load — sweep the bands away
-    hideOverlay();
-
-    // On internal link click — sweep bands in, then navigate.
-    // `data-no-transition="true"` (atau kelas `no-transition`) memberi jalan pintas
-    // tanpa animasi, sama seperti yang sudah dipakai loader.js.
-    document.addEventListener('click', function (e) {
-        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-
-        var anchor = e.target.closest('a[href]');
-        if (!anchor) return;
-
-        var href = anchor.getAttribute('href');
-        if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
-        if (anchor.target && anchor.target !== '_self') return;
-        if (anchor.target === '_blank') return;
-        if (anchor.hasAttribute('download')) return;
-        if (anchor.getAttribute('data-no-transition') === 'true') return;
-        if (anchor.classList.contains('no-transition')) return;
-
-        try {
-            var url = new URL(href, window.location.href);
-            if (url.origin !== window.location.origin) return;
-            if (url.pathname === window.location.pathname && url.search === window.location.search) return;
-        } catch (_) {
-            return;
-        }
-
-        e.preventDefault();
-        showOverlay();
-        setTimeout(function () {
-            window.location.href = href;
-        }, 420);
-    });
-
-    var loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function (event) {
-            if (loginForm.dataset.submitting === 'true') {
-                event.preventDefault();
-
-                return;
-            }
-
-            event.preventDefault();
-            loginForm.dataset.submitting = 'true';
-            overlay.classList.add('is-login-submit');
-            showOverlay();
-
-            var submitButton = loginForm.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.setAttribute('aria-busy', 'true');
-                submitButton.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>Memeriksa akun...</span>';
-            }
-
-            window.setTimeout(function () {
-                HTMLFormElement.prototype.submit.call(loginForm);
-            }, 700);
-        });
-    }
-
-    window.addEventListener('pageshow', hideOverlay);
-    window.addEventListener('popstate', hideOverlay);
-}
-
-/* =========================================================
    PUBLIC CATEGORY FILTERS
    ========================================================= */
 function initPublicCategoryFilters() {
@@ -991,7 +903,6 @@ function init() {
     initFooterYear();
     initMobileNav();
     initIndustriMarquee();
-    initPageTransition();
     initPublicCategoryFilters();
     initPasswordToggle();
     initPasswordResetHint();

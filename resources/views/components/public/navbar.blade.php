@@ -1,5 +1,6 @@
 @props([
     'navSections' => [],
+    'isAdmissionOpen' => false,
 ])
 
 @php
@@ -50,14 +51,12 @@
                     Dashboard
                 </a>
             @else
-                <a href="{{ route('login') }}"
-                    class="hidden lg:inline-flex items-center gap-2 border border-bluedark/25 hover:border-bluedark hover:bg-bluelight transition-colors text-bluedark font-heading font-medium text-sm px-5 py-2.5 rounded-full">
-                    Masuk
-                </a>
-                <a href="{{ route('public.ppdb.index') }}"
-                    class="hidden lg:inline-flex items-center gap-2 bg-bluedark hover:bg-blueprim transition-colors text-white font-heading font-medium text-sm px-5 py-2.5 rounded-full">
-                    Daftar PPDB
-                </a>
+                @if ($isAdmissionOpen)
+                    <a href="{{ route('public.ppdb.index') }}"
+                        class="hidden lg:inline-flex items-center gap-2 bg-bluedark hover:bg-blueprim transition-colors text-white font-heading font-medium text-sm px-5 py-2.5 rounded-full">
+                        Daftar PPDB
+                    </a>
+                @endif
             @endauth
 
             {{-- Mobile menu toggle --}}
@@ -98,14 +97,12 @@
                     Dashboard
                 </a>
             @else
-                <a href="{{ route('public.ppdb.index') }}"
-                    class="mt-2 text-center bg-blueprim text-white py-2.5 px-2 rounded-full font-medium">
-                    Daftar PPDB
-                </a>
-                <a href="{{ route('login') }}"
-                    class="mt-1 text-center border border-bluesoft text-bluedark py-2.5 px-2 rounded-full font-medium hover:bg-bluelight transition-colors">
-                    Masuk ke Portal
-                </a>
+                @if ($isAdmissionOpen)
+                    <a href="{{ route('public.ppdb.index') }}"
+                        class="mt-2 text-center bg-blueprim text-white py-2.5 px-2 rounded-full font-medium">
+                        Daftar PPDB
+                    </a>
+                @endif
             @endauth
         </nav>
     </div>

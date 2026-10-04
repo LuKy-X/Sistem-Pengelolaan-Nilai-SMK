@@ -51,7 +51,7 @@
           <span>Atur Kolom</span>
         </a>
         <div class="w-px h-4 bg-bluelight"></div>
-        <a href="{{ route('teacher.gradebooks.export', $gradebook) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-bluedark/80 hover:text-blueprim hover:bg-bluelight/40 transition-colors" title="Unduh rekapitulasi nilai Excel (.xlsx)" data-no-transition="true" download>
+        <a href="{{ route('teacher.gradebooks.export', $gradebook) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-bluedark/80 hover:text-blueprim hover:bg-bluelight/40 transition-colors" title="Unduh rekapitulasi nilai Excel (.xlsx)" download>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>Export Excel</span>
         </a>
