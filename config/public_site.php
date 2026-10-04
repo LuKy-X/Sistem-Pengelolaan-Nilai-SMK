@@ -73,7 +73,6 @@ return [
     */
     'landing_limits' => [
         'articles' => 4,
-        'achievements' => 4,
         'products' => 4,
         'opportunities' => 5,
     ],
