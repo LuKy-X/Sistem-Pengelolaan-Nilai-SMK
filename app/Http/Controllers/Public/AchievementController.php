@@ -38,6 +38,7 @@ class AchievementController extends Controller
                         ->orWhere('description', 'like', "%{$search}%");
                 });
             })
+            ->orderByDesc('is_featured')
             ->orderByDesc('achievement_date')
             ->orderByDesc('id')
             ->paginate(self::PER_PAGE)
