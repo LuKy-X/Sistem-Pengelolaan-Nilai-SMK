@@ -6,7 +6,7 @@
 <div class="space-y-6">
 
   <p class="text-sm text-bluedark/60">
-    <a href="{{ route('counselor.students.index') }}" data-no-transition="true" class="font-semibold text-blueprim hover:underline">Rekap Siswa</a>
+    <a href="{{ route('counselor.students.index') }}" class="font-semibold text-blueprim hover:underline">Rekap Siswa</a>
     /
     <span class="font-semibold text-bluedark">{{ $student->full_name }}</span>
   </p>

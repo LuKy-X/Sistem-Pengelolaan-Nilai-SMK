@@ -9,7 +9,7 @@
 
   <p class="text-sm text-bluedark/60">
     <a href="{{ route('counselor.journals.attendance', ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]) }}"
-       class="font-semibold text-blueprim hover:underline" data-no-transition="true">Lihat Absensi</a>
+       class="font-semibold text-blueprim hover:underline">Lihat Absensi</a>
     /
     <a href="{{ route('counselor.journals.history') }}" class="font-semibold text-blueprim hover:underline">Riwayat Jurnal</a>
     /
@@ -30,7 +30,7 @@
         </p>
       </div>
       <a href="{{ route('counselor.journals.attendance', ['class_id' => $journal->teachingAssignment?->class_id, 'date' => $journal->journal_date?->format('Y-m-d')]) }}"
-         class="btn btn-outline btn-sm" data-no-transition="true">
+         class="btn btn-outline btn-sm">
         Buka di Lihat Absensi
       </a>
     </div>
@@ -101,7 +101,7 @@
             <tr>
               <td class="text-xs text-bluedark/50">{{ $loop->iteration }}</td>
               <td class="text-xs font-medium text-bluedark">
-                <a href="{{ route('counselor.students.show', $attendance->student_id) }}" class="hover:text-blueprim" data-no-transition="true">
+                <a href="{{ route('counselor.students.show', $attendance->student_id) }}" class="hover:text-blueprim">
                   {{ $attendance->student?->full_name ?? 'Siswa #'.$attendance->student_id }}
                 </a>
                 <div class="text-[11px] text-bluedark/45">

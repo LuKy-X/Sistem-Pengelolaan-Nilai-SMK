@@ -481,26 +481,6 @@
         </a>
     </div>
 
-    {{-- Category filter pills (tags from articles) --}}
-    @if ($articles->isNotEmpty())
-        @php
-            $allCategories = $articles->pluck('category')->filter()->unique('id');
-        @endphp
-        <div class="mt-6 flex flex-wrap gap-2 reveal" id="beritaFilter"
-            data-public-filter data-filter-target="beritaGrid" data-filter-empty="beritaEmpty">
-            <button type="button" data-filter="all" aria-pressed="true"
-                class="berita-filter-btn is-active font-heading text-xs sm:text-sm font-medium px-4 py-2 rounded-full border transition-colors">
-                Semua
-            </button>
-            @foreach ($allCategories as $category)
-                <button type="button" data-filter="{{ $category->slug }}" aria-pressed="false"
-                    class="berita-filter-btn font-heading text-xs sm:text-sm font-medium px-4 py-2 rounded-full border transition-colors">
-                    {{ $category->name }}
-                </button>
-            @endforeach
-        </div>
-    @endif
-
     @if ($articles->isEmpty())
         <div class="mt-10 bg-white border border-bluelight rounded-3xl">
             <x-public.empty-state
@@ -512,7 +492,6 @@
         <div class="mt-8 sm:mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-6 stagger-group" id="beritaGrid">
             @foreach ($articles as $article)
                 <article
-                    data-category="{{ $article->category?->slug ?? 'informasi' }}"
                     class="berita-card link-card bg-white rounded-3xl overflow-hidden border border-bluelight stagger-item">
                     <a href="{{ route('public.articles.show', $article) }}"
                         class="absolute inset-0 z-10 rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-blueprim"
@@ -544,8 +523,6 @@
         </div>
     @endif
 
-    <p id="beritaEmpty" class="hidden text-center text-sm text-bluedark/50 mt-10">Belum ada artikel untuk kategori ini.</p>
-
     <div class="mt-8 flex md:hidden justify-center reveal">
         <a href="{{ route('public.articles.index') }}"
             class="inline-flex items-center gap-2 font-heading font-medium text-white bg-bluedark hover:bg-blueprim transition-colors px-6 py-3 rounded-full text-sm">
@@ -559,8 +536,8 @@
 {{-- ======================================================
      PPDB CTA
      ====================================================== --}}
+@if ($admissionPeriod)
 <section id="ppdb" class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mt-24 sm:mt-28 md:mt-32 scroll-mt-20">
-    @if ($admissionPeriod)
         <div class="text-center max-w-xl mx-auto reveal">
             <p class="font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-blueprim font-semibold mb-2">Penerimaan Peserta Didik Baru</p>
             <h2 class="font-heading font-bold text-2xl sm:text-3xl md:text-4xl text-bluedark">Pendaftaran sedang dibuka</h2>
@@ -654,25 +631,7 @@
                 </a>
             </div>
         </div>
-    @else
-        <div class="mx-auto max-w-2xl rounded-3xl border border-bluelight bg-white px-6 py-10 text-center shadow-xs sm:px-10">
-            <p class="font-heading text-xs font-semibold uppercase tracking-[0.16em] text-blueprim">Penerimaan Peserta Didik Baru</p>
-            <h2 class="mt-3 font-heading text-2xl font-bold text-bluedark sm:text-3xl">PPDB sedang ditutup</h2>
-            <p class="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-bluedark/60">
-                Periode pendaftaran belum dibuka. Informasi jadwal dan persyaratan akan tersedia di halaman PPDB saat pendaftaran dimulai.
-            </p>
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-                <a href="{{ route('public.ppdb.index') }}"
-                    class="inline-flex items-center justify-center rounded-full border border-bluelight px-5 py-3 font-heading text-sm font-semibold text-bluedark transition-colors hover:bg-bluelight">
-                    Informasi PPDB
-                </a>
-                <a href="{{ route('public.profile') }}"
-                    class="inline-flex items-center justify-center rounded-full bg-bluedark px-5 py-3 font-heading text-sm font-semibold text-white transition-colors hover:bg-blueprim">
-                    Kontak sekolah
-                </a>
-            </div>
-    </div>
-    @endif
 </section>
+@endif
 
 @endsection

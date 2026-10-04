@@ -2,6 +2,7 @@
 
 namespace App\View\Composers;
 
+use App\Models\AdmissionPeriod;
 use App\Services\PublicSiteService;
 use Illuminate\Contracts\View\View;
 
@@ -19,9 +20,17 @@ class PublicSiteComposer
 
     public function compose(View $view): void
     {
-        $view->with([
+        $viewData = [
             'schoolProfile' => $this->publicSite->profile(),
             'schoolName' => $this->publicSite->schoolName(),
-        ]);
+        ];
+
+        if ($view->name() === 'components.public.navbar') {
+            $viewData['isAdmissionOpen'] = AdmissionPeriod::query()
+                ->where('status', 'OPEN')
+                ->exists();
+        }
+
+        $view->with($viewData);
     }
 }

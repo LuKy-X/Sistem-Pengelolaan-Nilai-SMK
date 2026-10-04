@@ -118,7 +118,7 @@
               <td><x-bk.status-badge :label="$label" :tone="$tone" :dot="true" /></td>
               <td>
                 <div class="flex items-center justify-end gap-1.5">
-                  <a href="{{ route('counselor.disciplinary-letters.show', $letter) }}" class="btn btn-outline btn-sm" data-no-transition="true">Detail</a>
+                  <a href="{{ route('counselor.disciplinary-letters.show', $letter) }}" class="btn btn-outline btn-sm">Detail</a>
                   @if($letter->document_path)
                     <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($letter->document_path) }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Berkas</a>
                   @endif

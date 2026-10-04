@@ -178,7 +178,7 @@
                     @endif
                   </td>
                   <td class="text-right">
-                    <a href="{{ route('counselor.journals.show', $journal) }}" class="btn btn-outline btn-sm" data-no-transition="true">Buka</a>
+                    <a href="{{ route('counselor.journals.show', $journal) }}" class="btn btn-outline btn-sm">Buka</a>
                   </td>
                 </tr>
               @empty

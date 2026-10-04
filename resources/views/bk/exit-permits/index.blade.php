@@ -159,11 +159,11 @@
               <td>
                 <div class="flex items-center justify-end gap-1.5">
                   @if($permit->status === \App\Enums\ExitPermitStatus::Pending)
-                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm" data-no-transition="true">Cek Detail</a>
+                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm">Cek Detail</a>
                     <button type="button" class="btn btn-success btn-sm" data-modal-open="approveModal-{{ $permit->id }}">Setujui</button>
                     <button type="button" class="btn btn-danger btn-sm" data-modal-open="rejectModal-{{ $permit->id }}">Tolak</button>
                   @else
-                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm" data-no-transition="true">Detail</a>
+                    <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline btn-sm">Detail</a>
                   @endif
                 </div>
               </td>
@@ -237,7 +237,7 @@
                       placeholder="Contoh: dikembalikan sebelum pukul 12.00, wajib melapor ke BK">{{ old('approval_note') }}</textarea>
           </div>
           <div class="flex gap-2">
-            <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline" data-no-transition="true">Cek Detail Dulu</a>
+            <a href="{{ route('counselor.exit-permits.show', $permit) }}" class="btn btn-outline">Cek Detail Dulu</a>
             <button type="submit" class="btn btn-success flex-1">Ya, Setujui Izin</button>
             <button type="button" data-modal-close class="btn btn-outline">Batal</button>
           </div>
