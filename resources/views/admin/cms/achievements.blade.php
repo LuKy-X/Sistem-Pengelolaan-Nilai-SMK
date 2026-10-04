@@ -119,31 +119,6 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
         </div>
     </div>
 
-    <!-- Alert Success / Status -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-3 text-sm shadow-xs animate-in fade-in duration-200">
-            <div class="flex items-center gap-2.5">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-600 shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span>{{ session('success') }}</span>
-            </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-600 hover:text-emerald-800 text-lg leading-none font-bold">&times;</button>
-        </div>
-    @endif
-
-    <!-- Alert Validation Errors -->
-    @if($errors->any())
-        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm shadow-xs space-y-1">
-            <div class="flex items-center gap-2 font-bold">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-rose-600 shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>Mohon periksa kesalahan input berikut:</span>
-            </div>
-            <ul class="list-disc list-inside text-xs pl-5 space-y-0.5 text-rose-700">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     <!-- Quick Stats Cards (Fitur Berguna) -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

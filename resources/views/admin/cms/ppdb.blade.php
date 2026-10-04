@@ -80,18 +80,6 @@
         </div>
     </div>
 
-    <!-- Alert Success -->
-    @if(session('success'))
-        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between gap-3 text-sm shadow-xs animate-in fade-in duration-200">
-            <div class="flex items-center gap-2.5">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-emerald-600 shrink-0">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span class="font-medium">{{ session('success') }}</span>
-            </div>
-            <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-base leading-none">&times;</button>
-        </div>
-    @endif
 
     <!-- Quick Stats Grid -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -298,22 +298,6 @@
         </div>
     </div>
 
-    <!-- Error Validation Alert -->
-    @if (isset($errors) && $errors->any())
-        <div class="panel p-4 bg-rose-50 border-rose-200 text-rose-800 rounded-xl">
-            <div class="flex items-start gap-3">
-                <div class="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 font-bold">!</div>
-                <div>
-                    <h4 class="font-bold text-sm">Terdapat kesalahan pada isian form:</h4>
-                    <ul class="list-disc pl-5 mt-1 text-xs space-y-0.5 text-rose-700">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <!-- Main Form Grid -->
     <form id="createArticleForm" method="POST" action="{{ route('admin.cms.articles.store') }}" enctype="multipart/form-data">
