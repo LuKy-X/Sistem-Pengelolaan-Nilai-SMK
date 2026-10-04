@@ -17,7 +17,7 @@
                 class="w-9 h-9 md:w-11 md:h-11 object-contain shrink-0">
             <span class="font-heading leading-tight truncate">
                 <span class="block text-[13px] md:text-[15px] font-semibold text-bluedark truncate">{{ $schoolName }}</span>
-                <span class="block text-[10px] md:text-xs font-medium text-blueprim tracking-wide">Sekolah Menengah Kejuruan</span>
+                <span class="block text-[10px] md:text-xs font-medium text-blueprim tracking-wide">PUSAT KEUNGGULAN</span>
             </span>
         </a>
 
@@ -61,7 +61,7 @@
                 </a>
                 <a href="{{ route('public.ppdb.index') }}"
                     class="hidden lg:inline-flex items-center gap-2 bg-bluedark hover:bg-blueprim transition-colors text-white font-heading font-medium text-sm px-5 py-2.5 rounded-full">
-                    Daftar Sekarang
+                    Daftar PPDB
                 </a>
             @endauth
 
@@ -110,7 +110,7 @@
             @else
                 <a href="{{ route('public.ppdb.index') }}"
                     class="mt-2 text-center bg-blueprim text-white py-2.5 px-2 rounded-full font-medium">
-                    Daftar Sekarang
+                    Daftar PPDB
                 </a>
                 <a href="{{ route('login') }}"
                     class="mt-1 text-center border border-bluesoft text-bluedark py-2.5 px-2 rounded-full font-medium hover:bg-bluelight transition-colors">

@@ -20,7 +20,7 @@ class GetTeacherList implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Mengambil daftar guru aktif di sekolah. Bisa difilter berdasarkan jenis kelamin. Hasilnya dipaginasi (max 20 per halaman).';
+        return 'Mengambil nama guru aktif di sekolah. Hasilnya dipaginasi (max 20 per halaman) tanpa nomor identitas atau atribut pribadi.';
     }
 
     /**
@@ -28,18 +28,12 @@ class GetTeacherList implements Tool
      */
     public function handle(Request $request): Stringable|string
     {
-        $gender = $request['gender'] ?? null;
         $page = max(1, (int) ($request['page'] ?? 1));
 
         $query = TeacherProfile::query()
-            ->select(['id', 'full_name', 'nip', 'gender', 'status'])
+            ->select(['id', 'full_name', 'status'])
             ->where('status', 'ACTIVE')
             ->orderBy('full_name');
-
-        if ($gender) {
-            $normalizedGender = strtoupper($gender) === 'L' || stripos($gender, 'laki') !== false ? 'MALE' : 'FEMALE';
-            $query->where('gender', $normalizedGender);
-        }
 
         $total = $query->count();
         $teachers = $query->forPage($page, self::MAX_PER_PAGE)->get();
@@ -47,8 +41,6 @@ class GetTeacherList implements Tool
         return json_encode([
             'teachers' => $teachers->map(fn ($t) => [
                 'full_name' => $t->full_name,
-                'nip' => $t->nip,
-                'gender' => $t->gender === 'MALE' ? 'Laki-laki' : 'Perempuan',
             ])->values()->all(),
             'total' => $total,
             'page' => $page,
@@ -63,8 +55,6 @@ class GetTeacherList implements Tool
     public function schema(JsonSchema $schema): array
     {
         return [
-            'gender' => $schema->string()
-                ->description('Jenis kelamin: "L" untuk laki-laki, "P" untuk perempuan.'),
             'page' => $schema->integer()
                 ->description('Halaman data (default: 1).')
                 ->default(1),

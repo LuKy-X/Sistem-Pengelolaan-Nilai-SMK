@@ -30,6 +30,7 @@ class ChatbotController extends Controller
         $answer = $this->chatbot->answer(
             question: $request->question(),
             conversationId: $request->conversationId(),
+            conversationHistory: $request->conversationHistory(),
         );
 
         return response()->json($answer);

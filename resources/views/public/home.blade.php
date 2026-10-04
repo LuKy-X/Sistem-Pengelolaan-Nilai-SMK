@@ -20,9 +20,6 @@
 
                 {{-- Left: headline + CTA --}}
                 <div class="lg:col-span-6 reveal">
-                    <p class="hero-badge font-heading text-xs md:text-sm tracking-[0.2em] uppercase text-blueprim font-semibold mb-4">
-                        {{ $schoolProfile?->npsn ? 'NPSN ' . $schoolProfile->npsn : 'Sekolah Menengah Kejuruan' }}
-                    </p>
                     <h1 class="font-heading font-bold text-3xl sm:text-4xl md:text-5xl xl:text-[3.4rem] leading-[1.15] text-bluedark">
                         Kenali minat,<br>
                         bangun <span class="text-blueprim">keahlian.</span>
@@ -32,18 +29,15 @@
                             ?? 'Jelajahi program keahlian, karya siswa, dan informasi penerimaan di ' . $schoolName . '.' }}
                     </p>
 
-                    <div class="mt-8 flex flex-wrap items-center gap-4">
-                        <a href="{{ route('public.ppdb.index') }}"
-                            class="bg-blueprim hover:bg-bluedark transition-colors text-white font-heading font-medium px-6 sm:px-7 py-3 sm:py-3.5 rounded-full shadow-soft">
-                            Lihat informasi PPDB
+                    <div class="mt-8 flex flex-nowrap items-center gap-2 sm:gap-4">
+                        <a href="{{ route('public.profile') }}"
+                            class="inline-flex min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full bg-blueprim px-3 py-3 font-heading text-xs font-semibold text-white shadow-soft transition-colors hover:bg-bluedark sm:flex-none sm:px-7 sm:py-3.5 sm:text-sm">
+                            Profil Sekolah
                         </a>
                         <a href="#jurusan"
-                            class="inline-flex items-center justify-center w-11 h-11 rounded-full bg-white border border-bluesoft/60 hover:bg-bluelight transition-colors">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" aria-hidden="true">
-                                <path d="M5 12h14M13 6l6 6-6 6"/>
-                            </svg>
+                            class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-bluesoft/60 bg-white px-3 py-3 font-heading text-xs font-medium text-bluedark transition-colors hover:bg-bluelight sm:px-4 sm:text-sm">
+                            Lihat Jurusan <span aria-hidden="true">→</span>
                         </a>
-                        <span class="font-heading text-sm text-bluedark/70">Lihat Jurusan</span>
                     </div>
                 </div>
 

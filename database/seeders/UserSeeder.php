@@ -15,6 +15,10 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            return;
+        }
+
         $adminRole = Role::where('code', 'ADMIN')->first();
         $teacherRole = Role::where('code', 'TEACHER')->first();
         $studentRole = Role::where('code', 'STUDENT')->first();

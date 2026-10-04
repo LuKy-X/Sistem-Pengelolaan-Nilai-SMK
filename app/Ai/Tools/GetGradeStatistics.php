@@ -5,7 +5,6 @@ namespace App\Ai\Tools;
 use App\Models\GradebookScore;
 use App\Models\Subject;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
@@ -34,7 +33,6 @@ class GetGradeStatistics implements Tool
         $subjectSearch = $request['subject'] ?? null;
         $classSearch = $request['class'] ?? null;
         $departmentSearch = $request['department'] ?? null;
-        $showTopStudents = filter_var($request['show_top_students'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
 
         $query = GradebookScore::query()
             ->whereNotNull('final_score')
@@ -102,25 +100,6 @@ class GetGradeStatistics implements Tool
             return json_encode($result);
         }
 
-        // Optionally show top 3 students (names only, no sensitive data)
-        if ($showTopStudents && $subjectSearch) {
-            $topStudents = (clone $query)
-                ->join('student_profiles', 'student_profiles.id', '=', 'gradebook_scores.student_id')
-                ->select([
-                    'student_profiles.full_name',
-                    DB::raw('MAX(gradebook_scores.final_score) as best_score'),
-                ])
-                ->groupBy('student_profiles.id', 'student_profiles.full_name')
-                ->orderByDesc('best_score')
-                ->limit(3)
-                ->get();
-
-            $result['top_students'] = $topStudents->map(fn ($s) => [
-                'name' => $s->full_name,
-                'score' => round((float) $s->best_score, 2),
-            ])->values()->all();
-        }
-
         return json_encode($result);
     }
 
@@ -136,9 +115,6 @@ class GetGradeStatistics implements Tool
                 ->description('Nama atau kode kelas. Contoh: "XII RPL C".'),
             'department' => $schema->string()
                 ->description('Nama atau kode jurusan. Contoh: "RPL".'),
-            'show_top_students' => $schema->boolean()
-                ->description('Tampilkan 3 siswa dengan nilai tertinggi (hanya nama, bukan data sensitif). Default: false.')
-                ->default(false),
         ];
     }
 }

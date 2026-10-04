@@ -29,7 +29,38 @@ function initMobileNav() {
         });
 
         menu.querySelectorAll('a').forEach(function (link) {
-            link.addEventListener('click', function () { setState(false); });
+            link.addEventListener('click', function (event) {
+                var targetId = link.getAttribute('href');
+
+                if (!targetId || targetId.charAt(0) !== '#') {
+                    setState(false);
+                    return;
+                }
+
+                var target = document.getElementById(decodeURIComponent(targetId.slice(1)));
+                if (!target) {
+                    setState(false);
+                    return;
+                }
+
+                event.preventDefault();
+                setState(false);
+                window.history.pushState(null, '', targetId);
+
+                window.requestAnimationFrame(function () {
+                    window.requestAnimationFrame(function () {
+                        var header = button.closest('header');
+                        var headerHeight = header ? header.getBoundingClientRect().height : 0;
+                        var targetTop = target.getBoundingClientRect().top + window.scrollY - headerHeight - 8;
+                        var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                        window.scrollTo({
+                            top: Math.max(0, targetTop),
+                            behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                        });
+                    });
+                });
+            });
         });
 
         var desktop = window.matchMedia('(min-width: 1024px)');
@@ -136,6 +167,33 @@ function initPageTransition() {
         }, 420);
     });
 
+    var loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (event) {
+            if (loginForm.dataset.submitting === 'true') {
+                event.preventDefault();
+
+                return;
+            }
+
+            event.preventDefault();
+            loginForm.dataset.submitting = 'true';
+            overlay.classList.add('is-animated');
+            overlay.classList.remove('is-hidden');
+
+            var submitButton = loginForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.setAttribute('aria-busy', 'true');
+                submitButton.innerHTML = '<span class="inline-flex items-center justify-center gap-2"><span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true"></span>Memeriksa akun...</span>';
+            }
+
+            window.setTimeout(function () {
+                HTMLFormElement.prototype.submit.call(loginForm);
+            }, 420);
+        });
+    }
+
     window.addEventListener('pageshow', hideOverlay);
     window.addEventListener('popstate', hideOverlay);
 }
@@ -222,21 +280,6 @@ function initPasswordResetHint() {
 }
 
 /* =========================================================
-   DEMO CREDENTIALS (dev only)
-   ========================================================= */
-function initDemoCredentials() {
-    document.querySelectorAll('[data-demo-login]').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var login    = document.getElementById('login');
-            var password = document.getElementById('password');
-            if (login)    login.value    = button.dataset.demoLogin    ?? '';
-            if (password) password.value = button.dataset.demoPassword ?? '';
-            document.querySelector('form button[type="submit"]')?.focus();
-        });
-    });
-}
-
-/* =========================================================
    AUTO-DISMISS FLASH BANNERS
    ========================================================= */
 function initAutoDismissFlash() {
@@ -252,8 +295,8 @@ function initAutoDismissFlash() {
 /* =========================================================
    AI CHAT WIDGET
 
-   The backend answers recognized questions from live school data and uses
-   Gemini only when no local keyword handler matches. The widget owns presentation:
+   The backend answers well-scoped school questions from live school data and
+   uses Gemini for contextual, ambiguous, and conversational requests. The widget owns presentation:
    open/close, optimistic echo, typing indicator, suggestion chips
    and a tiny safe renderer for the `**bold**` / newline subset the
    backend emits (no innerHTML, so a CMS value can never inject
@@ -291,6 +334,12 @@ function initAiChat() {
 
     function scrollToLatest() {
         list.scrollTop = list.scrollHeight;
+    }
+
+    function scheduleScrollToLatest() {
+        window.requestAnimationFrame(function () {
+            window.requestAnimationFrame(scrollToLatest);
+        });
     }
 
     function saveState() {
@@ -342,6 +391,7 @@ function initAiChat() {
                 addMessage(message.text, message.who, message.links, false);
             });
             renderSuggestions(savedSuggestions, false);
+            scheduleScrollToLatest();
         } catch (error) {
             console.warn('Chatbot: sesi percakapan tidak dapat dipulihkan.', error);
             try {
@@ -525,7 +575,16 @@ function initAiChat() {
         if (conversationId) {
             body.append('conversation_id', conversationId);
         }
-        Object.keys(payload).forEach(function (key) { body.append(key, payload[key]); });
+        Object.keys(payload).forEach(function (key) {
+            var value = payload[key];
+
+            if (Array.isArray(value)) {
+                value.forEach(function (item) { body.append(key + '[]', item); });
+                return;
+            }
+
+            body.append(key, value);
+        });
 
         return fetch(url, {
             method: 'POST',
@@ -582,7 +641,16 @@ function initAiChat() {
         setBusy(true);
         renderSuggestions([]);
 
-        post(replyUrl, { message: value })
+        var conversationHistory = history
+            .slice(0, -1)
+            .filter(function (message) { return message.who === 'user'; })
+            .slice(-8)
+            .map(function (message) { return message.text; });
+
+        post(replyUrl, {
+            message: value,
+            conversation_history: conversationHistory,
+        })
             .then(function (data) {
                 return minimumDelay(startedAt).then(function () { return data; });
             })
@@ -665,7 +733,10 @@ function initAiChat() {
         saveState();
 
         window.requestAnimationFrame(function () {
-            if (panelIsOpen) panel.classList.add('is-open');
+            if (!panelIsOpen) return;
+
+            panel.classList.add('is-open');
+            scheduleScrollToLatest();
         });
 
         if (!list.children.length) greet();
@@ -916,7 +987,6 @@ function init() {
     initPublicCategoryFilters();
     initPasswordToggle();
     initPasswordResetHint();
-    initDemoCredentials();
     initAutoDismissFlash();
     initAiChat();
     initAnimations();
