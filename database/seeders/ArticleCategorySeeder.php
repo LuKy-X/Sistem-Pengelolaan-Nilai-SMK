@@ -10,6 +10,8 @@ class ArticleCategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
+            ['name' => 'Berita', 'slug' => 'berita'],
+            ['name' => 'Kerja Sama Industri', 'slug' => 'kerja-sama-industri'],
             ['name' => 'Prestasi', 'slug' => 'prestasi'],
             ['name' => 'PPDB', 'slug' => 'ppdb'],
             ['name' => 'Kegiatan Sekolah', 'slug' => 'kegiatan-sekolah'],

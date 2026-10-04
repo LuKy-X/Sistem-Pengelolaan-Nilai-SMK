@@ -27,7 +27,7 @@ class SchoolProfileSeeder extends Seeder
             'description' => 'SMK Negeri 2 Karanganyar membekali siswa dengan kurikulum berbasis industri, sertifikasi kompetensi, dan jaringan kerja sama dunia usaha untuk masa depan karier yang nyata.',
             'vision' => 'Terwujudnya SMK Negeri 2 Karanganyar yang berkarakter, unggul, berprestasi, berdaya saing global, berwawasan lingkungan, dan berjiwa wirausaha.',
             'mission' => "1. Menyelenggarakan pendidikan kejuruan yang berorientasi pada kebutuhan dunia usaha dan dunia industri (DUDI).\n2. Membentuk peserta didik yang beriman, bertakwa, berakhlak mulia, dan berkarakter Profil Pelajar Pancasila.\n3. Mengembangkan kompetensi keahlian dan sertifikasi bertaraf nasional maupun internasional.\n4. Menumbuhkan jiwa kewirausahaan (entrepreneurship) dan kreativitas peserta didik.\n5. Menerapkan budaya kerja industri dan budaya peduli lingkungan hidup di sekolah.",
-            'history' => 'Didirikan pada tahun 1997 untuk menghasilkan sumber daya manusia tingkat menengah yang kompeten di bidang teknologi, rekayasa, dan kejuruan industri di Kabupaten Karanganyar dan sekitarnya.',
+            'history' => 'SMK Negeri 2 Karanganyar berdiri pada tahun 1997 di atas tanah seluas 27.720 m² dan diresmikan pada 18 November 1997 oleh Menteri Pendidikan Nasional Prof. Dr. Ing. Wardiman Djojonegoro dengan satu program studi, Teknik Mesin. Sekolah pertama kali dipimpin Drs. Surip Sunamto pada Tahun Pelajaran 1997/1998 hingga 2005/2006. Program Teknologi Tekstil dibuka pada Tahun Pelajaran 2004/2005. Pada Tahun Pelajaran 2006/2007, Drs. Sugiyarso HS, S.Pd., S.H., M.Ag. ditugaskan sebagai pelaksana tugas kepala sekolah. Pada Tahun Pelajaran 2007/2008, Drs. Wahyu Widodo, M.T. ditetapkan sebagai kepala sekolah. Pada Tahun Pelajaran 2008/2009, sekolah membuka program Teknik Otomotif Elektronik dan Rekayasa Perangkat Lunak.',
         ];
 
         if ($profile) {
@@ -38,7 +38,7 @@ class SchoolProfileSeeder extends Seeder
 
         // Kepala sekolah didaftarkan sebagai Guru (posisi non-mengajar) agar memiliki NIP untuk keperluan laporan/ekspor
         $teacherRole = Role::where('code', 'TEACHER')->first();
-        if ($teacherRole) {
+        if ($teacherRole && ! app()->isProduction()) {
             $userSukidi = User::firstOrCreate(
                 ['username' => 'kepsek.sukidi'],
                 [

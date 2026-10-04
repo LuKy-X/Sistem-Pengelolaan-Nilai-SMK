@@ -54,14 +54,19 @@
     </section>
 
     @php
-        $whatsappNumber = preg_replace('/\D+/', '', (string) $schoolProfile?->phone);
+        $productContact = $products->getCollection()->first(fn ($product) => filled($product->contact))?->contact;
+        $whatsappNumber = preg_replace('/\D+/', '', (string) $productContact);
+        if (str_starts_with($whatsappNumber, '0')) {
+            $whatsappNumber = '62'.substr($whatsappNumber, 1);
+        }
+        $productInquiryMessage = rawurlencode('Halo, saya tertarik memesan produk siswa. Mohon informasi produk yang tersedia dan cara pemesanannya. Terima kasih.');
     @endphp
 
     <x-public.cta-band
         title="Butuh Produk atau Jasa Custom?"
         description="Pemesanan dilakukan langsung dengan siswa pembuat. Harga dapat menyesuaikan jumlah, bahan, dan finishing."
         :action-label="$whatsappNumber ? 'Pesan via WhatsApp' : 'Lihat Kontak Sekolah'"
-        :action-url="$whatsappNumber ? 'https://wa.me/'.$whatsappNumber : route('public.profile')"
+        :action-url="$whatsappNumber ? 'https://wa.me/'.$whatsappNumber.'?text='.$productInquiryMessage : route('public.profile')"
         secondary-label="Lihat semua produk"
         :secondary-url="route('public.products.index')" />
 @endsection

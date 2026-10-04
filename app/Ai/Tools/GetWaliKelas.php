@@ -34,7 +34,7 @@ class GetWaliKelas implements Tool
 
         $classes = SchoolClass::query()
             ->with([
-                'homeroomTeacher:id,full_name,nip,gender',
+                'homeroomTeacher:id,full_name',
                 'department:id,name,short_name',
                 'gradeLevel:id,code,name',
             ])
@@ -62,8 +62,6 @@ class GetWaliKelas implements Tool
                 'department' => $c->department ? ($c->department->short_name ?: $c->department->name) : null,
                 'homeroom_teacher' => $c->homeroomTeacher ? [
                     'name' => $c->homeroomTeacher->full_name,
-                    'nip' => $c->homeroomTeacher->nip,
-                    'gender' => $c->homeroomTeacher->gender === 'MALE' ? 'Laki-laki' : 'Perempuan',
                 ] : null,
             ])->values()->all(),
         ]);

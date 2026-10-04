@@ -5,15 +5,22 @@ namespace Tests\Feature;
 use App\Ai\Agents\SchoolAssistant;
 use App\Ai\Participants\GuestChatbotParticipant;
 use App\Ai\Tools\GetAchievementCount;
+use App\Ai\Tools\GetAdmissionInformation;
 use App\Ai\Tools\GetDepartmentList;
 use App\Ai\Tools\GetSchoolProfile;
 use App\Ai\Tools\GetSiteStatistics;
 use App\Ai\Tools\GetStudentCount;
+use App\Ai\Tools\GetStudentList;
 use App\Ai\Tools\GetTeacherBySubject;
 use App\Ai\Tools\GetTeacherCount;
+use App\Ai\Tools\GetTeacherList;
 use App\Ai\Tools\GetTeachingAssignments;
 use App\Ai\Tools\GetWaliKelas;
+use App\Models\AcademicYear;
 use App\Models\Achievement;
+use App\Models\AchievementCategory;
+use App\Models\AdmissionFeeItem;
+use App\Models\AdmissionPeriod;
 use App\Models\ClassEnrollment;
 use App\Models\Department;
 use App\Models\GradeLevel;
@@ -80,6 +87,44 @@ class AiChatbotTest extends TestCase
             ->assertJsonValidationErrors(['message']);
     }
 
+    public function test_reply_endpoint_rejects_invalid_conversation_history(): void
+    {
+        $response = $this->postJson('/tanya-ai', [
+            'message' => 'Apa itu RPL?',
+            'conversation_history' => array_fill(0, 9, 'Pertanyaan sebelumnya'),
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['conversation_history']);
+    }
+
+    public function test_guest_agent_does_not_expose_the_student_directory_tool(): void
+    {
+        $toolClasses = collect((new SchoolAssistant)->tools())
+            ->map(fn (Tool $tool): string => $tool::class)
+            ->all();
+
+        $this->assertContains(GetStudentCount::class, $toolClasses);
+        $this->assertContains(GetAdmissionInformation::class, $toolClasses);
+        $this->assertNotContains(GetStudentList::class, $toolClasses);
+    }
+
+    public function test_teacher_directory_tool_omits_personal_identifiers(): void
+    {
+        TeacherProfile::factory()->create([
+            'full_name' => 'Guru Contoh',
+            'nip' => '198001012006041001',
+            'gender' => 'MALE',
+            'status' => 'ACTIVE',
+        ]);
+
+        $result = json_decode((new GetTeacherList)->handle(new Request([])), true);
+
+        $this->assertSame(['full_name' => 'Guru Contoh'], $result['teachers'][0]);
+        $this->assertArrayNotHasKey('nip', $result['teachers'][0]);
+        $this->assertArrayNotHasKey('gender', $result['teachers'][0]);
+    }
+
     // =========================================================
     // TOOL TESTS – GetSchoolProfile
     // =========================================================
@@ -108,6 +153,33 @@ class AiChatbotTest extends TestCase
         $result = json_decode($tool->handle(new Request([])), true);
 
         $this->assertArrayHasKey('error', $result);
+    }
+
+    public function test_admission_information_tool_returns_current_school_requirements_and_fees(): void
+    {
+        $academicYear = AcademicYear::factory()->create(['name' => '2027/2028']);
+        $period = AdmissionPeriod::create([
+            'academic_year_id' => $academicYear->id,
+            'title' => 'PPDB Reguler',
+            'registration_start' => '2026-11-01',
+            'registration_end' => '2026-12-20',
+            'description' => 'Penerimaan siswa baru',
+            'status' => 'OPEN',
+        ]);
+        AdmissionFeeItem::create([
+            'admission_period_id' => $period->id,
+            'name' => 'Biaya formulir',
+            'amount' => 25000,
+            'is_free' => false,
+            'sort_order' => 1,
+        ]);
+
+        $result = json_decode((new GetAdmissionInformation)->handle(new Request([])), true);
+
+        $this->assertTrue($result['available']);
+        $this->assertSame('PPDB Reguler', $result['period']['title']);
+        $this->assertSame('Biaya formulir', $result['period']['fees'][0]['name']);
+        $this->assertSame(25000, $result['period']['fees'][0]['amount']);
     }
 
     // =========================================================
@@ -338,7 +410,20 @@ class AiChatbotTest extends TestCase
 
     public function test_get_achievement_count_returns_total(): void
     {
-        Achievement::factory()->count(7)->create();
+        $category = AchievementCategory::query()->create([
+            'name' => 'Akademik',
+            'slug' => 'akademik',
+        ]);
+
+        foreach (range(1, 7) as $number) {
+            Achievement::query()->create([
+                'achievement_category_id' => $category->id,
+                'title' => "Prestasi {$number}",
+                'scope' => 'Sekolah',
+                'level' => 'Kabupaten',
+                'achievement_date' => now()->toDateString(),
+            ]);
+        }
 
         $tool = new GetAchievementCount;
         $result = json_decode($tool->handle(new Request([])), true);
@@ -353,6 +438,7 @@ class AiChatbotTest extends TestCase
     public function test_get_site_statistics_returns_statistics(): void
     {
         SiteStatistic::query()->create([
+            'key' => 'jumlah-siswa',
             'label' => 'Jumlah Siswa',
             'value' => '1.200+',
             'section' => 'HERO',

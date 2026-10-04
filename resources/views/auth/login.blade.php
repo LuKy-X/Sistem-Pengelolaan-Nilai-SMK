@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Masuk — JHIC 2026 | SMK Negeri 2 Karanganyar</title>
+<title>Masuk — Portal SMK Negeri 2 Karanganyar</title>
 <meta name="description" content="Masuk ke Portal Sistem Pengelolaan Nilai SMK Negeri 2 Karanganyar.">
 <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/logo.png') }}">
 
@@ -18,7 +18,7 @@
 
 <div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
   <div class="page-transition-diagonal">
-    <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
+    <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
   </div>
 </div>
 <script>
@@ -47,8 +47,8 @@
     </div>
 
     <div class="relative z-10 mt-6 lg:mt-0 lg:mb-2">
-      <h1 class="font-heading text-white text-[2.3rem] font-bold leading-tight">Welcome Back!</h1>
-      <p class="hidden lg:block text-bluelight text-sm leading-relaxed mt-2.5 max-w-md">Masuk untuk melanjutkan aktivitasmu di Portal Sistem Pengelolaan Nilai SMK Negeri 2 Karanganyar.</p>
+      <h1 class="font-heading text-white text-[2.3rem] font-bold leading-tight">Selamat Datang</h1>
+      <p class="hidden lg:block text-bluelight text-sm leading-relaxed mt-2.5 max-w-md">Masuk menggunakan akun resmi sekolah untuk melanjutkan aktivitas di Portal Sistem Pengelolaan Nilai SMK Negeri 2 Karanganyar.</p>
     </div>
   </div>
 
@@ -59,7 +59,8 @@
       </svg>
 
       <div class="relative z-10 bg-white px-6 pt-[2.15rem] pb-9 lg:bg-transparent lg:p-0">
-        <h2 class="font-heading text-2xl lg:text-[1.85rem] font-bold text-ink mb-6">Masuk ke Akun</h2>
+        <h2 class="font-heading text-2xl lg:text-[1.85rem] font-bold text-ink mb-1">Masuk ke Akun</h2>
+        <p class="mb-6 text-sm leading-relaxed text-[#5C7899]">Gunakan email atau username resmi yang terdaftar di sekolah.</p>
 
         @if(session('success'))
           <div class="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center gap-2">
@@ -124,25 +125,8 @@
           <button type="submit" class="w-full py-[0.9rem] rounded-full bg-bluedark hover:bg-blueprim text-white font-heading text-sm font-semibold shadow-[0_10px_22px_-8px_rgba(13,71,161,0.5)] transition-colors active:translate-y-px cursor-pointer">Masuk</button>
         </form>
 
-        <!-- Quick Demo Credentials Chips for testing -->
-        <div class="mt-6 pt-5 border-t border-slate-100">
-          <p class="text-[11px] font-semibold text-[#5C7899] mb-2 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-blueprim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Akun Uji Coba Demo (Klik untuk auto-fill):
-          </p>
-          <div class="grid grid-cols-2 gap-2">
-            <button type="button" data-demo-login="guru.agus" data-demo-password="password123" class="text-left p-2 rounded-xl border border-bluelight bg-[#FAFDFF] hover:bg-bluelight/50 transition-colors cursor-pointer">
-              <div class="text-xs font-bold text-bluedark">Guru: Agus Rum</div>
-              <div class="text-[10px] text-slate-500 font-mono">guru.agus</div>
-            </button>
-            <button type="button" data-demo-login="admin" data-demo-password="password123" class="text-left p-2 rounded-xl border border-bluelight bg-[#FAFDFF] hover:bg-bluelight/50 transition-colors cursor-pointer">
-              <div class="text-xs font-bold text-bluedark">Admin: Sekolah</div>
-              <div class="text-[10px] text-slate-500 font-mono">admin</div>
-            </button>
-          </div>
-        </div>
-
-        <p class="text-center mt-6 text-[0.83rem] text-[#5C7899]">Kembali ke <a href="{{ route('public.home') }}" class="text-bluedark font-bold hover:underline">Beranda</a></p>
+        <p class="text-center mt-6 text-[0.83rem] text-[#5C7899]">Belum memiliki akun? Hubungi administrator sekolah.</p>
+        <p class="text-center mt-3 text-[0.83rem] text-[#5C7899]">Kembali ke <a href="{{ route('public.home') }}" class="text-bluedark font-bold hover:underline">Beranda</a></p>
 
         <x-public.sponsor-bar variant="login" />
       </div>

@@ -10,12 +10,12 @@
         description="Layanan pendampingan karier dan lowongan magang dari mitra industri."
         :breadcrumb="['Beranda' => route('public.home'), 'BKK & Karier' => null]" />
 
-    <section class="pt-8 sm:pt-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-            <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+    <section class="min-w-0 pt-8 sm:pt-10">
+        <div class="mx-auto min-w-0 max-w-7xl px-4 sm:px-6 md:px-8">
+            <div class="grid min-w-0 lg:grid-cols-3 gap-6 lg:gap-8">
 
                 {{-- Career services --}}
-                <div class="lg:col-span-1">
+                <div class="min-w-0 lg:col-span-1">
                     <h2 class="font-heading font-semibold text-xl text-bluedark">Layanan BKK</h2>
                     <p class="text-sm text-bluedark/60 mt-2">Layanan pendampingan yang tersedia untuk siswa.</p>
 
@@ -28,9 +28,9 @@
                                 description="Data layanan BKK belum diisi." />
                         </div>
                     @else
-                        <ul class="mt-6 space-y-3">
+                        <ul class="mt-6 min-w-0 space-y-3">
                             @foreach ($services as $service)
-                                <li class="p-4 bg-white border border-bluelight rounded-2xl">
+                                <li class="w-full min-w-0 p-4 bg-white border border-bluelight rounded-2xl">
                                     <div class="flex items-start gap-3">
                                         <span class="w-9 h-9 rounded-xl bg-bluelight text-blueprim grid place-items-center shrink-0">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -42,7 +42,7 @@
                                         <div class="min-w-0">
                                             <h3 class="font-heading font-medium text-sm text-bluedark">{{ $service->title }}</h3>
                                             @if (filled($service->description))
-                                                <p class="text-xs text-bluedark/55 mt-1 leading-relaxed">{{ $service->description }}</p>
+                                                <p class="break-words text-xs text-bluedark/55 mt-1 leading-relaxed">{{ $service->description }}</p>
                                             @endif
                                         </div>
                                     </div>
@@ -63,9 +63,9 @@
                                     :search-value="$companySearch"
                                     placeholder="Cari mitra..."
                                     :hidden-fields="['q' => $search, 'type' => $selectedType]" />
-                                <ul id="careerCompanies" class="mt-4 space-y-2">
+                                <ul id="careerCompanies" class="mt-4 min-w-0 space-y-2">
                                     @foreach ($companies as $company)
-                                        <li class="flex items-center gap-3 p-3 bg-white border border-bluelight rounded-xl">
+                                        <li class="flex w-full min-w-0 items-center gap-3 p-3 bg-white border border-bluelight rounded-xl">
                                             <div class="w-9 h-9 rounded-lg bg-bluelight/70 grid place-items-center shrink-0 overflow-hidden">
                                                 <x-public.media :model="$company" column="logo" :alt="$company->name" icon="briefcase" />
                                             </div>
@@ -89,7 +89,7 @@
                 </div>
 
                 {{-- Opportunities --}}
-                <div class="lg:col-span-2">
+                <div class="min-w-0 lg:col-span-2">
                     @php
                         $opportunityTypes = [
                             ['value' => 'JOB', 'label' => 'Lowongan Kerja'],
@@ -120,11 +120,11 @@
                                 :description="$search !== '' || $selectedType !== '' ? 'Coba ubah kata kunci atau jenis lowongan.' : 'Belum ada lowongan magang atau kerja yang dipublikasikan.'" />
                         </div>
                     @else
-                        <div id="careerOpportunities" class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                        <div id="careerOpportunities" class="mt-6 grid min-w-0 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                             @foreach ($opportunities as $opportunity)
-                                <article class="flex h-full flex-col overflow-hidden rounded-3xl border border-bluelight bg-white shadow-xs transition-shadow hover:shadow-card">
+                                <article class="flex h-full min-w-0 flex-col overflow-hidden rounded-3xl border border-bluelight bg-white shadow-xs transition-shadow hover:shadow-card">
                                     <a href="{{ route('public.career.show', $opportunity) }}"
-                                        class="group flex flex-1 flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blueprim"
+                                        class="group flex min-w-0 flex-1 flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blueprim"
                                         aria-label="Lihat detail {{ $opportunity->type->label() }}: {{ $opportunity->title }}">
                                         <div class="aspect-[4/3] overflow-hidden bg-bluelight">
                                             <x-public.media :model="$opportunity" :alt="$opportunity->title" icon="briefcase"
