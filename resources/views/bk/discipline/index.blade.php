@@ -94,7 +94,7 @@
                   </td>
                   <td><x-bk.point-badge :standing="$row['standing']" :show-balance="false" /></td>
                   <td class="text-right">
-                    <a href="{{ route('counselor.discipline.index', ['student_id' => $row['student']->id]) }}" class="btn btn-outline btn-sm" data-no-transition="true">Riwayat</a>
+                    <a href="{{ route('counselor.discipline.index', ['student_id' => $row['student']->id]) }}" class="btn btn-outline btn-sm">Riwayat</a>
                   </td>
                 </tr>
               @empty

@@ -360,11 +360,9 @@ class CounselorAccessBoundaryTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_student_card_links_skip_the_page_transition_animation(): void
+    public function test_student_card_links_point_to_the_expected_pages(): void
     {
-        // Kartu siswa dan link kembali harus memakai data-no-transition agar
-        // pindah halaman langsung tanpa animasi slide.
-        // Keempat KPI card harus bisa diklik tanpa animasi.
+        // Kartu siswa, tautan kembali, dan KPI harus menuju halaman yang benar.
         foreach (['all', 'attention', 'sp1', 'sp23'] as $kpiScope) {
             $kpiHtml = (string) $this->actingAs($this->counselor)
                 ->get(route('counselor.students.index', ['scope' => $kpiScope]))
@@ -372,7 +370,7 @@ class CounselorAccessBoundaryTest extends TestCase
                 ->getContent();
 
             $this->assertMatchesRegularExpression(
-                '/<a href="'.preg_quote(route('counselor.students.index', ['scope' => $kpiScope]), '/').'"\s+data-no-transition="true"/',
+                '/<a href="'.preg_quote(route('counselor.students.index', ['scope' => $kpiScope]), '/').'"/',
                 $kpiHtml
             );
         }
@@ -392,7 +390,7 @@ class CounselorAccessBoundaryTest extends TestCase
             120
         );
 
-        $this->assertStringContainsString('data-no-transition="true"', $cardAnchor);
+        $this->assertStringContainsString(route('counselor.students.show', $this->counseledStudent), $cardAnchor);
 
         $showHtml = (string) $this->actingAs($this->counselor)
             ->get(route('counselor.students.show', $this->counseledStudent))
@@ -400,7 +398,7 @@ class CounselorAccessBoundaryTest extends TestCase
             ->getContent();
 
         $this->assertMatchesRegularExpression(
-            '/<a href="'.preg_quote(route('counselor.students.index'), '/').'"\s+data-no-transition="true"/',
+            '/<a href="'.preg_quote(route('counselor.students.index'), '/').'"/',
             $showHtml
         );
     }

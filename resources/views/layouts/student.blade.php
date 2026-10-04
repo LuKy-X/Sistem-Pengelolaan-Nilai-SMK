@@ -100,20 +100,6 @@
 </head>
 <body class="font-body antialiased teacher-portal">
 <a href="#konten-utama" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:m-2 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-bluedark focus:shadow-lg">Lewati ke konten utama</a>
-
-<div class="page-transition-overlay is-hidden" id="pageTransitionOverlay" aria-hidden="true">
-  <div class="page-transition-diagonal">
-    <span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span><span class="page-transition-band"></span>
-  </div>
-</div>
-<script>
-  try {
-    if (sessionStorage.getItem('playPageTransition') === '1') {
-      document.getElementById('pageTransitionOverlay')?.classList.remove('is-hidden');
-    }
-  } catch (e) {}
-</script>
-
 <div class="flex min-h-screen">
 
   <div class="db-sidebar-backdrop" id="dbBackdrop"></div>
@@ -261,7 +247,6 @@
   </div>
 </div>
 
-<script src="{{ asset('assets/js/loader.js') }}"></script>
 <script src="{{ asset('assets/js/dashboard-ui.js') }}"></script>
 <script>
   // Perbaikan drawer navigasi untuk layar kecil.

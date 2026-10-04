@@ -26,29 +26,6 @@
 <body class="font-body antialiased bg-[#F7FBFF] text-ink is-landing">
     {{-- Marks JS as available so scroll-reveal only hides content when it can be revealed again. --}}
     <script>document.documentElement.classList.add('js');</script>
-
-    {{-- Page transition overlay (diagonal colour bands) --}}
-    <div class="page-transition-overlay" id="pageTransitionOverlay" aria-hidden="true">
-        <div class="page-transition-diagonal">
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-            <span class="page-transition-band"></span>
-        </div>
-    </div>
-
     <a href="#konten-utama"
         class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2.5 focus:rounded-full focus:bg-bluedark focus:text-white focus:font-heading focus:text-sm">
         Lewati ke konten utama

@@ -8,7 +8,7 @@
   @include('partials.journals.bk-tabs', ['tabQuery' => ['class_id' => $selectedClass?->id]])
 
   <p class="text-sm text-bluedark/60">
-    <a href="{{ route('counselor.journals.attendance') }}" class="font-semibold text-blueprim hover:underline" data-no-transition="true">Lihat Absensi</a>
+    <a href="{{ route('counselor.journals.attendance') }}" class="font-semibold text-blueprim hover:underline">Lihat Absensi</a>
     /
     <span class="font-semibold text-bluedark">Riwayat Semua Jurnal</span>
   </p>
@@ -139,7 +139,7 @@
                 {{ $journal->alpha_count }}
               </td>
               <td class="text-right">
-                <a href="{{ route('counselor.journals.show', $journal) }}" class="btn btn-outline btn-sm" data-no-transition="true">Buka</a>
+                <a href="{{ route('counselor.journals.show', $journal) }}" class="btn btn-outline btn-sm">Buka</a>
               </td>
             </tr>
           @empty
