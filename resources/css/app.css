@@ -280,6 +280,7 @@ body.is-landing .link-card:focus-within::before {
 /* Industri partner marquee */
 .industri-marquee-wrap {
   overflow: hidden;
+  padding-block: clamp(0.75rem, 2vw, 1.25rem);
 }
 .industri-marquee-track {
   display: flex;
@@ -292,8 +293,8 @@ body.is-landing .link-card:focus-within::before {
 .industri-marquee-set {
   display: flex;
   align-items: center;
-  gap: clamp(2rem, 5vw, 5rem);
-  padding-right: clamp(2rem, 5vw, 5rem);
+  gap: clamp(1.25rem, 4vw, 4rem);
+  padding-inline: clamp(0.75rem, 2vw, 2rem);
   flex: none;
 }
 .industri-marquee-wrap:hover .industri-marquee-track {
@@ -308,8 +309,8 @@ body.is-landing .link-card:focus-within::before {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: clamp(9rem, 15vw, 13rem);
-  height: 5rem;
+  width: clamp(7rem, 18vw, 12rem);
+  height: clamp(3.75rem, 7vw, 5.5rem);
 }
 .industri-logo-card > :is(a, span) {
   display: grid;
@@ -319,13 +320,16 @@ body.is-landing .link-card:focus-within::before {
 }
 .industri-logo-card img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
   filter: grayscale(1);
   opacity: .58;
   transition: filter .25s ease, opacity .25s ease;
 }
+
 .industri-logo-card :is(a, span):hover img,
 .industri-logo-card a:focus-visible img {
   filter: grayscale(0);
@@ -1803,6 +1807,52 @@ body {
 }
 
 /* Mobile nav animation (id used by components/public/navbar.blade.php) */
+.public-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding-block: 0.4rem;
+    transition: color 0.25s ease;
+}
+
+.public-nav-link::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: #2196f3;
+    content: "";
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.public-nav-link:hover,
+.public-nav-link:focus-visible,
+.public-nav-link[aria-current="page"] {
+    color: #2196f3;
+}
+
+.public-nav-link:hover::after,
+.public-nav-link:focus-visible::after,
+.public-nav-link[aria-current="page"]::after {
+    transform: scaleX(1);
+}
+
+.public-nav-link--mobile {
+    align-self: flex-start;
+    min-height: 2.65rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .public-nav-link,
+    .public-nav-link::after {
+        transition-duration: 0.01ms;
+    }
+}
+
 @media (max-width: 1023.98px) {
     #publicMobileMenu {
         overflow: hidden;
@@ -2507,8 +2557,8 @@ body.bk-portal {
 
 .public-home > #beranda > div > div {
   border-radius: 1.25rem;
-  background: #edf4f3;
-  background-image: none;
+  background: linear-gradient(180deg, #ffffff 0%, #fdfefd 52%, #ffffff 100%);
+  box-shadow: var(--shadow-card);
   padding-block: clamp(2.5rem, 6vw, 5rem);
 }
 

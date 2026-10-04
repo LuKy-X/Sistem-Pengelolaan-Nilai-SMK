@@ -34,7 +34,7 @@
                             class="inline-flex min-w-0 flex-1 items-center justify-center whitespace-nowrap rounded-full bg-blueprim px-3 py-3 font-heading text-xs font-semibold text-white shadow-soft transition-colors hover:bg-bluedark sm:flex-none sm:px-7 sm:py-3.5 sm:text-sm">
                             Profil Sekolah
                         </a>
-                        <a href="#jurusan"
+                        <a href="{{ route('public.departments.index') }}"
                             class="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-bluesoft/60 bg-white px-3 py-3 font-heading text-xs font-medium text-bluedark transition-colors hover:bg-bluelight sm:px-4 sm:text-sm">
                             Lihat Jurusan <span aria-hidden="true">→</span>
                         </a>
@@ -43,12 +43,13 @@
 
                 {{-- Right: hero art + floating chips --}}
                 <div class="lg:col-span-6 relative reveal">
-                    <div class="relative max-w-md mx-auto">
-                        <div class="absolute inset-0 bg-blueprim/10 rounded-full blur-3xl scale-90" aria-hidden="true"></div>
-                        <img src="{{ asset('assets/images/hero/hero-jurusan.png') }}"
-                            alt="Ilustrasi empat program keahlian {{ $schoolName }}"
-                            class="relative w-full h-auto drop-shadow-2xl hero-art-parallax"
-                            loading="eager">
+                    <div class="relative mx-auto aspect-square w-full max-w-lg overflow-hidden">
+                        <video class="hero-art-parallax absolute inset-0 h-full w-full object-fill brightness-105 mix-blend-multiply"
+                            autoplay muted loop playsinline preload="metadata"
+                            poster="{{ asset('assets/images/hero/hero-jurusan.png') }}"
+                            aria-label="Video ilustrasi program keahlian {{ $schoolName }}">
+                            <source src="{{ asset('assets/videos/hero-jurusan-3d.mp4') }}" type="video/mp4">
+                        </video>
                     </div>
 
                 </div>

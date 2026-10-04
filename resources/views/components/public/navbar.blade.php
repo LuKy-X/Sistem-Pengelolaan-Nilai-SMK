@@ -3,8 +3,15 @@
 ])
 
 @php
-    $currentRoute = request()->route()?->getName();
-    $isHomePage   = $currentRoute === 'public.home';
+    $templateNavItems = [
+        ['label' => 'Beranda', 'route' => 'public.home', 'active' => 'public.home'],
+        ['label' => 'Profil', 'route' => 'public.profile', 'active' => 'public.profile'],
+        ['label' => 'Jurusan', 'route' => 'public.departments.index', 'active' => 'public.departments.*'],
+        ['label' => 'PKL & Karier', 'route' => 'public.career.index', 'active' => 'public.career.*'],
+        ['label' => 'Prestasi', 'route' => 'public.achievements.index', 'active' => 'public.achievements.*'],
+        ['label' => 'Produk Unggulan', 'route' => 'public.products.index', 'active' => 'public.products.*'],
+        ['label' => 'Berita', 'route' => 'public.articles.index', 'active' => 'public.articles.*'],
+    ];
 @endphp
 
 <header class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-bluelight">
@@ -23,25 +30,13 @@
 
         {{-- Desktop navigation --}}
         <nav class="hidden lg:flex items-center gap-4 xl:gap-6 font-heading text-sm font-medium text-bluedark/80">
-            @php
-                $templateNavItems = [
-                    ['label' => 'Beranda',          'href' => $isHomePage ? '#beranda'          : route('public.home'),              'route' => 'public.home'],
-                    ['label' => 'Profil',           'href' => route('public.profile'),          'route' => 'public.profile'],
-                    ['label' => 'Jurusan',          'href' => $isHomePage ? '#jurusan'          : route('public.departments.index'), 'route' => 'public.departments.index'],
-                    ['label' => 'PKL & Karier',     'href' => $isHomePage ? '#karier'           : route('public.career.index'),      'route' => 'public.career.index'],
-                    ['label' => 'Prestasi',         'href' => $isHomePage ? '#prestasi'         : route('public.achievements.index'), 'route' => 'public.achievements.index'],
-                    ['label' => 'Produk Unggulan',  'href' => $isHomePage ? '#produk-unggulan'  : route('public.products.index'),    'route' => 'public.products.index'],
-                    ['label' => 'Berita',           'href' => $isHomePage ? '#berita'           : route('public.articles.index'),    'route' => 'public.articles.index'],
-                ];
-            @endphp
-
             @foreach ($templateNavItems as $item)
                 @php
-                    $isActive = $currentRoute === $item['route'];
+                    $isActive = request()->routeIs($item['active']);
                 @endphp
-                <a href="{{ $item['href'] }}"
+                <a href="{{ route($item['route']) }}"
                     @if ($isActive) aria-current="page" @endif
-                    class="hover:text-blueprim transition-colors {{ $isActive ? 'text-blueprim font-semibold' : '' }}">
+                    class="public-nav-link {{ $isActive ? 'text-blueprim font-semibold' : '' }}">
                     {{ $item['label'] }}
                 </a>
             @endforeach
@@ -87,21 +82,16 @@
     {{-- Mobile navigation --}}
     <div id="publicMobileMenu" class="hidden lg:hidden border-t border-bluelight bg-white">
         <nav class="flex flex-col px-4 sm:px-6 py-4 gap-1 font-heading text-bluedark">
-            <a href="{{ $isHomePage ? '#beranda' : route('public.home') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Beranda</a>
-            <a href="{{ route('public.profile') }}"
-                @if ($currentRoute === 'public.profile') aria-current="page" @endif
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Profil</a>
-            <a href="{{ $isHomePage ? '#jurusan' : route('public.departments.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Jurusan</a>
-            <a href="{{ $isHomePage ? '#karier' : route('public.career.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">PKL &amp; Karier</a>
-            <a href="{{ $isHomePage ? '#prestasi' : route('public.achievements.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Prestasi</a>
-            <a href="{{ $isHomePage ? '#produk-unggulan' : route('public.products.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Produk Unggulan</a>
-            <a href="{{ $isHomePage ? '#berita' : route('public.articles.index') }}"
-                class="py-2.5 px-2 rounded-lg hover:bg-bluelight transition-colors">Berita</a>
+            @foreach ($templateNavItems as $item)
+                @php
+                    $isActive = request()->routeIs($item['active']);
+                @endphp
+                <a href="{{ route($item['route']) }}"
+                    @if ($isActive) aria-current="page" @endif
+                    class="public-nav-link public-nav-link--mobile {{ $isActive ? 'text-blueprim font-semibold' : '' }}">
+                    {{ $item['label'] }}
+                </a>
+            @endforeach
             @auth
                 <a href="{{ route(auth()->user()->dashboardRouteName()) }}"
                     class="mt-2 text-center bg-bluedark text-white py-2.5 px-2 rounded-full font-medium">
