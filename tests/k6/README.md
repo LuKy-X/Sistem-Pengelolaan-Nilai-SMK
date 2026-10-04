@@ -53,13 +53,13 @@ brew install k6
 Buka terminal di komputer Anda, arahkan ke folder proyek, dan jalankan perintah berikut:
 
 ### A. Uji Coba Cepat (Smoke Test - 1 VU selama 10 detik)
-Sebelum menjalankan tes penuh selama ~10 menit, pastikan domain dapat diakses dengan baik oleh k6:
-```bash
+Sebelum menjalankan tes penuh selama ~10 menit, pastikan seluruh 10 route publik (Home, Login, Profil, Jurusan, Berita, Prestasi, Alumni, PPDB, Produk Siswa, Karier) dapat diakses dengan baik oleh k6:
+```powershell
 k6 run --vus 1 --duration 10s -e TARGET_URL=https://sivana.my.id tests/k6/baseline_stress_test.js
 ```
 
 ### B. Menjalankan Baseline Stress Test Penuh (10 -> 25 -> 50 VU)
-```bash
+```powershell
 k6 run -e TARGET_URL=https://sivana.my.id tests/k6/baseline_stress_test.js
 ```
 
