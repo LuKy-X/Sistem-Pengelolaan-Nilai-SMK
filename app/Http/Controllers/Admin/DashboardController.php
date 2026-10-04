@@ -27,16 +27,19 @@ class DashboardController extends Controller
         $totalClasses = SchoolClass::count();
         $totalDepartments = Department::count();
 
-        // Kehadiran hari ini
-        $todayAttendances = JournalAttendance::whereHas('journal', function ($query) {
-            $query->whereDate('journal_date', today());
-        })->get();
+        // Kehadiran hari ini (agregasi SQL langsung tanpa hidrasi ribuan model Eloquent)
+        $todayAttendanceCounts = JournalAttendance::query()
+            ->join('class_journals', 'journal_attendances.journal_id', '=', 'class_journals.id')
+            ->where('class_journals.journal_date', today()->toDateString())
+            ->selectRaw('journal_attendances.status, COUNT(*) as total')
+            ->groupBy('journal_attendances.status')
+            ->pluck('total', 'journal_attendances.status');
 
         $attendanceStats = [
-            'hadir' => $todayAttendances->where('status', AttendanceStatus::Present)->count(),
-            'sakit' => $todayAttendances->where('status', AttendanceStatus::Sick)->count(),
-            'izin' => $todayAttendances->where('status', AttendanceStatus::Permit)->count(),
-            'alpha' => $todayAttendances->where('status', AttendanceStatus::Absent)->count(),
+            'hadir' => (int) ($todayAttendanceCounts->get(AttendanceStatus::Present->value) ?? 0),
+            'sakit' => (int) ($todayAttendanceCounts->get(AttendanceStatus::Sick->value) ?? 0),
+            'izin' => (int) ($todayAttendanceCounts->get(AttendanceStatus::Permit->value) ?? 0),
+            'alpha' => (int) ($todayAttendanceCounts->get(AttendanceStatus::Absent->value) ?? 0),
         ];
 
         // Rombel aktif terbaru
